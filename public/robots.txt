@@ -1,0 +1,49 @@
+User-agent: *
+Allow: /
+
+# Core pages - high priority for indexing
+Allow: /
+Allow: /staking
+Allow: /dashboard
+Allow: /whitepaper
+Allow: /technology
+Allow: /about
+Allow: /community
+Allow: /contact
+
+# API endpoints - block from indexing
+Disallow: /api/
+Disallow: /.netlify/
+
+# Internal assets
+Disallow: /assets/
+Disallow: /_next/
+
+# Sitemap location
+Sitemap: https://nimrev.xyz/sitemap.xml
+
+# Specific bots
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+# AI crawlers
+User-agent: GPTBot
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+# Crawl delay for better server performance
+Crawl-delay: 1

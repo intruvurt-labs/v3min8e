@@ -1,0 +1,46 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Circular background -->
+  <circle cx="16" cy="16" r="16" fill="#0a0a0a"/>
+  <circle cx="16" cy="16" r="15" fill="none" stroke="#00ff88" stroke-width="1"/>
+  
+  <!-- Cyber grid pattern -->
+  <defs>
+    <pattern id="grid" width="4" height="4" patternUnits="userSpaceOnUse">
+      <path d="M 4 0 L 0 0 0 4" fill="none" stroke="#00ff88" stroke-width="0.3" opacity="0.3"/>
+    </pattern>
+  </defs>
+  
+  <!-- Grid overlay -->
+  <circle cx="16" cy="16" r="14" fill="url(#grid)" opacity="0.2"/>
+  
+  <!-- Central N logo -->
+  <g transform="translate(16,16)">
+    <!-- Letter N in cyber style -->
+    <path d="M-6,-8 L-6,8 L-4,8 L-4,-4 L4,8 L6,8 L6,-8 L4,-8 L4,4 L-4,-8 Z" 
+          fill="#00ff88" 
+          stroke="#66ffaa" 
+          stroke-width="0.5"/>
+    
+    <!-- Glowing effect -->
+    <path d="M-6,-8 L-6,8 L-4,8 L-4,-4 L4,8 L6,8 L6,-8 L4,-8 L4,4 L-4,-8 Z" 
+          fill="none" 
+          stroke="#00ff88" 
+          stroke-width="1" 
+          opacity="0.6"
+          filter="blur(1px)"/>
+  </g>
+  
+  <!-- Rotating outer ring -->
+  <circle cx="16" cy="16" r="13" fill="none" stroke="#00ddff" stroke-width="0.5" opacity="0.4" stroke-dasharray="2,2">
+    <animateTransform attributeName="transform" type="rotate" values="0 16 16;360 16 16" dur="10s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- Data points -->
+  <circle cx="26" cy="16" r="1" fill="#00ff88" opacity="0.8">
+    <animate attributeName="opacity" values="0.8;0.2;0.8" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="6" cy="16" r="1" fill="#ff6600" opacity="0.8">
+    <animate attributeName="opacity" values="0.2;0.8;0.2" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  
+</svg>

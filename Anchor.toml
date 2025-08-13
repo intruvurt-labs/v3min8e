@@ -1,0 +1,47 @@
+[features]
+seeds = false
+skip-lint = false
+
+[programs.localnet]
+verm_staking = "StakeVERM1111111111111111111111111111111111111"
+
+[programs.devnet]
+verm_staking = "StakeVERM1111111111111111111111111111111111111"
+
+[programs.mainnet]
+verm_staking = "EdabwrorVWrqix5zhY9FpEBuBR1bqLRtcMvnGrnJ8ePp"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "mainnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+
+[toolchain]
+
+[workspace]
+members = [
+    "programs/*"
+]
+
+[test]
+startup_wait = 5000
+shutdown_wait = 2000
+upgradeable = false
+
+[[test.genesis]]
+address = "StakeVERM1111111111111111111111111111111111111"
+program = "target/deploy/verm_staking.so"
+
+[test.validator]
+url = "https://api.mainnet-beta.solana.com"
+
+[[test.validator.clone]]
+address = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+
+[[test.validator.clone]]
+address = "11111111111111111111111111111111"

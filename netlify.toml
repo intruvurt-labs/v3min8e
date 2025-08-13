@@ -1,0 +1,63 @@
+[build]
+  command = "npm run build:client"
+  functions = "netlify/functions"
+  publish = "dist/spa"
+
+
+[functions]
+  external_node_modules = ["express"]
+  node_bundler = "esbuild"
+  
+[[redirects]]
+  force = true
+  from = "/api/check-verm-balance"
+  status = 200
+  to = "/.netlify/functions/check-verm-balance"
+
+[[redirects]]
+  force = true
+  from = "/api/platform/analytics"
+  status = 200
+  to = "/.netlify/functions/platform-analytics"
+
+[[redirects]]
+  force = true
+  from = "/api/user/profile"
+  status = 200
+  to = "/.netlify/functions/user-profile"
+
+[[redirects]]
+  force = true
+  from = "/api/user/profile/update"
+  status = 200
+  to = "/.netlify/functions/user-profile-update"
+
+[[redirects]]
+  force = true
+  from = "/api/track-scan"
+  status = 200
+  to = "/.netlify/functions/track-scan"
+
+[[redirects]]
+  force = true
+  from = "/api/ip-scan-tracking"
+  status = 200
+  to = "/.netlify/functions/ip-scan-tracking"
+
+[[redirects]]
+  force = true
+  from = "/api/scan-history"
+  status = 200
+  to = "/.netlify/functions/scan-history"
+
+[[redirects]]
+  force = true
+  from = "/api/verm-price"
+  status = 200
+  to = "/.netlify/functions/verm-price"
+
+[[redirects]]
+  force = true
+  from = "/api/*"
+  status = 200
+  to = "/.netlify/functions/api/:splat"
