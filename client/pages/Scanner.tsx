@@ -176,7 +176,7 @@ const SUPPORTED_NETWORKS: SupportedNetwork[] = [
   {
     id: "xrp",
     name: "XRP Ledger",
-    icon: "����",
+    icon: " ",
     color: "teal",
     rpcUrl: "https://s1.ripple.com:51234",
   },
@@ -198,7 +198,7 @@ const DEMO_QUOTES = [
   "Checking contract ownership and mint authority...",
 ];
 
-const CREATOR_WALLET = "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM";
+const CREATOR_WALLET = "4XygsJdgpKRqvAuyyyXczDQRDxuSeumns7RA3Ak1RZpf";
 
 export default function Scanner() {
   // Merge state from both Explorer and Dashboard
@@ -641,7 +641,7 @@ export default function Scanner() {
           timestamp: Date.now(),
           verminAnalysis: {
             recommendation:
-              "⚠️ Analysis unavailable - token data could not be retrieved",
+              "⚠️ Analysis unavailable - token data could not be retrieved. Please ensure that you have entered the correct address.",
             confidenceLevel: 0,
             isDemoMode: true,
           },
