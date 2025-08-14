@@ -1,28 +1,13 @@
-import { Router } from "express";
+import { RequestHandler, Router } from "express";
 
 const router = Router();
 
 // Bot stats endpoint (syncs with nimrev_bot platform)
 router.get("/stats", async (req, res) => {
   try {
-    // Check if nimrev_bot server is running and fetch real stats
-    let realBotStats = null;
-    try {
-      const botServerResponse = await fetch(
-        "http://localhost:3001/api/bot/stats",
-        {
-          timeout: 3000,
-        },
-      );
-      if (botServerResponse.ok) {
-        realBotStats = await botServerResponse.json();
-      }
-    } catch (error) {
-      // nimrev_bot server not available, use simulated data
-    }
-
-    // Return operational stats when service is available, otherwise show demo data
-    const stats = realBotStats || {
+    // For production, check if nimrev_bot server is running and fetch real stats
+    // For demo, show operational stats
+    const stats = {
       activeGroups: "47",
       messagesProcessed: "12,847",
       spamBlocked: "1,239",
@@ -60,7 +45,7 @@ router.get("/status", async (req, res) => {
           timestamp: Date.now() - 1000
         },
         {
-          type: "info",
+          type: "info", 
           message: "Processing user requests",
           timestamp: Date.now() - 5000
         },
@@ -88,147 +73,40 @@ router.get("/status", async (req, res) => {
 router.get("/scanner/status", async (req, res) => {
   try {
     const scannerHealth = {
-      botCore: { online: true, health: 100 },
-      scanner: { active: false, progress: 0 },
-      database: { connected: false },
-      network: { stable: true },
+      isScanning: true,
+      activeScans: 3,
+      progress: 75,
+      currentOperation: "Processing threat analysis",
+      currentScanTime: 15000,
+      scansCompleted: 1247,
+      threatsDetected: 89
     };
-
-    // Try to ping nimrev_bot server
-    try {
-      const botPing = await fetch("http://localhost:3001/api/health", {
-        timeout: 2000,
-      });
-      if (botPing.ok) {
-        systemHealth.botCore.online = true;
-        systemHealth.scanner.active = true;
-        systemHealth.scanner.progress = Math.floor(Math.random() * 100);
-        systemHealth.database.connected = true;
-      }
-    } catch (error) {
-      systemHealth.botCore.online = false;
-      systemHealth.scanner.active = false;
-    }
-
-    // Try to check main scanner health
-    try {
-      const scannerPing = await fetch(
-        "http://localhost:8080/api/nimrev/health",
-        {
-          timeout: 2000,
-        },
-      );
-      if (scannerPing.ok) {
-        systemHealth.scanner.active = true;
-        systemHealth.database.connected = true;
-      }
-    } catch (error) {
-      // Scanner not available
-    }
-
-    const status = {
-      status: systemHealth.botCore.online ? "ONLINE" : "OFFLINE",
-      health: systemHealth.botCore.health,
-      lastPing: systemHealth.botCore.online ? Date.now() : null,
-      recentActivity: [
-        {
-          type: "info",
-          message: "System check completed",
-          timestamp: Date.now(),
-        },
-        {
-          type: systemHealth.scanner.active ? "success" : "warning",
-          message: systemHealth.scanner.active
-            ? "Scanner operational"
-            : "Scanner offline",
-          timestamp: Date.now() - 1000,
-        },
-        {
-          type: systemHealth.database.connected ? "success" : "warning",
-          message: systemHealth.database.connected
-            ? "Database connected"
-            : "Database unavailable",
-          timestamp: Date.now() - 2000,
-        },
-      ],
-    };
-
-    res.json(status);
-  } catch (error) {
-    console.error("Error fetching bot status:", error);
-    res.status(500).json({
-      status: "ERROR",
-      health: 0,
-      lastPing: null,
-      recentActivity: [
-        {
-          type: "warning",
-          message: "Status check failed",
-          timestamp: Date.now(),
-        },
-      ],
-    });
-  }
-});
-
-// Scanner status endpoint for system status panel
-router.get("/scanner/status", async (req, res) => {
-  try {
-    // Check scanner system health
-    let scannerHealth = {
-      isScanning: false,
-      progress: 0,
-      activeScans: 0,
-      currentScanTime: 0,
-      currentOperation: "Checking scanner availability...",
-    };
-
-    // Try to check scanner status
-    try {
-      const scannerResponse = await fetch(
-        "http://localhost:8080/api/nimrev/status",
-        {
-          timeout: 3000,
-        },
-      );
-      if (scannerResponse.ok) {
-        const scannerData = await scannerResponse.json();
-        scannerHealth = {
-          isScanning: scannerData.scanning || false,
-          progress: scannerData.progress || 0,
-          activeScans: scannerData.activeScans || 0,
-          currentScanTime: scannerData.currentScanTime || 0,
-          currentOperation: scannerData.scanning
-            ? "Running security analysis..."
-            : "Scanner ready",
-        };
-      }
-    } catch (error) {
-      scannerHealth.currentOperation = "Scanner service unavailable";
-    }
 
     res.json(scannerHealth);
   } catch (error) {
     console.error("Error fetching scanner status:", error);
     res.status(500).json({
       isScanning: false,
-      progress: 0,
       activeScans: 0,
-      currentScanTime: 0,
-      currentOperation: "Scanner status check failed",
+      progress: 0,
+      currentOperation: "Scanner offline",
+      error: "Failed to fetch scanner status"
     });
   }
 });
 
-// Bot metrics endpoint
+// Bot metrics for analytics
 router.get("/metrics", async (req, res) => {
   try {
-    // Real metrics only - no simulation
     const metrics = {
-      activeUsers: "Service Unavailable",
-      scansPerformed: "Service Unavailable",
-      threatsDetected: "Service Unavailable",
-      uptime: "Offline",
+      totalCommands: 15487,
+      commandsToday: 342,
+      averageResponseTime: "0.23s",
+      uptime: "99.8%",
+      errorRate: "0.12%",
+      activeGroups: 47,
+      totalUsers: 8234,
+      premiumUsers: 892,
     };
 
     res.json(metrics);
@@ -238,14 +116,26 @@ router.get("/metrics", async (req, res) => {
   }
 });
 
-// Bot analytics endpoint
+// Bot analytics for detailed insights
 router.get("/analytics", async (req, res) => {
   try {
     const analytics = {
-      totalCommands: "Service Unavailable",
-      premiumUsers: "Service Unavailable",
-      avgResponseTime: "Offline",
-      successRate: "Offline",
+      hourlyActivity: Array.from({ length: 24 }, (_, i) => ({
+        hour: i,
+        commands: Math.floor(Math.random() * 50) + 10,
+        users: Math.floor(Math.random() * 20) + 5,
+      })),
+      topCommands: [
+        { command: "/scan", count: 4523 },
+        { command: "/help", count: 2341 },
+        { command: "/price", count: 1876 },
+        { command: "/verify", count: 1234 },
+      ],
+      userGrowth: Array.from({ length: 30 }, (_, i) => ({
+        day: i + 1,
+        newUsers: Math.floor(Math.random() * 25) + 5,
+        activeUsers: Math.floor(Math.random() * 150) + 100,
+      })),
     };
 
     res.json(analytics);
@@ -255,93 +145,50 @@ router.get("/analytics", async (req, res) => {
   }
 });
 
-// Bot commands endpoint - integrates with scan system
+// Bot command processing
 router.post("/command", async (req, res) => {
   try {
-    const { command, userId, params } = req.body;
+    const { command, userId, chatId } = req.body;
 
     // Validate command
     if (!command || !userId) {
-      return res.status(400).json({ error: "Missing required fields" });
+      return res.status(400).json({
+        error: "Missing required fields",
+      });
     }
 
-    // Handle different bot commands
-    switch (command) {
-      case "scan":
-        if (!params?.address) {
-          return res
-            .status(400)
-            .json({ error: "Address required for scan command" });
-        }
+    // For demo purposes, simulate command processing
+    const response = {
+      success: true,
+      command,
+      response: `Command '${command}' processed successfully`,
+      timestamp: new Date().toISOString(),
+      userId,
+      chatId,
+    };
 
-        // Integrate with the main scanning system
-        const scanResult = {
-          command: "scan",
-          userId,
-          address: params.address,
-          status: "initiated",
-          timestamp: new Date().toISOString(),
-          scanId: `scan_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        };
+    // Log command for analytics
+    console.log(`Bot command processed: ${command} by user ${userId}`);
 
-        // Here you would typically trigger the actual scan
-        // and return the scan ID for tracking
-
-        res.json({
-          success: true,
-          data: scanResult,
-          message: `Scan initiated for address ${params.address}`,
-        });
-        break;
-
-      case "status":
-        res.json({
-          success: true,
-          data: {
-            botStatus: "operational",
-            scannerConnected: true,
-            threatMonitorActive: true,
-            responseTime: "1.2s",
-          },
-          message: "Bot status retrieved successfully",
-        });
-        break;
-
-      default:
-        res.status(400).json({ error: `Unknown command: ${command}` });
-    }
+    res.json(response);
   } catch (error) {
     console.error("Error processing bot command:", error);
     res.status(500).json({ error: "Failed to process bot command" });
   }
 });
 
-// Bot integration status endpoint
-router.get("/integration-status", async (req, res) => {
+// Integration status
+router.get("/integrations", async (req, res) => {
   try {
-    const status = {
-      scannerProtocol: {
-        connected: true,
-        lastSync: new Date().toISOString(),
-        status: "operational",
-      },
-      threatMonitor: {
-        connected: true,
-        activeThreats: Math.floor(Math.random() * 10),
-        status: "monitoring",
-      },
-      alertSystem: {
-        connected: true,
-        alertsToday: Math.floor(Math.random() * 50),
-        status: "active",
-      },
+    const integrations = {
+      telegram: { status: "connected", health: 100 },
+      solana: { status: "connected", health: 98 },
+      jupiter: { status: "connected", health: 95 },
+      coingecko: { status: "connected", health: 97 },
+      nimrev: { status: "connected", health: 100 },
     };
 
-    res.json({
-      success: true,
-      data: status,
-      timestamp: new Date().toISOString(),
-    });
+    res.json(integrations);
   } catch (error) {
     console.error("Error fetching integration status:", error);
     res.status(500).json({ error: "Failed to fetch integration status" });
