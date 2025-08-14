@@ -335,7 +335,7 @@ export class VerminAI {
       transactionData: this.generateMockTransactions(address),
     };
 
-    return mockFeatures;
+    return features;
   }
 
   private generateMockTransactions(address: string) {
