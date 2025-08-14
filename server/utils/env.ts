@@ -150,7 +150,7 @@ class EnvManager {
   }
 
   isDevelopment(): boolean {
-    return this.env.NODE_ENV === "production";
+    return this.env.NODE_ENV === "development";
   }
 }
 
