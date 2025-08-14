@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { X, AlertTriangle, Shield, Activity, Bot, Target } from 'lucide-react';
-import { useRealTimeNotifications, GlobalThreatEvent } from '../hooks/useUnifiedThreatMonitor';
+import { useRealTimeNotifications, useUnifiedThreatMonitor, GlobalThreatEvent } from '../hooks/useUnifiedThreatMonitor';
 
 interface NotificationItemProps {
   event: GlobalThreatEvent;
