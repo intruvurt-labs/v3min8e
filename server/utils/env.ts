@@ -124,7 +124,9 @@ class EnvManager {
 
   logConfig() {
     console.log("🔧 Environment Configuration:");
-    console.log(`   Default Blockchain: ${this.env.DEFAULT_BLOCKCHAIN.toUpperCase()}`);
+    console.log(
+      `   Default Blockchain: ${this.env.DEFAULT_BLOCKCHAIN.toUpperCase()}`,
+    );
     console.log(`   Solana Network: ${this.env.SOLANA_NETWORK}`);
     console.log(`   Domain: ${this.env.DOMAIN}`);
     console.log(`   Node Env: ${this.env.NODE_ENV}`);

@@ -251,7 +251,9 @@ export const getPublicScans: RequestHandler = async (req, res) => {
 
     // Apply search filter with proper sanitization
     if (search) {
-      const sanitizedSearch = search.replace(/[%_\\]/g, '\\$&').replace(/'/g, "''");
+      const sanitizedSearch = search
+        .replace(/[%_\\]/g, "\\$&")
+        .replace(/'/g, "''");
       query = query.or(
         `token_address.ilike.%${sanitizedSearch}%,token_symbol.ilike.%${sanitizedSearch}%,ipfs_hash.ilike.%${sanitizedSearch}%`,
       );

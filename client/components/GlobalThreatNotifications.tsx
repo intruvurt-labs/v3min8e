@@ -1,6 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { X, AlertTriangle, Shield, Activity, Bot, Target } from 'lucide-react';
-import { useRealTimeNotifications, useUnifiedThreatMonitor, GlobalThreatEvent } from '../hooks/useUnifiedThreatMonitor';
+import React, { useEffect, useState } from "react";
+import { X, AlertTriangle, Shield, Activity, Bot, Target } from "lucide-react";
+import {
+  useRealTimeNotifications,
+  useUnifiedThreatMonitor,
+  GlobalThreatEvent,
+} from "../hooks/useUnifiedThreatMonitor";
 
 interface NotificationItemProps {
   event: GlobalThreatEvent;
@@ -18,26 +22,26 @@ function NotificationItem({ event, onDismiss }: NotificationItemProps) {
 
   const getSeverityColors = () => {
     switch (event.severity) {
-      case 'critical':
-        return 'bg-red-900/90 border-red-500 text-red-100';
-      case 'high':
-        return 'bg-orange-900/90 border-orange-500 text-orange-100';
-      case 'medium':
-        return 'bg-yellow-900/90 border-yellow-500 text-yellow-100';
+      case "critical":
+        return "bg-red-900/90 border-red-500 text-red-100";
+      case "high":
+        return "bg-orange-900/90 border-orange-500 text-orange-100";
+      case "medium":
+        return "bg-yellow-900/90 border-yellow-500 text-yellow-100";
       default:
-        return 'bg-blue-900/90 border-blue-500 text-blue-100';
+        return "bg-blue-900/90 border-blue-500 text-blue-100";
     }
   };
 
   const getIcon = () => {
     switch (event.type) {
-      case 'high_risk_detected':
+      case "high_risk_detected":
         return <AlertTriangle className="w-5 h-5" />;
-      case 'scan_completed':
+      case "scan_completed":
         return <Shield className="w-5 h-5" />;
-      case 'address_activity':
+      case "address_activity":
         return <Target className="w-5 h-5" />;
-      case 'bot_activity':
+      case "bot_activity":
         return <Bot className="w-5 h-5" />;
       default:
         return <Activity className="w-5 h-5" />;
@@ -50,16 +54,16 @@ function NotificationItem({ event, onDismiss }: NotificationItemProps) {
     }
 
     switch (event.type) {
-      case 'high_risk_detected':
+      case "high_risk_detected":
         return `High-risk token detected: ${event.data.address?.slice(0, 8)}... (Risk: ${event.data.riskScore}/100)`;
-      case 'scan_completed':
+      case "scan_completed":
         return `Scan completed for ${event.data.blockchain}: ${event.data.address?.slice(0, 8)}...`;
-      case 'address_activity':
+      case "address_activity":
         return `Suspicious activity on ${event.data.blockchain}: ${event.data.address?.slice(0, 8)}...`;
-      case 'bot_activity':
-        return event.data.botAction || 'Bot activity detected';
+      case "bot_activity":
+        return event.data.botAction || "Bot activity detected";
       default:
-        return 'System event detected';
+        return "System event detected";
     }
   };
 
@@ -80,32 +84,28 @@ function NotificationItem({ event, onDismiss }: NotificationItemProps) {
   };
 
   return (
-    <div 
+    <div
       className={`
         relative p-4 rounded-lg border backdrop-blur-sm transition-all duration-300 
         ${getSeverityColors()}
-        ${isVisible ? 'transform translate-x-0 opacity-100' : 'transform translate-x-full opacity-0'}
+        ${isVisible ? "transform translate-x-0 opacity-100" : "transform translate-x-full opacity-0"}
       `}
     >
       {/* Animated border glow */}
       <div className="absolute inset-0 rounded-lg border border-current opacity-20 animate-pulse pointer-events-none" />
-      
+
       <div className="flex items-start space-x-3 relative z-10">
-        <div className="flex-shrink-0 mt-0.5">
-          {getIcon()}
-        </div>
-        
+        <div className="flex-shrink-0 mt-0.5">{getIcon()}</div>
+
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <span className="font-mono text-xs uppercase font-bold tracking-wider">
                 {event.severity} threat
               </span>
-              <span className="text-xs opacity-75">
-                {formatTime()}
-              </span>
+              <span className="text-xs opacity-75">{formatTime()}</span>
             </div>
-            
+
             <button
               onClick={() => onDismiss(event.id)}
               className="flex-shrink-0 text-current opacity-60 hover:opacity-100 transition-opacity"
@@ -113,11 +113,9 @@ function NotificationItem({ event, onDismiss }: NotificationItemProps) {
               <X className="w-4 h-4" />
             </button>
           </div>
-          
-          <p className="mt-1 text-sm font-medium">
-            {formatMessage()}
-          </p>
-          
+
+          <p className="mt-1 text-sm font-medium">{formatMessage()}</p>
+
           {/* Additional details */}
           <div className="mt-2 flex flex-wrap gap-2 text-xs">
             {event.data.blockchain && (
@@ -146,12 +144,13 @@ function NotificationItem({ event, onDismiss }: NotificationItemProps) {
 }
 
 export default function GlobalThreatNotifications() {
-  const { notifications, dismissNotification, clearAllNotifications } = useRealTimeNotifications();
+  const { notifications, dismissNotification, clearAllNotifications } =
+    useRealTimeNotifications();
   const [isMinimized, setIsMinimized] = useState(false);
 
   // Auto-expand when new critical notifications arrive
   useEffect(() => {
-    const hasCritical = notifications.some(n => n.severity === 'critical');
+    const hasCritical = notifications.some((n) => n.severity === "critical");
     if (hasCritical && isMinimized) {
       setIsMinimized(false);
     }
@@ -169,15 +168,15 @@ export default function GlobalThreatNotifications() {
             LIVE THREATS ({notifications.length})
           </span>
         </div>
-        
+
         <div className="flex items-center space-x-2">
           <button
             onClick={() => setIsMinimized(!isMinimized)}
             className="text-cyber-green hover:text-cyber-blue transition-colors text-xs font-mono"
           >
-            {isMinimized ? 'EXPAND' : 'MINIMIZE'}
+            {isMinimized ? "EXPAND" : "MINIMIZE"}
           </button>
-          
+
           {notifications.length > 1 && (
             <button
               onClick={clearAllNotifications}
@@ -208,7 +207,8 @@ export default function GlobalThreatNotifications() {
           <div className="flex items-center space-x-2">
             <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
             <span className="text-cyber-green font-mono text-xs">
-              {notifications.filter(n => n.severity === 'critical').length} critical threats
+              {notifications.filter((n) => n.severity === "critical").length}{" "}
+              critical threats
             </span>
           </div>
         </div>
@@ -228,9 +228,11 @@ export function GlobalStatsIndicator() {
       <div className="flex items-center space-x-4 px-4 py-2 bg-dark-bg/90 border border-cyber-green/30 rounded-lg backdrop-blur-sm">
         {/* Connection status */}
         <div className="flex items-center space-x-2">
-          <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-cyber-green animate-pulse' : 'bg-red-500'}`} />
+          <div
+            className={`w-2 h-2 rounded-full ${isConnected ? "bg-cyber-green animate-pulse" : "bg-red-500"}`}
+          />
           <span className="text-xs font-mono text-cyber-green">
-            {isConnected ? 'LIVE' : 'OFFLINE'}
+            {isConnected ? "LIVE" : "OFFLINE"}
           </span>
         </div>
 
@@ -252,14 +254,24 @@ export function GlobalStatsIndicator() {
 
         {/* System health */}
         <div className="flex items-center space-x-2">
-          <Shield className={`w-3 h-3 ${
-            stats.systemHealth === 'healthy' ? 'text-cyber-green' :
-            stats.systemHealth === 'degraded' ? 'text-cyber-orange' : 'text-red-500'
-          }`} />
-          <span className={`text-xs font-mono ${
-            stats.systemHealth === 'healthy' ? 'text-cyber-green' :
-            stats.systemHealth === 'degraded' ? 'text-cyber-orange' : 'text-red-500'
-          }`}>
+          <Shield
+            className={`w-3 h-3 ${
+              stats.systemHealth === "healthy"
+                ? "text-cyber-green"
+                : stats.systemHealth === "degraded"
+                  ? "text-cyber-orange"
+                  : "text-red-500"
+            }`}
+          />
+          <span
+            className={`text-xs font-mono ${
+              stats.systemHealth === "healthy"
+                ? "text-cyber-green"
+                : stats.systemHealth === "degraded"
+                  ? "text-cyber-orange"
+                  : "text-red-500"
+            }`}
+          >
             {stats.systemHealth.toUpperCase()}
           </span>
         </div>
