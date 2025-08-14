@@ -273,7 +273,7 @@ export class EnterpriseSecurityMiddleware {
       this.config.encryption.algorithm,
       this.encryptionKey,
       iv,
-    );
+    ) as crypto.CipherGCM;
     cipher.setAAD(Buffer.from("nimrev-security", "utf8"));
 
     let encrypted = cipher.update(data, "utf8", "hex");
@@ -296,7 +296,7 @@ export class EnterpriseSecurityMiddleware {
       this.config.encryption.algorithm,
       this.encryptionKey,
       Buffer.from(encryptedData.iv, "hex"),
-    );
+    ) as crypto.DecipherGCM;
     decipher.setAAD(Buffer.from("nimrev-security", "utf8"));
     decipher.setAuthTag(Buffer.from(encryptedData.tag, "hex"));
 
