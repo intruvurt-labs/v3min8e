@@ -304,31 +304,88 @@ export default function BotPlatform() {
       return;
     }
 
+    if (balance < PREMIUM_PRICE_SOL) {
+      alert('Insufficient SOL balance');
+      return;
+    }
+
     setIsProcessingPayment(true);
     try {
-      // Simulate payment processing (in production, integrate with Solana)
+      // In production, this would create and sign a real Solana transaction
+      // For demo purposes, simulate the payment process
+
+      // Step 1: Validate wallet connection
+      if (!publicKey) {
+        throw new Error('Wallet not properly connected');
+      }
+
+      // Step 2: Create mock transaction (in production, use @solana/web3.js)
+      const mockTransaction = {
+        from: publicKey,
+        to: "NimRevTreasury1111111111111111111111111111",
+        amount: PREMIUM_PRICE_SOL,
+        timestamp: Date.now(),
+        signature: `mock_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      };
+
+      // Step 3: Simulate transaction signing and confirmation
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // For demo purposes, mark as premium after payment
-      setIsPremium(true);
-      setPaymentSuccess(true);
+      // Step 4: Verify transaction on backend (mock verification)
+      const verificationResponse = await fetch('/api/verify-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          signature: mockTransaction.signature,
+          amount: PREMIUM_PRICE_SOL,
+          wallet: publicKey
+        })
+      }).catch(() => ({ ok: true })); // Mock success for demo
 
-      // Update configs to enable premium features
-      setConfigs(prev => prev.map(config =>
-        config.isPremium ? { ...config, enabled: true } : config
-      ));
+      if (verificationResponse.ok) {
+        // Step 5: Activate premium features
+        setIsPremium(true);
+        setPaymentSuccess(true);
 
-      setTimeout(() => {
-        setIsPaymentOpen(false);
-        setPaymentSuccess(false);
-      }, 3000);
+        // Update configs to enable premium features
+        setConfigs(prev => prev.map(config =>
+          config.isPremium ? { ...config, enabled: true } : config
+        ));
+
+        // Store premium status in localStorage for demo persistence
+        localStorage.setItem('nimrev_premium_status', 'true');
+        localStorage.setItem('nimrev_premium_wallet', publicKey);
+
+        setTimeout(() => {
+          setIsPaymentOpen(false);
+          setPaymentSuccess(false);
+        }, 3000);
+      } else {
+        throw new Error('Payment verification failed');
+      }
 
     } catch (error) {
       console.error('Payment failed:', error);
+      alert(`Payment failed: ${error.message}`);
     } finally {
       setIsProcessingPayment(false);
     }
   };
+
+  // Check for existing premium status on component mount
+  useEffect(() => {
+    const premiumStatus = localStorage.getItem('nimrev_premium_status');
+    const premiumWallet = localStorage.getItem('nimrev_premium_wallet');
+
+    if (premiumStatus === 'true' && premiumWallet === publicKey) {
+      setIsPremium(true);
+      setConfigs(prev => prev.map(config =>
+        config.isPremium ? { ...config, enabled: true } : config
+      ));
+    }
+  }, [publicKey]);
 
   const PREMIUM_PRICE_SOL = 0.045;
 
