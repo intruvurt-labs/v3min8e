@@ -204,31 +204,49 @@ export const cryptoSchemas = {
  * File upload validation
  */
 export const validateFileUpload = (req: Request, res: Response, next: NextFunction) => {
-  if (!req.files || (Array.isArray(req.files) && req.files.length === 0)) {
+  if (!req.file && (!req.files || (Array.isArray(req.files) && req.files.length === 0))) {
     return res.status(400).json({ error: 'No files uploaded' });
   }
-  
-  const files = Array.isArray(req.files) ? req.files : [req.files];
-  
+
+  // Handle both single file and multiple files
+  const files = [];
+  if (req.file) {
+    files.push(req.file);
+  }
+  if (req.files) {
+    if (Array.isArray(req.files)) {
+      files.push(...req.files);
+    } else {
+      // Handle object of arrays (field-specific files)
+      Object.values(req.files).forEach(fileArray => {
+        if (Array.isArray(fileArray)) {
+          files.push(...fileArray);
+        } else {
+          files.push(fileArray);
+        }
+      });
+    }
+  }
+
   for (const file of files) {
     // Type checking for Express.Multer.File
-    if (!file || typeof file !== 'object' || !('originalname' in file)) {
+    if (!file || typeof file !== 'object' || !('originalname' in file) || !('size' in file)) {
       return res.status(400).json({ error: 'Invalid file format' });
     }
-    
+
     // Additional file validation
     const maxSize = 50 * 1024 * 1024; // 50MB
-    if (file.size > maxSize) {
+    if (typeof file.size === 'number' && file.size > maxSize) {
       return res.status(413).json({ error: 'File too large' });
     }
-    
+
     // Check filename for dangerous patterns
     const dangerousPatterns = [/\.\./, /[<>:"|?*]/, /^(CON|PRN|AUX|NUL)$/i];
-    if (dangerousPatterns.some(pattern => pattern.test(file.originalname))) {
+    if (typeof file.originalname === 'string' && dangerousPatterns.some(pattern => pattern.test(file.originalname))) {
       return res.status(400).json({ error: 'Dangerous filename detected' });
     }
   }
-  
+
   next();
 };
 
