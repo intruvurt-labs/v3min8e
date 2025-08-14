@@ -27,7 +27,7 @@ export default function About() {
               />
               <div className="text-left">
                 <h2 className="text-3xl font-cyber font-bold text-cyber-green mb-2">
-                  DOBLEDUCHE
+                 R.Mason aka @DOBLEDUCHE
                 </h2>
                 <p className="text-cyber-blue font-mono text-lg mb-2">
                   Web3 Alchemist & Founder
