@@ -42,19 +42,19 @@ router.get("/status", async (req, res) => {
         {
           type: "success",
           message: "Bot responding to commands",
-          timestamp: Date.now() - 1000
+          timestamp: Date.now() - 1000,
         },
         {
-          type: "info", 
+          type: "info",
           message: "Processing user requests",
-          timestamp: Date.now() - 5000
+          timestamp: Date.now() - 5000,
         },
         {
           type: "success",
           message: "Security scans completed",
-          timestamp: Date.now() - 12000
-        }
-      ]
+          timestamp: Date.now() - 12000,
+        },
+      ],
     };
 
     res.json(systemHealth);
@@ -64,7 +64,7 @@ router.get("/status", async (req, res) => {
       status: "ERROR",
       health: 0,
       lastPing: null,
-      recentActivity: []
+      recentActivity: [],
     });
   }
 });
@@ -79,7 +79,7 @@ router.get("/scanner/status", async (req, res) => {
       currentOperation: "Processing threat analysis",
       currentScanTime: 15000,
       scansCompleted: 1247,
-      threatsDetected: 89
+      threatsDetected: 89,
     };
 
     res.json(scannerHealth);
@@ -90,7 +90,7 @@ router.get("/scanner/status", async (req, res) => {
       activeScans: 0,
       progress: 0,
       currentOperation: "Scanner offline",
-      error: "Failed to fetch scanner status"
+      error: "Failed to fetch scanner status",
     });
   }
 });

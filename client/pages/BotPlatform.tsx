@@ -140,7 +140,8 @@ export default function BotPlatform() {
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
-  const { connected, connect, publicKey, signTransaction, balance } = useWallet();
+  const { connected, connect, publicKey, signTransaction, balance } =
+    useWallet();
 
   // Real-time bot status state
   const [botStatus, setBotStatus] = useState({
@@ -305,7 +306,7 @@ export default function BotPlatform() {
     }
 
     if (balance < PREMIUM_PRICE_SOL) {
-      alert('Insufficient SOL balance');
+      alert("Insufficient SOL balance");
       return;
     }
 
@@ -316,7 +317,7 @@ export default function BotPlatform() {
 
       // Step 1: Validate wallet connection
       if (!publicKey) {
-        throw new Error('Wallet not properly connected');
+        throw new Error("Wallet not properly connected");
       }
 
       // Step 2: Create mock transaction (in production, use @solana/web3.js)
@@ -325,23 +326,23 @@ export default function BotPlatform() {
         to: "NimRevTreasury1111111111111111111111111111",
         amount: PREMIUM_PRICE_SOL,
         timestamp: Date.now(),
-        signature: `mock_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        signature: `mock_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       };
 
       // Step 3: Simulate transaction signing and confirmation
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       // Step 4: Verify transaction on backend (mock verification)
-      const verificationResponse = await fetch('/api/verify-payment', {
-        method: 'POST',
+      const verificationResponse = await fetch("/api/verify-payment", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           signature: mockTransaction.signature,
           amount: PREMIUM_PRICE_SOL,
-          wallet: publicKey
-        })
+          wallet: publicKey,
+        }),
       }).catch(() => ({ ok: true })); // Mock success for demo
 
       if (verificationResponse.ok) {
@@ -350,24 +351,25 @@ export default function BotPlatform() {
         setPaymentSuccess(true);
 
         // Update configs to enable premium features
-        setConfigs(prev => prev.map(config =>
-          config.isPremium ? { ...config, enabled: true } : config
-        ));
+        setConfigs((prev) =>
+          prev.map((config) =>
+            config.isPremium ? { ...config, enabled: true } : config,
+          ),
+        );
 
         // Store premium status in localStorage for demo persistence
-        localStorage.setItem('nimrev_premium_status', 'true');
-        localStorage.setItem('nimrev_premium_wallet', publicKey);
+        localStorage.setItem("nimrev_premium_status", "true");
+        localStorage.setItem("nimrev_premium_wallet", publicKey);
 
         setTimeout(() => {
           setIsPaymentOpen(false);
           setPaymentSuccess(false);
         }, 3000);
       } else {
-        throw new Error('Payment verification failed');
+        throw new Error("Payment verification failed");
       }
-
     } catch (error) {
-      console.error('Payment failed:', error);
+      console.error("Payment failed:", error);
       alert(`Payment failed: ${error.message}`);
     } finally {
       setIsProcessingPayment(false);
@@ -376,14 +378,16 @@ export default function BotPlatform() {
 
   // Check for existing premium status on component mount
   useEffect(() => {
-    const premiumStatus = localStorage.getItem('nimrev_premium_status');
-    const premiumWallet = localStorage.getItem('nimrev_premium_wallet');
+    const premiumStatus = localStorage.getItem("nimrev_premium_status");
+    const premiumWallet = localStorage.getItem("nimrev_premium_wallet");
 
-    if (premiumStatus === 'true' && premiumWallet === publicKey) {
+    if (premiumStatus === "true" && premiumWallet === publicKey) {
       setIsPremium(true);
-      setConfigs(prev => prev.map(config =>
-        config.isPremium ? { ...config, enabled: true } : config
-      ));
+      setConfigs((prev) =>
+        prev.map((config) =>
+          config.isPremium ? { ...config, enabled: true } : config,
+        ),
+      );
     }
   }, [publicKey]);
 
@@ -1390,19 +1394,27 @@ export default function BotPlatform() {
                   <div className="space-y-3 mb-6 text-left">
                     <div className="flex items-center gap-3">
                       <CheckCircle2 className="w-5 h-5 text-cyber-green" />
-                      <span className="text-sm text-gray-300">Advanced Token Gating</span>
+                      <span className="text-sm text-gray-300">
+                        Advanced Token Gating
+                      </span>
                     </div>
                     <div className="flex items-center gap-3">
                       <CheckCircle2 className="w-5 h-5 text-cyber-green" />
-                      <span className="text-sm text-gray-300">One-Click Trading</span>
+                      <span className="text-sm text-gray-300">
+                        One-Click Trading
+                      </span>
                     </div>
                     <div className="flex items-center gap-3">
                       <CheckCircle2 className="w-5 h-5 text-cyber-green" />
-                      <span className="text-sm text-gray-300">Advanced Analytics</span>
+                      <span className="text-sm text-gray-300">
+                        Advanced Analytics
+                      </span>
                     </div>
                     <div className="flex items-center gap-3">
                       <CheckCircle2 className="w-5 h-5 text-cyber-green" />
-                      <span className="text-sm text-gray-300">Priority Support</span>
+                      <span className="text-sm text-gray-300">
+                        Priority Support
+                      </span>
                     </div>
                   </div>
 
@@ -1417,7 +1429,9 @@ export default function BotPlatform() {
                   ) : (
                     <div className="space-y-4">
                       <div className="p-3 bg-cyber-green/10 border border-cyber-green/20 rounded-lg">
-                        <div className="text-xs text-gray-300 mb-1">Connected Wallet:</div>
+                        <div className="text-xs text-gray-300 mb-1">
+                          Connected Wallet:
+                        </div>
                         <div className="text-sm font-mono text-cyber-green">
                           {publicKey?.slice(0, 8)}...{publicKey?.slice(-8)}
                         </div>
@@ -1451,11 +1465,14 @@ export default function BotPlatform() {
                               Insufficient SOL balance
                             </div>
                             <div className="text-xs text-gray-400">
-                              Need {PREMIUM_PRICE_SOL} SOL, have {balance.toFixed(4)} SOL
+                              Need {PREMIUM_PRICE_SOL} SOL, have{" "}
+                              {balance.toFixed(4)} SOL
                             </div>
                           </div>
                           <button
-                            onClick={() => window.open('https://jup.ag', '_blank')}
+                            onClick={() =>
+                              window.open("https://jup.ag", "_blank")
+                            }
                             className="w-full bg-cyber-orange text-white font-bold py-3 px-6 rounded-xl hover:scale-105 transition-all duration-300 font-mono"
                           >
                             Buy SOL on Jupiter
