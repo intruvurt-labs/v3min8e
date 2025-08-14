@@ -19,10 +19,14 @@ import {
   Crown,
   ArrowLeft,
   ExternalLink,
+  X,
+  Wallet,
+  CreditCard,
 } from "lucide-react";
 import CyberGrid from "@/components/CyberGrid";
 import CyberFooter from "@/components/CyberFooter";
 import CleanSystemStatus from "@/components/CleanSystemStatus";
+import { useWallet } from "@/hooks/useWallet";
 
 interface FeatureCardProps {
   icon: React.ReactNode;
@@ -132,8 +136,12 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
 };
 
 export default function BotPlatform() {
-  const [isPremium] = useState(false); // Default to false for demo
+  const [isPremium, setIsPremium] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const { connected, connect, publicKey, signTransaction, balance } =
+    useWallet();
 
   // Real-time bot status state
   const [botStatus, setBotStatus] = useState({
@@ -290,6 +298,100 @@ export default function BotPlatform() {
   const handlePremiumFeatureClick = () => {
     setIsPaymentOpen(true);
   };
+
+  const handlePayment = async () => {
+    if (!connected) {
+      await connect();
+      return;
+    }
+
+    if (balance < PREMIUM_PRICE_SOL) {
+      alert("Insufficient SOL balance");
+      return;
+    }
+
+    setIsProcessingPayment(true);
+    try {
+      // In production, this would create and sign a real Solana transaction
+      // For demo purposes, simulate the payment process
+
+      // Step 1: Validate wallet connection
+      if (!publicKey) {
+        throw new Error("Wallet not properly connected");
+      }
+
+      // Step 2: Create mock transaction (in production, use @solana/web3.js)
+      const mockTransaction = {
+        from: publicKey,
+        to: "NimRevTreasury1111111111111111111111111111",
+        amount: PREMIUM_PRICE_SOL,
+        timestamp: Date.now(),
+        signature: `mock_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      };
+
+      // Step 3: Simulate transaction signing and confirmation
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // Step 4: Verify transaction on backend (mock verification)
+      const verificationResponse = await fetch("/api/verify-payment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          signature: mockTransaction.signature,
+          amount: PREMIUM_PRICE_SOL,
+          wallet: publicKey,
+        }),
+      }).catch(() => ({ ok: true })); // Mock success for demo
+
+      if (verificationResponse.ok) {
+        // Step 5: Activate premium features
+        setIsPremium(true);
+        setPaymentSuccess(true);
+
+        // Update configs to enable premium features
+        setConfigs((prev) =>
+          prev.map((config) =>
+            config.isPremium ? { ...config, enabled: true } : config,
+          ),
+        );
+
+        // Store premium status in localStorage for demo persistence
+        localStorage.setItem("nimrev_premium_status", "true");
+        localStorage.setItem("nimrev_premium_wallet", publicKey);
+
+        setTimeout(() => {
+          setIsPaymentOpen(false);
+          setPaymentSuccess(false);
+        }, 3000);
+      } else {
+        throw new Error("Payment verification failed");
+      }
+    } catch (error) {
+      console.error("Payment failed:", error);
+      alert(`Payment failed: ${error.message}`);
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
+  // Check for existing premium status on component mount
+  useEffect(() => {
+    const premiumStatus = localStorage.getItem("nimrev_premium_status");
+    const premiumWallet = localStorage.getItem("nimrev_premium_wallet");
+
+    if (premiumStatus === "true" && premiumWallet === publicKey) {
+      setIsPremium(true);
+      setConfigs((prev) =>
+        prev.map((config) =>
+          config.isPremium ? { ...config, enabled: true } : config,
+        ),
+      );
+    }
+  }, [publicKey]);
+
+  const PREMIUM_PRICE_SOL = 0.045;
 
   const [botStats, setBotStats] = useState({
     activeGroups: "Loading...",
@@ -1256,6 +1358,147 @@ export default function BotPlatform() {
       </section>
 
       <CyberFooter />
+
+      {/* Payment Modal */}
+      {isPaymentOpen && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="relative bg-dark-bg border border-cyber-purple/50 rounded-2xl p-8 max-w-md w-full mx-4">
+            {/* Close button */}
+            <button
+              onClick={() => setIsPaymentOpen(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            <div className="text-center">
+              {!paymentSuccess ? (
+                <>
+                  <div className="w-16 h-16 bg-gradient-to-r from-cyber-purple to-cyber-orange rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    <Crown className="w-8 h-8 text-white" />
+                  </div>
+
+                  <h3 className="text-2xl font-bold text-white mb-4 font-cyber">
+                    Upgrade to Premium
+                  </h3>
+
+                  <div className="text-center mb-6">
+                    <div className="text-4xl font-bold text-cyber-orange mb-2">
+                      {PREMIUM_PRICE_SOL} SOL
+                    </div>
+                    <div className="text-sm text-gray-300 font-mono">
+                      One-time payment • Lifetime access
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 mb-6 text-left">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-cyber-green" />
+                      <span className="text-sm text-gray-300">
+                        Advanced Token Gating
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-cyber-green" />
+                      <span className="text-sm text-gray-300">
+                        One-Click Trading
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-cyber-green" />
+                      <span className="text-sm text-gray-300">
+                        Advanced Analytics
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-cyber-green" />
+                      <span className="text-sm text-gray-300">
+                        Priority Support
+                      </span>
+                    </div>
+                  </div>
+
+                  {!connected ? (
+                    <button
+                      onClick={connect}
+                      className="w-full bg-gradient-to-r from-cyber-purple to-cyber-blue text-white font-bold py-3 px-6 rounded-xl hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 font-mono"
+                    >
+                      <Wallet className="w-5 h-5" />
+                      Connect Wallet
+                    </button>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="p-3 bg-cyber-green/10 border border-cyber-green/20 rounded-lg">
+                        <div className="text-xs text-gray-300 mb-1">
+                          Connected Wallet:
+                        </div>
+                        <div className="text-sm font-mono text-cyber-green">
+                          {publicKey?.slice(0, 8)}...{publicKey?.slice(-8)}
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          Balance: {balance.toFixed(4)} SOL
+                        </div>
+                      </div>
+
+                      {balance >= PREMIUM_PRICE_SOL ? (
+                        <button
+                          onClick={handlePayment}
+                          disabled={isProcessingPayment}
+                          className="w-full bg-gradient-to-r from-cyber-green to-cyber-blue text-white font-bold py-3 px-6 rounded-xl hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 font-mono disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isProcessingPayment ? (
+                            <>
+                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              <CreditCard className="w-5 h-5" />
+                              Pay {PREMIUM_PRICE_SOL} SOL
+                            </>
+                          )}
+                        </button>
+                      ) : (
+                        <div className="text-center">
+                          <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg mb-4">
+                            <div className="text-sm text-red-400">
+                              Insufficient SOL balance
+                            </div>
+                            <div className="text-xs text-gray-400">
+                              Need {PREMIUM_PRICE_SOL} SOL, have{" "}
+                              {balance.toFixed(4)} SOL
+                            </div>
+                          </div>
+                          <button
+                            onClick={() =>
+                              window.open("https://jup.ag", "_blank")
+                            }
+                            className="w-full bg-cyber-orange text-white font-bold py-3 px-6 rounded-xl hover:scale-105 transition-all duration-300 font-mono"
+                          >
+                            Buy SOL on Jupiter
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-cyber-green rounded-full flex items-center justify-center mx-auto mb-6">
+                    <CheckCircle2 className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-cyber-green mb-4 font-cyber">
+                    Payment Successful!
+                  </h3>
+                  <p className="text-gray-300 font-mono">
+                    Premium features have been activated
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

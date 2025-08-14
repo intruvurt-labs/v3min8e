@@ -15,6 +15,9 @@ import {
 // Import bot routes
 import botRoutes from "./bot";
 
+// Import payment routes
+import paymentRoutes from "./payment";
+
 // Import security audit routes
 import securityAuditRoutes from "./security-audit";
 
@@ -75,6 +78,9 @@ export function setupRoutes(app: Express) {
 
   // Bot platform routes
   app.use("/api/bot", botRoutes);
+
+  // Payment routes
+  app.use("/api", paymentRoutes);
 
   // Security audit routes
   app.use("/api/security-audit", securityAuditRoutes);

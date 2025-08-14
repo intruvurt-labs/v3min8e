@@ -501,7 +501,7 @@ export function AddressWatchlist() {
                             {Object.entries(activity.details).map(
                               ([key, value]) => (
                                 <span key={key} className="mr-4">
-                                  {key}: {value}
+                                  {key}: {String(value)}
                                 </span>
                               ),
                             )}

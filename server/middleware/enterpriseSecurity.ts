@@ -6,6 +6,13 @@ import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import { createClient } from "@supabase/supabase-js";
 
+// Extend Request interface to include sessionID
+declare module "express-serve-static-core" {
+  interface Request {
+    sessionID?: string;
+  }
+}
+
 // Enterprise-grade security configuration
 export interface SecurityConfig {
   jwtSecret: string;
@@ -262,15 +269,16 @@ export class EnterpriseSecurityMiddleware {
     tag: string;
   } {
     const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipher(
+    const cipher = crypto.createCipheriv(
       this.config.encryption.algorithm,
       this.encryptionKey,
-    );
+      iv,
+    ) as crypto.CipherGCM;
     cipher.setAAD(Buffer.from("nimrev-security", "utf8"));
 
     let encrypted = cipher.update(data, "utf8", "hex");
     encrypted += cipher.final("hex");
-    const tag = (cipher as any).getAuthTag().toString("hex");
+    const tag = cipher.getAuthTag().toString("hex");
 
     return {
       encrypted,
@@ -284,12 +292,13 @@ export class EnterpriseSecurityMiddleware {
     iv: string;
     tag: string;
   }): string {
-    const decipher = crypto.createDecipher(
+    const decipher = crypto.createDecipheriv(
       this.config.encryption.algorithm,
       this.encryptionKey,
-    );
+      Buffer.from(encryptedData.iv, "hex"),
+    ) as crypto.DecipherGCM;
     decipher.setAAD(Buffer.from("nimrev-security", "utf8"));
-    (decipher as any).setAuthTag(Buffer.from(encryptedData.tag, "hex"));
+    decipher.setAuthTag(Buffer.from(encryptedData.tag, "hex"));
 
     let decrypted = decipher.update(encryptedData.encrypted, "hex", "utf8");
     decrypted += decipher.final("utf8");

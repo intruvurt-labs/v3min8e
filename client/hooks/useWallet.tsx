@@ -15,6 +15,9 @@ interface WalletContextType {
   disconnect: () => void;
   signTransaction: (transaction: any) => Promise<any>;
   signMessage: (message: string) => Promise<string>;
+  // Backward compatibility aliases
+  walletConnected: boolean;
+  connectWallet: () => Promise<void>;
 }
 
 // Default context value to prevent null context issues
@@ -31,6 +34,9 @@ const defaultWalletContext: WalletContextType = {
   signMessage: async () => {
     throw new Error("Wallet not initialized");
   },
+  // Backward compatibility aliases
+  walletConnected: false,
+  connectWallet: async () => {},
 };
 
 const WalletContext = createContext<WalletContextType>(defaultWalletContext);
@@ -385,6 +391,9 @@ export function WalletProvider({ children }: WalletProviderProps) {
     disconnect,
     signTransaction,
     signMessage,
+    // Backward compatibility aliases
+    walletConnected: connected,
+    connectWallet: connect,
   };
 
   return (

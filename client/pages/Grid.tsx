@@ -816,8 +816,8 @@ export default function Grid() {
   const generateIntelligenceReport = (result: SubversiveScanResult): string => {
     const { threatScore, subversiveAnalysis } = result;
 
-    if (threatScore.risk === "critical" || threatScore.risk === "high") {
-      return `🚨 NIMREV SECURITY ALERT 🚨\n\n⚠️ HIGH RISK DETECTED - Exercise extreme caution!\nThreat Score: ${threatScore.score}/100\nConfidence: ${threatScore.confidence}%\n\nFindings:\n${subversiveAnalysis.feeTrapDetected ? "• Fee trap mechanism detected\n" : ""}${subversiveAnalysis.hiddenMintAuthority ? "• Hidden mint authority found\n" : ""}• Social footprint: ${subversiveAnalysis.socialFootprint}\n\n🚨 RECOMMENDATION: AVOID OR PROCEED WITH EXTREME CAUTION`;
+    if (threatScore.risk === "high") {
+      return `��� NIMREV SECURITY ALERT 🚨\n\n⚠️ HIGH RISK DETECTED - Exercise extreme caution!\nThreat Score: ${threatScore.score}/100\nConfidence: ${threatScore.confidence}%\n\nFindings:\n${subversiveAnalysis.feeTrapDetected ? "• Fee trap mechanism detected\n" : ""}${subversiveAnalysis.hiddenMintAuthority ? "• Hidden mint authority found\n" : ""}• Social footprint: ${subversiveAnalysis.socialFootprint}\n\n🚨 RECOMMENDATION: AVOID OR PROCEED WITH EXTREME CAUTION`;
     } else if (threatScore.risk === "medium") {
       return `⚠️ NIMREV SECURITY REPORT ⚠️\n\nMODERATE RISK DETECTED\nThreat Score: ${threatScore.score}/100\nConfidence: ${threatScore.confidence}%\n\nContract appears to have some risk factors but may be legitimate.\nRecommend additional research and limited exposure.\n\n💡 RECOMMENDATION: PROCEED WITH CAUTION`;
     } else {

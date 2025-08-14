@@ -249,10 +249,13 @@ export const getPublicScans: RequestHandler = async (req, res) => {
       query = query.gte("created_at", startDate.toISOString());
     }
 
-    // Apply search filter
+    // Apply search filter with proper sanitization
     if (search) {
+      const sanitizedSearch = search
+        .replace(/[%_\\]/g, "\\$&")
+        .replace(/'/g, "''");
       query = query.or(
-        `token_address.ilike.%${search}%,token_symbol.ilike.%${search}%,ipfs_hash.ilike.%${search}%`,
+        `token_address.ilike.%${sanitizedSearch}%,token_symbol.ilike.%${sanitizedSearch}%,ipfs_hash.ilike.%${sanitizedSearch}%`,
       );
     }
 
