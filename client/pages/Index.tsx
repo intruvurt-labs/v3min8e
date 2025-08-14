@@ -410,7 +410,7 @@ export default function Index() {
                     </span>
                   </div>
                   <Link
-                    to="/bot-platform"
+                    to="/botplatform"
                     className="text-cyber-purple hover:text-cyber-blue transition-colors font-mono text-xs underline"
                   >
                     View Platform →
@@ -431,7 +431,7 @@ export default function Index() {
                     </span>
                   </div>
                   <Link
-                    to="/security-audit"
+                    to="/securityaudit"
                     className="text-cyber-orange hover:text-cyber-blue transition-colors font-mono text-xs underline"
                   >
                     Get Audit →
