@@ -56,7 +56,7 @@ export default function Staking() {
       apr: 9.8,
       minimumStake: 1000,
       lockPeriod: 0, // No lock period
-      programId: "StakeVERM1111111111111111111111111111111111111",
+      programId: "4gPquGRAh4cLqLGXKu6TdeeqTp5MA8N6KDriPaSRhc86",
     },
     {
       token: "GRIT",
