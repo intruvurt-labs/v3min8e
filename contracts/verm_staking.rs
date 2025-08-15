@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Token, TokenAccount, Mint, Transfer};
 
-declare_id!("StakeVERM1111111111111111111111111111111111111");
+declare_id!("4gPquGRAh4cLqLGXKu6TdeeqTp5MA8N6KDriPaSRhc86");
 
 #[program]
 pub mod verm_staking {
