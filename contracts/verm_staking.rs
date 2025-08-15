@@ -11,7 +11,7 @@ pub mod verm_staking {
         let stake_pool = &mut ctx.accounts.stake_pool;
         stake_pool.authority = ctx.accounts.authority.key();
         stake_pool.total_staked = 0;
-        stake_pool.reward_rate = 2460; // 246% APR in basis points
+        stake_pool.reward_rate = 24600; // 246% APR in basis points
         stake_pool.bump = bump;
         stake_pool.last_update_slot = Clock::get()?.slot;
         Ok(())
