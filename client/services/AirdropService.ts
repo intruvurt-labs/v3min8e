@@ -76,26 +76,28 @@ export interface ApiResponse<T> {
 }
 
 class AirdropService {
-  private baseUrl = '/api/airdrop';
+  private baseUrl = "/api/airdrop";
 
   // Helper method for API requests
   private async apiRequest<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
   ): Promise<ApiResponse<T>> {
     try {
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           ...options.headers,
         },
         ...options,
       });
 
       const data = await response.json();
-      
+
       if (!response.ok) {
-        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+        throw new Error(
+          data.message || `HTTP error! status: ${response.status}`,
+        );
       }
 
       return data;
@@ -103,35 +105,42 @@ class AirdropService {
       console.error(`API request failed for ${endpoint}:`, error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        error:
+          error instanceof Error ? error.message : "Unknown error occurred",
       };
     }
   }
 
   // Verify bot token
-  async verifyBotToken(request: BotTokenVerificationRequest): Promise<ApiResponse<any>> {
-    return this.apiRequest('/verify-bot-token', {
-      method: 'POST',
+  async verifyBotToken(
+    request: BotTokenVerificationRequest,
+  ): Promise<ApiResponse<any>> {
+    return this.apiRequest("/verify-bot-token", {
+      method: "POST",
       body: JSON.stringify(request),
     });
   }
 
   // Verify task completion
-  async verifyTask(request: TaskVerificationRequest): Promise<ApiResponse<any>> {
-    return this.apiRequest('/verify-task', {
-      method: 'POST',
+  async verifyTask(
+    request: TaskVerificationRequest,
+  ): Promise<ApiResponse<any>> {
+    return this.apiRequest("/verify-task", {
+      method: "POST",
       body: JSON.stringify(request),
     });
   }
 
   // Get leaderboard
-  async getLeaderboard(): Promise<ApiResponse<{ leaderboard: LeaderboardEntry[] }>> {
-    return this.apiRequest('/leaderboard');
+  async getLeaderboard(): Promise<
+    ApiResponse<{ leaderboard: LeaderboardEntry[] }>
+  > {
+    return this.apiRequest("/leaderboard");
   }
 
   // Get airdrop statistics
   async getStats(): Promise<ApiResponse<AirdropStats>> {
-    return this.apiRequest('/stats');
+    return this.apiRequest("/stats");
   }
 
   // Get user progress
@@ -142,53 +151,53 @@ class AirdropService {
   // Local storage helpers
   saveUserProgress(progress: UserProgress): void {
     try {
-      localStorage.setItem('nimrev_airdrop_progress', JSON.stringify(progress));
+      localStorage.setItem("nimrev_airdrop_progress", JSON.stringify(progress));
     } catch (error) {
-      console.error('Failed to save user progress:', error);
+      console.error("Failed to save user progress:", error);
     }
   }
 
   loadUserProgress(): UserProgress | null {
     try {
-      const saved = localStorage.getItem('nimrev_airdrop_progress');
+      const saved = localStorage.getItem("nimrev_airdrop_progress");
       return saved ? JSON.parse(saved) : null;
     } catch (error) {
-      console.error('Failed to load user progress:', error);
+      console.error("Failed to load user progress:", error);
       return null;
     }
   }
 
   saveTaskProgress(tasks: AirdropTask[]): void {
     try {
-      localStorage.setItem('nimrev_airdrop_tasks', JSON.stringify(tasks));
+      localStorage.setItem("nimrev_airdrop_tasks", JSON.stringify(tasks));
     } catch (error) {
-      console.error('Failed to save task progress:', error);
+      console.error("Failed to save task progress:", error);
     }
   }
 
   loadTaskProgress(): AirdropTask[] | null {
     try {
-      const saved = localStorage.getItem('nimrev_airdrop_tasks');
+      const saved = localStorage.getItem("nimrev_airdrop_tasks");
       return saved ? JSON.parse(saved) : null;
     } catch (error) {
-      console.error('Failed to load task progress:', error);
+      console.error("Failed to load task progress:", error);
       return null;
     }
   }
 
   // Validate bot token format
   validateBotToken(token: string): { valid: boolean; error?: string } {
-    if (!token || typeof token !== 'string') {
-      return { valid: false, error: 'Bot token is required' };
+    if (!token || typeof token !== "string") {
+      return { valid: false, error: "Bot token is required" };
     }
 
     // Telegram bot token format: {bot_id}:{auth_token}
     const botTokenRegex = /^\d{8,10}:[A-Za-z0-9_-]{35}$/;
-    
+
     if (!botTokenRegex.test(token)) {
-      return { 
-        valid: false, 
-        error: 'Invalid bot token format. Should be: {bot_id}:{auth_token}' 
+      return {
+        valid: false,
+        error: "Invalid bot token format. Should be: {bot_id}:{auth_token}",
       };
     }
 
@@ -209,7 +218,7 @@ class AirdropService {
   // Calculate next milestone
   calculateNextMilestone(totalEarned: number): number {
     const milestones = [100, 500, 1000, 2000, 5000, 10000, 20000];
-    return milestones.find(milestone => milestone > totalEarned) || 50000;
+    return milestones.find((milestone) => milestone > totalEarned) || 50000;
   }
 
   // Check if task is available
@@ -225,20 +234,22 @@ class AirdropService {
 
     // Check specific task requirements
     switch (task.id) {
-      case 'legendary_hunter':
+      case "legendary_hunter":
         // Requires all other tasks completed and 1000+ total earned
-        return userProgress.tasksCompleted >= 8 && userProgress.totalEarned >= 1000;
-      
-      case 'refer_5_users':
+        return (
+          userProgress.tasksCompleted >= 8 && userProgress.totalEarned >= 1000
+        );
+
+      case "refer_5_users":
         // Check if user has profile
         return userProgress.totalEarned > 0;
-      
-      case 'premium_trade':
+
+      case "premium_trade":
         // Requires bot token verification
         return userProgress.botTokenVerified;
-      
+
       default:
-        return task.status !== 'locked';
+        return task.status !== "locked";
     }
   }
 
@@ -251,54 +262,57 @@ class AirdropService {
   // Parse referral code from URL
   getReferralCode(): string | null {
     const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get('ref');
+    return urlParams.get("ref");
   }
 
   // Calculate reward with multipliers
   calculateReward(task: AirdropTask, userProgress: UserProgress): number {
     let reward = task.reward;
-    
+
     // Apply task multiplier
     if (task.multiplier) {
       reward *= task.multiplier;
     }
-    
+
     // Apply streak multiplier
     if (userProgress.currentStreak >= 7) {
       reward *= 1.5; // 50% bonus for 7+ day streak
     }
-    
+
     // Apply bot verification multiplier
     if (userProgress.botTokenVerified) {
       reward *= 1.25; // 25% bonus for verified bot
     }
-    
+
     return Math.floor(reward);
   }
 
   // Track analytics event
   trackEvent(eventName: string, properties: Record<string, any> = {}): void {
     // In production, this would send to analytics service
-    console.log('Analytics Event:', eventName, properties);
-    
+    console.log("Analytics Event:", eventName, properties);
+
     // Store locally for debugging
-    const events = JSON.parse(localStorage.getItem('nimrev_analytics') || '[]');
+    const events = JSON.parse(localStorage.getItem("nimrev_analytics") || "[]");
     events.push({
       event: eventName,
       properties,
       timestamp: new Date().toISOString(),
     });
-    
+
     // Keep only last 100 events
     if (events.length > 100) {
       events.splice(0, events.length - 100);
     }
-    
-    localStorage.setItem('nimrev_analytics', JSON.stringify(events));
+
+    localStorage.setItem("nimrev_analytics", JSON.stringify(events));
   }
 
   // Social media verification helpers
-  async verifySocialMedia(platform: 'twitter' | 'telegram', username: string): Promise<boolean> {
+  async verifySocialMedia(
+    platform: "twitter" | "telegram",
+    username: string,
+  ): Promise<boolean> {
     // In production, this would call respective APIs
     // For now, simulate verification
     return new Promise((resolve) => {
@@ -332,10 +346,10 @@ class AirdropService {
   // Format numbers for display
   formatNumber(num: number): string {
     if (num >= 1000000) {
-      return (num / 1000000).toFixed(1) + 'M';
+      return (num / 1000000).toFixed(1) + "M";
     }
     if (num >= 1000) {
-      return (num / 1000).toFixed(1) + 'K';
+      return (num / 1000).toFixed(1) + "K";
     }
     return num.toString();
   }
@@ -347,26 +361,28 @@ class AirdropService {
     }
     const hours = Math.floor(minutes / 60);
     if (hours < 24) {
-      return `${hours} hour${hours !== 1 ? 's' : ''}`;
+      return `${hours} hour${hours !== 1 ? "s" : ""}`;
     }
     const days = Math.floor(hours / 24);
-    return `${days} day${days !== 1 ? 's' : ''}`;
+    return `${days} day${days !== 1 ? "s" : ""}`;
   }
 
   // Clean up expired data
   cleanup(): void {
     try {
       // Remove expired analytics events (older than 30 days)
-      const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
-      const events = JSON.parse(localStorage.getItem('nimrev_analytics') || '[]');
-      const validEvents = events.filter((event: any) => 
-        new Date(event.timestamp).getTime() > thirtyDaysAgo
+      const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+      const events = JSON.parse(
+        localStorage.getItem("nimrev_analytics") || "[]",
       );
-      localStorage.setItem('nimrev_analytics', JSON.stringify(validEvents));
-      
-      console.log('Airdrop service cleanup completed');
+      const validEvents = events.filter(
+        (event: any) => new Date(event.timestamp).getTime() > thirtyDaysAgo,
+      );
+      localStorage.setItem("nimrev_analytics", JSON.stringify(validEvents));
+
+      console.log("Airdrop service cleanup completed");
     } catch (error) {
-      console.error('Cleanup failed:', error);
+      console.error("Cleanup failed:", error);
     }
   }
 }

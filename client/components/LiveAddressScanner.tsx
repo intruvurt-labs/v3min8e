@@ -39,7 +39,10 @@ interface LiveScannerProps {
   embedded?: boolean;
 }
 
-export default function LiveAddressScanner({ onScanComplete, embedded = false }: LiveScannerProps) {
+export default function LiveAddressScanner({
+  onScanComplete,
+  embedded = false,
+}: LiveScannerProps) {
   const [address, setAddress] = useState("");
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
@@ -60,11 +63,13 @@ export default function LiveAddressScanner({ onScanComplete, embedded = false }:
       "PATTERN_RECOGNITION",
       "THREAT_ASSESSMENT",
       "RISK_CALCULATION",
-      "SIGNATURE_MATCHING"
+      "SIGNATURE_MATCHING",
     ];
-    
+
     const interval = setInterval(() => {
-      setGlitchText(glitchTexts[Math.floor(Math.random() * glitchTexts.length)]);
+      setGlitchText(
+        glitchTexts[Math.floor(Math.random() * glitchTexts.length)],
+      );
     }, 2000);
 
     return () => clearInterval(interval);
@@ -73,7 +78,7 @@ export default function LiveAddressScanner({ onScanComplete, embedded = false }:
   // Update live stats
   useEffect(() => {
     const interval = setInterval(() => {
-      setLiveStats(prev => ({
+      setLiveStats((prev) => ({
         ...prev,
         totalScans: prev.totalScans + Math.floor(Math.random() * 3),
         lastUpdate: Date.now(),
@@ -99,12 +104,12 @@ export default function LiveAddressScanner({ onScanComplete, embedded = false }:
 
     try {
       // Simulate scanning process with realistic timing
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 1500));
 
       const blockchain = detectBlockchain(address);
       const mockRiskScore = Math.floor(Math.random() * 100);
       const confidence = Math.floor(Math.random() * 30) + 70; // 70-100%
-      
+
       let riskLevel: "safe" | "warning" | "danger" | "critical";
       let findings: string[] = [];
       let suspiciousPatterns: string[] = [];
@@ -139,7 +144,11 @@ export default function LiveAddressScanner({ onScanComplete, embedded = false }:
           "Known malicious address",
           "DO NOT INTERACT",
         ];
-        suspiciousPatterns = ["Known scammer", "Blacklisted address", "Rug pull confirmed"];
+        suspiciousPatterns = [
+          "Known scammer",
+          "Blacklisted address",
+          "Rug pull confirmed",
+        ];
       }
 
       const result: ScanResult = {
@@ -160,19 +169,19 @@ export default function LiveAddressScanner({ onScanComplete, embedded = false }:
       };
 
       setScanResult(result);
-      setScanHistory(prev => [result, ...prev.slice(0, 4)]); // Keep last 5 scans
+      setScanHistory((prev) => [result, ...prev.slice(0, 4)]); // Keep last 5 scans
       onScanComplete?.(result);
 
       // Update stats
-      setLiveStats(prev => ({
+      setLiveStats((prev) => ({
         ...prev,
         totalScans: prev.totalScans + 1,
-        threatsDetected: riskLevel === "danger" || riskLevel === "critical" 
-          ? prev.threatsDetected + 1 
-          : prev.threatsDetected,
+        threatsDetected:
+          riskLevel === "danger" || riskLevel === "critical"
+            ? prev.threatsDetected + 1
+            : prev.threatsDetected,
         safeSites: riskLevel === "safe" ? prev.safeSites + 1 : prev.safeSites,
       }));
-
     } catch (error) {
       console.error("Scan failed:", error);
     } finally {
@@ -182,36 +191,54 @@ export default function LiveAddressScanner({ onScanComplete, embedded = false }:
 
   const getRiskColor = (level: string) => {
     switch (level) {
-      case "safe": return "text-cyber-green";
-      case "warning": return "text-cyber-orange";
-      case "danger": return "text-red-400";
-      case "critical": return "text-red-600";
-      default: return "text-gray-400";
+      case "safe":
+        return "text-cyber-green";
+      case "warning":
+        return "text-cyber-orange";
+      case "danger":
+        return "text-red-400";
+      case "critical":
+        return "text-red-600";
+      default:
+        return "text-gray-400";
     }
   };
 
   const getRiskBorderColor = (level: string) => {
     switch (level) {
-      case "safe": return "border-cyber-green";
-      case "warning": return "border-cyber-orange";
-      case "danger": return "border-red-400";
-      case "critical": return "border-red-600";
-      default: return "border-gray-400";
+      case "safe":
+        return "border-cyber-green";
+      case "warning":
+        return "border-cyber-orange";
+      case "danger":
+        return "border-red-400";
+      case "critical":
+        return "border-red-600";
+      default:
+        return "border-gray-400";
     }
   };
 
   const getRiskIcon = (level: string) => {
     switch (level) {
-      case "safe": return <CheckCircle className="w-5 h-5" />;
-      case "warning": return <AlertTriangle className="w-5 h-5" />;
-      case "danger": return <Shield className="w-5 h-5" />;
-      case "critical": return <Skull className="w-5 h-5" />;
-      default: return <Search className="w-5 h-5" />;
+      case "safe":
+        return <CheckCircle className="w-5 h-5" />;
+      case "warning":
+        return <AlertTriangle className="w-5 h-5" />;
+      case "danger":
+        return <Shield className="w-5 h-5" />;
+      case "critical":
+        return <Skull className="w-5 h-5" />;
+      default:
+        return <Search className="w-5 h-5" />;
     }
   };
 
   const formatTimestamp = (timestamp: number) => {
-    return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return new Date(timestamp).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   const formatBalance = (balance: number, blockchain: string) => {
@@ -246,13 +273,17 @@ export default function LiveAddressScanner({ onScanComplete, embedded = false }:
 
         {/* Compact Results */}
         {scanResult && (
-          <div className={`p-3 rounded-lg border ${getRiskBorderColor(scanResult.riskLevel)} bg-${scanResult.riskLevel === 'safe' ? 'cyber-green' : scanResult.riskLevel === 'warning' ? 'cyber-orange' : 'red-500'}/10`}>
+          <div
+            className={`p-3 rounded-lg border ${getRiskBorderColor(scanResult.riskLevel)} bg-${scanResult.riskLevel === "safe" ? "cyber-green" : scanResult.riskLevel === "warning" ? "cyber-orange" : "red-500"}/10`}
+          >
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <div className={getRiskColor(scanResult.riskLevel)}>
                   {getRiskIcon(scanResult.riskLevel)}
                 </div>
-                <span className={`font-cyber font-bold text-sm ${getRiskColor(scanResult.riskLevel)}`}>
+                <span
+                  className={`font-cyber font-bold text-sm ${getRiskColor(scanResult.riskLevel)}`}
+                >
                   {scanResult.riskLevel.toUpperCase()}
                 </span>
               </div>
@@ -262,7 +293,9 @@ export default function LiveAddressScanner({ onScanComplete, embedded = false }:
             </div>
             <div className="text-xs space-y-1">
               {scanResult.findings.slice(0, 2).map((finding, i) => (
-                <div key={i} className="text-gray-300">• {finding}</div>
+                <div key={i} className="text-gray-300">
+                  • {finding}
+                </div>
               ))}
             </div>
           </div>
@@ -277,11 +310,14 @@ export default function LiveAddressScanner({ onScanComplete, embedded = false }:
       <div className="text-center">
         <div className="inline-flex items-center gap-2 bg-dark-bg/60 border border-cyber-green/30 rounded-lg px-4 py-2 mb-4">
           <Brain className="w-5 h-5 text-cyber-green animate-pulse" />
-          <span className="text-cyber-green font-cyber font-bold glitch" data-text={glitchText}>
+          <span
+            className="text-cyber-green font-cyber font-bold glitch"
+            data-text={glitchText}
+          >
             {glitchText}
           </span>
         </div>
-        
+
         <h2 className="text-3xl font-cyber font-bold text-cyber-green mb-2 neon-glow">
           LIVE ADDRESS SCANNER
         </h2>
@@ -299,7 +335,7 @@ export default function LiveAddressScanner({ onScanComplete, embedded = false }:
           </div>
           <div className="text-xs text-gray-400 font-mono">Total Scans</div>
         </div>
-        
+
         <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-center">
           <Shield className="w-6 h-6 text-red-400 mx-auto mb-2" />
           <div className="text-2xl font-cyber font-bold text-red-400">
@@ -307,7 +343,7 @@ export default function LiveAddressScanner({ onScanComplete, embedded = false }:
           </div>
           <div className="text-xs text-gray-400 font-mono">Threats Blocked</div>
         </div>
-        
+
         <div className="bg-cyber-blue/10 border border-cyber-blue/30 rounded-lg p-4 text-center">
           <CheckCircle className="w-6 h-6 text-cyber-blue mx-auto mb-2" />
           <div className="text-2xl font-cyber font-bold text-cyber-blue">
@@ -315,7 +351,7 @@ export default function LiveAddressScanner({ onScanComplete, embedded = false }:
           </div>
           <div className="text-xs text-gray-400 font-mono">Safe Addresses</div>
         </div>
-        
+
         <div className="bg-cyber-purple/10 border border-cyber-purple/30 rounded-lg p-4 text-center">
           <Clock className="w-6 h-6 text-cyber-purple mx-auto mb-2" />
           <div className="text-sm font-cyber font-bold text-cyber-purple">
@@ -354,7 +390,7 @@ export default function LiveAddressScanner({ onScanComplete, embedded = false }:
             )}
           </button>
         </div>
-        
+
         <div className="mt-3 text-xs font-mono text-gray-400 text-center">
           🆓 Free scans • 🔒 No data stored • ⚡ Instant results
         </div>
@@ -366,15 +402,18 @@ export default function LiveAddressScanner({ onScanComplete, embedded = false }:
           <div className="text-center">
             <div className="inline-flex items-center gap-3 mb-4">
               <Search className="w-6 h-6 text-cyber-blue animate-spin" />
-              <span className="text-cyber-blue font-cyber font-bold">ANALYZING ADDRESS...</span>
+              <span className="text-cyber-blue font-cyber font-bold">
+                ANALYZING ADDRESS...
+              </span>
             </div>
-            
+
             <div className="space-y-2">
               <div className="h-2 bg-dark-bg rounded-full overflow-hidden">
                 <div className="h-full bg-gradient-to-r from-cyber-green to-cyber-blue animate-pulse w-3/4"></div>
               </div>
               <p className="text-xs font-mono text-gray-400">
-                Running neural pattern analysis • Checking threat databases • Analyzing transaction history
+                Running neural pattern analysis • Checking threat databases •
+                Analyzing transaction history
               </p>
             </div>
           </div>
@@ -382,29 +421,40 @@ export default function LiveAddressScanner({ onScanComplete, embedded = false }:
       )}
 
       {scanResult && (
-        <div className={`border ${getRiskBorderColor(scanResult.riskLevel)} rounded-lg overflow-hidden`}>
+        <div
+          className={`border ${getRiskBorderColor(scanResult.riskLevel)} rounded-lg overflow-hidden`}
+        >
           {/* Result Header */}
-          <div className={`bg-${scanResult.riskLevel === 'safe' ? 'cyber-green' : scanResult.riskLevel === 'warning' ? 'cyber-orange' : 'red-500'}/20 p-4 border-b ${getRiskBorderColor(scanResult.riskLevel)}`}>
+          <div
+            className={`bg-${scanResult.riskLevel === "safe" ? "cyber-green" : scanResult.riskLevel === "warning" ? "cyber-orange" : "red-500"}/20 p-4 border-b ${getRiskBorderColor(scanResult.riskLevel)}`}
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className={getRiskColor(scanResult.riskLevel)}>
                   {getRiskIcon(scanResult.riskLevel)}
                 </div>
                 <div>
-                  <h3 className={`text-lg font-cyber font-bold ${getRiskColor(scanResult.riskLevel)}`}>
+                  <h3
+                    className={`text-lg font-cyber font-bold ${getRiskColor(scanResult.riskLevel)}`}
+                  >
                     {scanResult.riskLevel.toUpperCase()} ADDRESS
                   </h3>
                   <p className="text-sm font-mono text-gray-400">
-                    {scanResult.blockchain.toUpperCase()} • {formatTimestamp(scanResult.timestamp)}
+                    {scanResult.blockchain.toUpperCase()} •{" "}
+                    {formatTimestamp(scanResult.timestamp)}
                   </p>
                 </div>
               </div>
-              
+
               <div className="text-right">
-                <div className={`text-2xl font-cyber font-bold ${getRiskColor(scanResult.riskLevel)}`}>
+                <div
+                  className={`text-2xl font-cyber font-bold ${getRiskColor(scanResult.riskLevel)}`}
+                >
                   {scanResult.riskScore}/100
                 </div>
-                <div className="text-xs text-gray-400 font-mono">Risk Score</div>
+                <div className="text-xs text-gray-400 font-mono">
+                  Risk Score
+                </div>
               </div>
             </div>
           </div>
@@ -413,56 +463,85 @@ export default function LiveAddressScanner({ onScanComplete, embedded = false }:
           <div className="p-4 bg-dark-bg/60">
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <h4 className="text-sm font-cyber font-bold text-cyber-green mb-3">SCAN FINDINGS</h4>
+                <h4 className="text-sm font-cyber font-bold text-cyber-green mb-3">
+                  SCAN FINDINGS
+                </h4>
                 <div className="space-y-2">
                   {scanResult.findings.map((finding, i) => (
                     <div key={i} className="flex items-start gap-2">
                       <div className="w-1 h-1 bg-cyber-green rounded-full mt-2"></div>
-                      <span className="text-sm text-gray-300 font-mono">{finding}</span>
+                      <span className="text-sm text-gray-300 font-mono">
+                        {finding}
+                      </span>
                     </div>
                   ))}
                 </div>
-                
+
                 {scanResult.details.suspiciousPatterns.length > 0 && (
                   <div className="mt-4">
-                    <h5 className="text-sm font-cyber font-bold text-red-400 mb-2">THREAT PATTERNS</h5>
+                    <h5 className="text-sm font-cyber font-bold text-red-400 mb-2">
+                      THREAT PATTERNS
+                    </h5>
                     <div className="space-y-1">
-                      {scanResult.details.suspiciousPatterns.map((pattern, i) => (
-                        <div key={i} className="flex items-start gap-2">
-                          <AlertTriangle className="w-3 h-3 text-red-400 mt-1" />
-                          <span className="text-xs text-red-300 font-mono">{pattern}</span>
-                        </div>
-                      ))}
+                      {scanResult.details.suspiciousPatterns.map(
+                        (pattern, i) => (
+                          <div key={i} className="flex items-start gap-2">
+                            <AlertTriangle className="w-3 h-3 text-red-400 mt-1" />
+                            <span className="text-xs text-red-300 font-mono">
+                              {pattern}
+                            </span>
+                          </div>
+                        ),
+                      )}
                     </div>
                   </div>
                 )}
               </div>
-              
+
               <div>
-                <h4 className="text-sm font-cyber font-bold text-cyber-blue mb-3">ADDRESS DETAILS</h4>
+                <h4 className="text-sm font-cyber font-bold text-cyber-blue mb-3">
+                  ADDRESS DETAILS
+                </h4>
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-xs text-gray-400 font-mono">Transactions:</span>
-                    <span className="text-xs text-white font-mono">{scanResult.details.transactionCount.toLocaleString()}</span>
-                  </div>
-                  
-                  <div className="flex justify-between">
-                    <span className="text-xs text-gray-400 font-mono">Balance:</span>
+                    <span className="text-xs text-gray-400 font-mono">
+                      Transactions:
+                    </span>
                     <span className="text-xs text-white font-mono">
-                      {formatBalance(scanResult.details.balance, scanResult.blockchain)}
+                      {scanResult.details.transactionCount.toLocaleString()}
                     </span>
                   </div>
-                  
+
                   <div className="flex justify-between">
-                    <span className="text-xs text-gray-400 font-mono">Reputation:</span>
-                    <span className={`text-xs font-mono ${scanResult.details.reputation > 70 ? 'text-cyber-green' : scanResult.details.reputation > 40 ? 'text-cyber-orange' : 'text-red-400'}`}>
+                    <span className="text-xs text-gray-400 font-mono">
+                      Balance:
+                    </span>
+                    <span className="text-xs text-white font-mono">
+                      {formatBalance(
+                        scanResult.details.balance,
+                        scanResult.blockchain,
+                      )}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <span className="text-xs text-gray-400 font-mono">
+                      Reputation:
+                    </span>
+                    <span
+                      className={`text-xs font-mono ${scanResult.details.reputation > 70 ? "text-cyber-green" : scanResult.details.reputation > 40 ? "text-cyber-orange" : "text-red-400"}`}
+                    >
                       {scanResult.details.reputation}/100
                     </span>
                   </div>
-                  
+
                   <div className="flex justify-between">
-                    <span className="text-xs text-gray-400 font-mono">Confidence:</span>
-                    <span className="text-xs text-cyber-blue font-mono">{scanResult.confidence}%</span>
+                    <span className="text-xs text-gray-400 font-mono">
+                      Confidence:
+                    </span>
+                    <span className="text-xs text-cyber-blue font-mono">
+                      {scanResult.confidence}%
+                    </span>
                   </div>
                 </div>
               </div>
@@ -474,21 +553,29 @@ export default function LiveAddressScanner({ onScanComplete, embedded = false }:
       {/* Scan History */}
       {scanHistory.length > 0 && (
         <div className="bg-dark-bg/60 border border-cyber-green/30 rounded-lg p-4">
-          <h3 className="text-lg font-cyber font-bold text-cyber-green mb-4">RECENT SCANS</h3>
+          <h3 className="text-lg font-cyber font-bold text-cyber-green mb-4">
+            RECENT SCANS
+          </h3>
           <div className="space-y-2">
             {scanHistory.map((scan, index) => (
-              <div key={index} className="flex items-center justify-between p-2 bg-dark-bg/30 rounded border border-cyber-green/20">
+              <div
+                key={index}
+                className="flex items-center justify-between p-2 bg-dark-bg/30 rounded border border-cyber-green/20"
+              >
                 <div className="flex items-center gap-2">
                   <div className={getRiskColor(scan.riskLevel)}>
                     {getRiskIcon(scan.riskLevel)}
                   </div>
                   <span className="text-xs font-mono text-gray-300">
-                    {scan.address.substring(0, 8)}...{scan.address.substring(-6)}
+                    {scan.address.substring(0, 8)}...
+                    {scan.address.substring(-6)}
                   </span>
                 </div>
-                
+
                 <div className="flex items-center gap-3">
-                  <span className={`text-xs font-cyber font-bold ${getRiskColor(scan.riskLevel)}`}>
+                  <span
+                    className={`text-xs font-cyber font-bold ${getRiskColor(scan.riskLevel)}`}
+                  >
                     {scan.riskLevel.toUpperCase()}
                   </span>
                   <span className="text-xs text-gray-400 font-mono">

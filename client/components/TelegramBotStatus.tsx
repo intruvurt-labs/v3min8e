@@ -48,7 +48,7 @@ export default function TelegramBotStatus({
             method: "GET",
             headers: { "Content-Type": "application/json" },
             signal: controller.signal,
-          }).finally(() => clearTimeout(timeoutId))
+          }).finally(() => clearTimeout(timeoutId)),
         ]);
 
         let botRunning = false;
@@ -73,7 +73,10 @@ export default function TelegramBotStatus({
           const nimrevResponse = responses[1].value;
           if (nimrevResponse.ok) {
             const nimrevData = await nimrevResponse.json();
-            if (nimrevData.isRunning && nimrevData.services?.scanQueue?.isRunning) {
+            if (
+              nimrevData.isRunning &&
+              nimrevData.services?.scanQueue?.isRunning
+            ) {
               botRunning = true;
               responseTime = "< 1s";
               confidence += 50;
@@ -109,7 +112,10 @@ export default function TelegramBotStatus({
                 isReal = true;
               }
             } catch (jsonError) {
-              console.log("Bot API response parsing failed:", jsonError.message);
+              console.log(
+                "Bot API response parsing failed:",
+                jsonError.message,
+              );
             }
           }
         }
@@ -121,12 +127,17 @@ export default function TelegramBotStatus({
             try {
               const nimrevData = await nimrevResponse.json();
               if (nimrevData.stats) {
-                realActiveUsers = nimrevData.stats.activeUsers || realActiveUsers;
-                realMessagesProcessed = nimrevData.stats.messagesProcessed || realMessagesProcessed;
+                realActiveUsers =
+                  nimrevData.stats.activeUsers || realActiveUsers;
+                realMessagesProcessed =
+                  nimrevData.stats.messagesProcessed || realMessagesProcessed;
                 realUptime = nimrevData.stats.uptime || realUptime;
               }
             } catch (jsonError) {
-              console.log("NimRev API response parsing failed:", jsonError.message);
+              console.log(
+                "NimRev API response parsing failed:",
+                jsonError.message,
+              );
             }
           }
         }
@@ -143,7 +154,8 @@ export default function TelegramBotStatus({
           isOnline: botRunning,
           responseTime,
           activeUsers: realActiveUsers,
-          messagesProcessed: realMessagesProcessed || prev?.messagesProcessed || 0,
+          messagesProcessed:
+            realMessagesProcessed || prev?.messagesProcessed || 0,
           lastUpdate: new Date(),
           uptime: realUptime,
           isReal,
@@ -192,20 +204,24 @@ export default function TelegramBotStatus({
                 NIMREV BOT
               </h3>
               <p className="text-cyber-blue text-xs font-mono opacity-80">
-              {metrics.isReal ? "Live Data" : "No Data"}
-            </p>
+                {metrics.isReal ? "Live Data" : "No Data"}
+              </p>
             </div>
           </div>
           <div className="text-right">
             <div className="flex items-center gap-1 justify-end mb-1">
-              <div className={`w-2 h-2 rounded-full ${metrics.isReal ? "bg-cyber-green animate-pulse" : "bg-gray-500"}`}></div>
+              <div
+                className={`w-2 h-2 rounded-full ${metrics.isReal ? "bg-cyber-green animate-pulse" : "bg-gray-500"}`}
+              ></div>
               <div
                 className={`text-xs font-mono font-bold ${metrics.isOnline ? "text-cyber-green" : "text-red-400"}`}
               >
                 {metrics.isOnline ? "ONLINE" : "OFFLINE"}
               </div>
             </div>
-            <div className={`text-xs font-mono ${metrics.isReal ? "text-cyber-blue" : "text-gray-400"}`}>
+            <div
+              className={`text-xs font-mono ${metrics.isReal ? "text-cyber-blue" : "text-gray-400"}`}
+            >
               {metrics.isReal ? "REAL DATA" : "NO DATA"}
             </div>
             <div className="text-xs text-gray-500 font-mono">

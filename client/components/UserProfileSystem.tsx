@@ -1,4 +1,10 @@
-import { useState, useEffect, createContext, useContext, ReactNode } from "react";
+import {
+  useState,
+  useEffect,
+  createContext,
+  useContext,
+  ReactNode,
+} from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   User,
@@ -77,7 +83,9 @@ interface ProfileProviderProps {
 }
 
 export function ProfileProvider({ children }: ProfileProviderProps) {
-  const [currentProfile, setCurrentProfile] = useState<UserProfile | null>(null);
+  const [currentProfile, setCurrentProfile] = useState<UserProfile | null>(
+    null,
+  );
   const [isProfileRequired, setIsProfileRequired] = useState(false);
 
   useEffect(() => {
@@ -92,11 +100,14 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
     }
   }, []);
 
-  const createProfile = async (data: Partial<UserProfile>): Promise<boolean> => {
+  const createProfile = async (
+    data: Partial<UserProfile>,
+  ): Promise<boolean> => {
     try {
       const newProfile: UserProfile = {
         id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        username: data.username || `ghost_${Math.random().toString(36).substr(2, 6)}`,
+        username:
+          data.username || `ghost_${Math.random().toString(36).substr(2, 6)}`,
         displayName: data.displayName || data.username || "Anonymous Ghost",
         avatar: data.avatar || {
           type: "generated",
@@ -136,7 +147,9 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
     }
   };
 
-  const updateProfile = async (data: Partial<UserProfile>): Promise<boolean> => {
+  const updateProfile = async (
+    data: Partial<UserProfile>,
+  ): Promise<boolean> => {
     if (!currentProfile) return false;
 
     try {
@@ -147,7 +160,10 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
       };
 
       setCurrentProfile(updatedProfile);
-      localStorage.setItem("nimrev_user_profile", JSON.stringify(updatedProfile));
+      localStorage.setItem(
+        "nimrev_user_profile",
+        JSON.stringify(updatedProfile),
+      );
       return true;
     } catch (error) {
       console.error("Failed to update profile:", error);
@@ -156,13 +172,15 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
   };
 
   return (
-    <ProfileContext.Provider value={{
-      currentProfile,
-      isProfileRequired,
-      createProfile,
-      updateProfile,
-      setProfileRequired,
-    }}>
+    <ProfileContext.Provider
+      value={{
+        currentProfile,
+        isProfileRequired,
+        createProfile,
+        updateProfile,
+        setProfileRequired,
+      }}
+    >
       {children}
     </ProfileContext.Provider>
   );
@@ -179,28 +197,28 @@ function generateAvatar(username: string): string {
 
   // Generate colors based on username
   const hash = username.split("").reduce((a, b) => {
-    a = ((a << 5) - a) + b.charCodeAt(0);
+    a = (a << 5) - a + b.charCodeAt(0);
     return a & a;
   }, 0);
 
   const hue1 = Math.abs(hash) % 360;
   const hue2 = (hue1 + 120) % 360;
-  
+
   // Create gradient background
   const gradient = ctx.createLinearGradient(0, 0, 100, 100);
   gradient.addColorStop(0, `hsl(${hue1}, 70%, 50%)`);
   gradient.addColorStop(1, `hsl(${hue2}, 70%, 30%)`);
-  
+
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, 100, 100);
 
   // Add geometric pattern
   ctx.fillStyle = `hsl(${hue1}, 50%, 70%)`;
   for (let i = 0; i < 5; i++) {
-    const x = (hash * (i + 1)) % 80 + 10;
-    const y = (hash * (i + 2)) % 80 + 10;
-    const size = (hash * (i + 3)) % 20 + 5;
-    
+    const x = ((hash * (i + 1)) % 80) + 10;
+    const y = ((hash * (i + 2)) % 80) + 10;
+    const size = ((hash * (i + 3)) % 20) + 5;
+
     ctx.beginPath();
     ctx.arc(x, y, size, 0, Math.PI * 2);
     ctx.fill();
@@ -210,7 +228,13 @@ function generateAvatar(username: string): string {
 }
 
 // Profile Creation Modal
-export function ProfileCreationModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+export function ProfileCreationModal({
+  isOpen,
+  onClose,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+}) {
   const { createProfile } = useProfile();
   const [formData, setFormData] = useState({
     username: "",
@@ -233,7 +257,7 @@ export function ProfileCreationModal({ isOpen, onClose }: { isOpen: boolean; onC
     if (!formData.username.trim()) return;
 
     setIsCreating(true);
-    
+
     const success = await createProfile({
       username: formData.username,
       displayName: formData.displayName || formData.username,
@@ -252,7 +276,7 @@ export function ProfileCreationModal({ isOpen, onClose }: { isOpen: boolean; onC
     });
 
     setIsCreating(false);
-    
+
     if (success) {
       onClose();
     }
@@ -290,14 +314,20 @@ export function ProfileCreationModal({ isOpen, onClose }: { isOpen: boolean; onC
           <div className="text-center">
             <div className="w-20 h-20 rounded-full overflow-hidden mx-auto mb-2 border-2 border-cyber-green">
               {previewAvatar ? (
-                <img src={previewAvatar} alt="Avatar" className="w-full h-full object-cover" />
+                <img
+                  src={previewAvatar}
+                  alt="Avatar"
+                  className="w-full h-full object-cover"
+                />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-cyber-purple to-cyber-blue flex items-center justify-center">
                   <User className="w-8 h-8 text-white" />
                 </div>
               )}
             </div>
-            <p className="text-xs text-gray-400">Auto-generated from username</p>
+            <p className="text-xs text-gray-400">
+              Auto-generated from username
+            </p>
           </div>
 
           {/* Username */}
@@ -308,7 +338,9 @@ export function ProfileCreationModal({ isOpen, onClose }: { isOpen: boolean; onC
             <input
               type="text"
               value={formData.username}
-              onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, username: e.target.value }))
+              }
               placeholder="ghost_hunter_2024"
               className="w-full bg-dark-bg/50 border border-cyber-green/30 rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-cyber-green"
               required
@@ -323,7 +355,12 @@ export function ProfileCreationModal({ isOpen, onClose }: { isOpen: boolean; onC
             <input
               type="text"
               value={formData.displayName}
-              onChange={(e) => setFormData(prev => ({ ...prev, displayName: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  displayName: e.target.value,
+                }))
+              }
               placeholder="Ghost Hunter"
               className="w-full bg-dark-bg/50 border border-cyber-blue/30 rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-cyber-blue"
             />
@@ -335,7 +372,9 @@ export function ProfileCreationModal({ isOpen, onClose }: { isOpen: boolean; onC
               <label className="text-sm text-gray-300">Public Profile</label>
               <button
                 type="button"
-                onClick={() => setFormData(prev => ({ ...prev, isPublic: !prev.isPublic }))}
+                onClick={() =>
+                  setFormData((prev) => ({ ...prev, isPublic: !prev.isPublic }))
+                }
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                   formData.isPublic ? "bg-cyber-green" : "bg-gray-600"
                 }`}
@@ -349,10 +388,17 @@ export function ProfileCreationModal({ isOpen, onClose }: { isOpen: boolean; onC
             </div>
 
             <div>
-              <label className="block text-sm text-gray-300 mb-2">Encryption Level</label>
+              <label className="block text-sm text-gray-300 mb-2">
+                Encryption Level
+              </label>
               <select
                 value={formData.encryptionLevel}
-                onChange={(e) => setFormData(prev => ({ ...prev, encryptionLevel: e.target.value as any }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    encryptionLevel: e.target.value as any,
+                  }))
+                }
                 className="w-full bg-dark-bg/50 border border-cyber-purple/30 rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-cyber-purple"
               >
                 <option value="basic">Basic (AES-128)</option>
@@ -371,7 +417,7 @@ export function ProfileCreationModal({ isOpen, onClose }: { isOpen: boolean; onC
             >
               Cancel
             </button>
-            
+
             <button
               type="submit"
               disabled={!formData.username.trim() || isCreating}
@@ -397,27 +443,40 @@ export function ProfileCreationModal({ isOpen, onClose }: { isOpen: boolean; onC
 }
 
 // Profile Card Component
-export function ProfileCard({ profile, compact = false }: { 
-  profile: UserProfile; 
-  compact?: boolean; 
+export function ProfileCard({
+  profile,
+  compact = false,
+}: {
+  profile: UserProfile;
+  compact?: boolean;
 }) {
   const getRankIcon = (rank: string) => {
     switch (rank) {
-      case "Legend": return <Crown className="w-5 h-5 text-yellow-400" />;
-      case "Elite": return <Diamond className="w-5 h-5 text-purple-400" />;
-      case "Guardian": return <Shield className="w-5 h-5 text-blue-400" />;
-      case "Scanner": return <Target className="w-5 h-5 text-green-400" />;
-      default: return <Ghost className="w-5 h-5 text-gray-400" />;
+      case "Legend":
+        return <Crown className="w-5 h-5 text-yellow-400" />;
+      case "Elite":
+        return <Diamond className="w-5 h-5 text-purple-400" />;
+      case "Guardian":
+        return <Shield className="w-5 h-5 text-blue-400" />;
+      case "Scanner":
+        return <Target className="w-5 h-5 text-green-400" />;
+      default:
+        return <Ghost className="w-5 h-5 text-gray-400" />;
     }
   };
 
   const getRankColor = (rank: string) => {
     switch (rank) {
-      case "Legend": return "text-yellow-400 border-yellow-400/30 bg-yellow-400/10";
-      case "Elite": return "text-purple-400 border-purple-400/30 bg-purple-400/10";
-      case "Guardian": return "text-blue-400 border-blue-400/30 bg-blue-400/10";
-      case "Scanner": return "text-green-400 border-green-400/30 bg-green-400/10";
-      default: return "text-gray-400 border-gray-400/30 bg-gray-400/10";
+      case "Legend":
+        return "text-yellow-400 border-yellow-400/30 bg-yellow-400/10";
+      case "Elite":
+        return "text-purple-400 border-purple-400/30 bg-purple-400/10";
+      case "Guardian":
+        return "text-blue-400 border-blue-400/30 bg-blue-400/10";
+      case "Scanner":
+        return "text-green-400 border-green-400/30 bg-green-400/10";
+      default:
+        return "text-gray-400 border-gray-400/30 bg-gray-400/10";
     }
   };
 
@@ -425,19 +484,27 @@ export function ProfileCard({ profile, compact = false }: {
     return (
       <div className="flex items-center gap-3 bg-dark-bg/60 border border-cyber-green/30 rounded-lg p-3">
         <div className="w-10 h-10 rounded-full overflow-hidden border border-cyber-green/50">
-          <img src={profile.avatar.data} alt={profile.username} className="w-full h-full object-cover" />
+          <img
+            src={profile.avatar.data}
+            alt={profile.username}
+            className="w-full h-full object-cover"
+          />
         </div>
-        
+
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-white truncate">{profile.displayName}</span>
+            <span className="font-bold text-white truncate">
+              {profile.displayName}
+            </span>
             {getRankIcon(profile.rank)}
           </div>
           <div className="text-xs text-gray-400">@{profile.username}</div>
         </div>
-        
+
         <div className="text-right">
-          <div className="text-sm font-bold text-cyber-green">Level {profile.level}</div>
+          <div className="text-sm font-bold text-cyber-green">
+            Level {profile.level}
+          </div>
           <div className="text-xs text-gray-400">{profile.reputation} rep</div>
         </div>
       </div>
@@ -449,18 +516,26 @@ export function ProfileCard({ profile, compact = false }: {
       <div className="flex items-start gap-4 mb-4">
         <div className="relative">
           <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-cyber-green">
-            <img src={profile.avatar.data} alt={profile.username} className="w-full h-full object-cover" />
+            <img
+              src={profile.avatar.data}
+              alt={profile.username}
+              className="w-full h-full object-cover"
+            />
           </div>
           <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-cyber-blue rounded-full flex items-center justify-center text-xs font-bold text-white">
             {profile.level}
           </div>
         </div>
-        
+
         <div className="flex-1">
-          <h3 className="text-xl font-bold text-white">{profile.displayName}</h3>
+          <h3 className="text-xl font-bold text-white">
+            {profile.displayName}
+          </h3>
           <p className="text-gray-400">@{profile.username}</p>
-          
-          <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full border text-xs font-bold mt-2 ${getRankColor(profile.rank)}`}>
+
+          <div
+            className={`inline-flex items-center gap-1 px-2 py-1 rounded-full border text-xs font-bold mt-2 ${getRankColor(profile.rank)}`}
+          >
             {getRankIcon(profile.rank)}
             {profile.rank}
           </div>
@@ -470,19 +545,27 @@ export function ProfileCard({ profile, compact = false }: {
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div className="text-center">
-          <div className="text-lg font-bold text-cyber-green">{profile.stats.scansCompleted}</div>
+          <div className="text-lg font-bold text-cyber-green">
+            {profile.stats.scansCompleted}
+          </div>
           <div className="text-xs text-gray-400">Scans</div>
         </div>
         <div className="text-center">
-          <div className="text-lg font-bold text-cyber-orange">{profile.stats.threatsDetected}</div>
+          <div className="text-lg font-bold text-cyber-orange">
+            {profile.stats.threatsDetected}
+          </div>
           <div className="text-xs text-gray-400">Threats</div>
         </div>
         <div className="text-center">
-          <div className="text-lg font-bold text-cyber-blue">{profile.stats.chatMessages}</div>
+          <div className="text-lg font-bold text-cyber-blue">
+            {profile.stats.chatMessages}
+          </div>
           <div className="text-xs text-gray-400">Messages</div>
         </div>
         <div className="text-center">
-          <div className="text-lg font-bold text-cyber-purple">{profile.stats.dayStreak}</div>
+          <div className="text-lg font-bold text-cyber-purple">
+            {profile.stats.dayStreak}
+          </div>
           <div className="text-xs text-gray-400">Day Streak</div>
         </div>
       </div>
@@ -506,15 +589,16 @@ export function ProfileCard({ profile, compact = false }: {
 
 // Profile requirement hook
 export function useProfileRequirement() {
-  const { currentProfile, isProfileRequired, setProfileRequired } = useProfile();
+  const { currentProfile, isProfileRequired, setProfileRequired } =
+    useProfile();
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
     // Check if profile is required for current route
     const path = window.location.pathname;
     const profileRequiredRoutes = ["/community", "/chat"];
-    
-    if (profileRequiredRoutes.some(route => path.includes(route))) {
+
+    if (profileRequiredRoutes.some((route) => path.includes(route))) {
       setProfileRequired(true);
       if (!currentProfile) {
         setShowCreateModal(true);

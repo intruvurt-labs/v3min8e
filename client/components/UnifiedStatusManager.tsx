@@ -1,4 +1,10 @@
-import { useState, useEffect, createContext, useContext, ReactNode } from "react";
+import {
+  useState,
+  useEffect,
+  createContext,
+  useContext,
+  ReactNode,
+} from "react";
 
 interface SystemStatus {
   bot: {
@@ -83,7 +89,7 @@ export function StatusProvider({ children }: StatusProviderProps) {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeout);
-      
+
       const response = await fetch(endpoint, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
@@ -102,12 +108,12 @@ export function StatusProvider({ children }: StatusProviderProps) {
 
   const refreshStatus = async () => {
     setIsLoading(true);
-    
+
     try {
       // Check multiple endpoints in parallel
       const [botCheck, scannerCheck, nimrevCheck] = await Promise.allSettled([
         checkService("/api/bot/status"),
-        checkService("/api/bot/scanner/status"), 
+        checkService("/api/bot/scanner/status"),
         checkService("/api/nimrev/status"),
       ]);
 
@@ -180,24 +186,27 @@ export function StatusProvider({ children }: StatusProviderProps) {
         services.network = true;
       }
 
-      setStatus(prev => ({
+      setStatus((prev) => ({
         ...prev,
         bot: botStatus,
         scanner: scannerStatus,
         services,
         stats: {
           ...prev.stats,
-          totalScans: prev.stats.totalScans + (scannerStatus.isActive ? Math.floor(Math.random() * 2) : 0),
-          messagesProcessed: prev.stats.messagesProcessed + (botStatus.isOnline ? Math.floor(Math.random() * 3) : 0),
+          totalScans:
+            prev.stats.totalScans +
+            (scannerStatus.isActive ? Math.floor(Math.random() * 2) : 0),
+          messagesProcessed:
+            prev.stats.messagesProcessed +
+            (botStatus.isOnline ? Math.floor(Math.random() * 3) : 0),
         },
         lastUpdate: Date.now(),
       }));
-
     } catch (error) {
       console.error("Status check failed:", error);
-      
+
       // Fallback to demo mode on error
-      setStatus(prev => ({
+      setStatus((prev) => ({
         ...prev,
         bot: {
           isOnline: true,
@@ -216,10 +225,10 @@ export function StatusProvider({ children }: StatusProviderProps) {
   useEffect(() => {
     // Initial status check
     refreshStatus();
-    
+
     // Regular updates every 10 seconds
     const interval = setInterval(refreshStatus, 10000);
-    
+
     return () => clearInterval(interval);
   }, []);
 

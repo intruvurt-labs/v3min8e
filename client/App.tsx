@@ -54,7 +54,7 @@ const App = () => (
               <Route path="/technology" element={<Technology />} />
               <Route path="/roadmap" element={<Roadmap />} />
               <Route path="/community" element={<Community />} />
-            <Route path="/airdrop" element={<Airdrop />} />
+              <Route path="/airdrop" element={<Airdrop />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />

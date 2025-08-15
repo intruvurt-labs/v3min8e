@@ -81,7 +81,8 @@ const knowledgeNodes: KnowledgeNode[] = [
   {
     id: "advanced-scanning",
     title: "Advanced Scanning Techniques",
-    description: "Master sophisticated scanning methods and pattern recognition",
+    description:
+      "Master sophisticated scanning methods and pattern recognition",
     category: "security",
     level: 2,
     xpReward: 200,
@@ -146,7 +147,11 @@ const knowledgeNodes: KnowledgeNode[] = [
     level: 5,
     xpReward: 1000,
     tokenReward: 500,
-    prerequisites: ["advanced-scanning", "trading-mastery", "community-engagement"],
+    prerequisites: [
+      "advanced-scanning",
+      "trading-mastery",
+      "community-engagement",
+    ],
     isUnlocked: false,
     isCompleted: false,
     progress: 0,
@@ -217,7 +222,12 @@ const milestones: Milestone[] = [
     type: "achievement",
     requirement: 100,
     currentProgress: 12,
-    reward: { xp: 1000, tokens: 500, badge: "Threat Hunter Elite", title: "Guardian of the Network" },
+    reward: {
+      xp: 1000,
+      tokens: 500,
+      badge: "Threat Hunter Elite",
+      title: "Guardian of the Network",
+    },
     isCompleted: false,
     icon: <Shield className="w-5 h-5" />,
     rarity: "legendary",
@@ -234,59 +244,79 @@ export default function KnowledgeTreeSystem() {
 
   // Update node unlock status based on prerequisites
   useEffect(() => {
-    setNodes(prevNodes => 
-      prevNodes.map(node => {
-        const allPrereqsCompleted = node.prerequisites.every(prereqId =>
-          prevNodes.find(n => n.id === prereqId)?.isCompleted
+    setNodes((prevNodes) =>
+      prevNodes.map((node) => {
+        const allPrereqsCompleted = node.prerequisites.every(
+          (prereqId) => prevNodes.find((n) => n.id === prereqId)?.isCompleted,
         );
         return {
           ...node,
           isUnlocked: node.prerequisites.length === 0 || allPrereqsCompleted,
         };
-      })
+      }),
     );
   }, []);
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case "security": return "from-cyber-green to-cyber-blue";
-      case "trading": return "from-cyber-orange to-cyber-purple";
-      case "community": return "from-cyber-blue to-cyber-cyan";
-      case "advanced": return "from-cyber-purple to-cyber-pink";
-      case "expert": return "from-yellow-400 to-orange-500";
-      default: return "from-gray-400 to-gray-600";
+      case "security":
+        return "from-cyber-green to-cyber-blue";
+      case "trading":
+        return "from-cyber-orange to-cyber-purple";
+      case "community":
+        return "from-cyber-blue to-cyber-cyan";
+      case "advanced":
+        return "from-cyber-purple to-cyber-pink";
+      case "expert":
+        return "from-yellow-400 to-orange-500";
+      default:
+        return "from-gray-400 to-gray-600";
     }
   };
 
   const getCategoryBorder = (category: string) => {
     switch (category) {
-      case "security": return "border-cyber-green";
-      case "trading": return "border-cyber-orange";
-      case "community": return "border-cyber-blue";
-      case "advanced": return "border-cyber-purple";
-      case "expert": return "border-yellow-400";
-      default: return "border-gray-400";
+      case "security":
+        return "border-cyber-green";
+      case "trading":
+        return "border-cyber-orange";
+      case "community":
+        return "border-cyber-blue";
+      case "advanced":
+        return "border-cyber-purple";
+      case "expert":
+        return "border-yellow-400";
+      default:
+        return "border-gray-400";
     }
   };
 
   const getRarityColor = (rarity: string) => {
     switch (rarity) {
-      case "common": return "border-gray-400 bg-gray-400/10 text-gray-400";
-      case "rare": return "border-blue-400 bg-blue-400/10 text-blue-400";
-      case "epic": return "border-purple-400 bg-purple-400/10 text-purple-400";
-      case "legendary": return "border-yellow-400 bg-yellow-400/10 text-yellow-400";
-      default: return "border-gray-400 bg-gray-400/10 text-gray-400";
+      case "common":
+        return "border-gray-400 bg-gray-400/10 text-gray-400";
+      case "rare":
+        return "border-blue-400 bg-blue-400/10 text-blue-400";
+      case "epic":
+        return "border-purple-400 bg-purple-400/10 text-purple-400";
+      case "legendary":
+        return "border-yellow-400 bg-yellow-400/10 text-yellow-400";
+      default:
+        return "border-gray-400 bg-gray-400/10 text-gray-400";
     }
   };
 
   const completeNodeTask = (nodeId: string, taskIndex: number) => {
-    setNodes(prevNodes =>
-      prevNodes.map(node => {
+    setNodes((prevNodes) =>
+      prevNodes.map((node) => {
         if (node.id === nodeId) {
-          const newCompletedTasks = [...node.completedTasks, node.tasks[taskIndex]];
+          const newCompletedTasks = [
+            ...node.completedTasks,
+            node.tasks[taskIndex],
+          ];
           const progress = (newCompletedTasks.length / node.tasks.length) * 100;
           const isCompleted = progress === 100;
-          
+
           return {
             ...node,
             completedTasks: newCompletedTasks,
@@ -295,13 +325,13 @@ export default function KnowledgeTreeSystem() {
           };
         }
         return node;
-      })
+      }),
     );
   };
 
   const claimNodeReward = (node: KnowledgeNode) => {
     if (node.isCompleted) {
-      setUserXP(prev => prev + node.xpReward);
+      setUserXP((prev) => prev + node.xpReward);
       // Add notification here
     }
   };
@@ -317,13 +347,13 @@ export default function KnowledgeTreeSystem() {
               KNOWLEDGE TREE
             </h2>
           </div>
-          
+
           <div className="flex bg-dark-bg/60 border border-cyber-green/30 rounded-lg p-1">
             <button
               onClick={() => setViewMode("tree")}
               className={`px-3 py-1 rounded text-sm font-mono transition-colors ${
-                viewMode === "tree" 
-                  ? "bg-cyber-green text-dark-bg" 
+                viewMode === "tree"
+                  ? "bg-cyber-green text-dark-bg"
                   : "text-gray-400 hover:text-cyber-green"
               }`}
             >
@@ -332,8 +362,8 @@ export default function KnowledgeTreeSystem() {
             <button
               onClick={() => setViewMode("milestones")}
               className={`px-3 py-1 rounded text-sm font-mono transition-colors ${
-                viewMode === "milestones" 
-                  ? "bg-cyber-green text-dark-bg" 
+                viewMode === "milestones"
+                  ? "bg-cyber-green text-dark-bg"
                   : "text-gray-400 hover:text-cyber-green"
               }`}
             >
@@ -359,8 +389,10 @@ export default function KnowledgeTreeSystem() {
             <div className="bg-dark-bg/60 border border-cyber-green/30 rounded-2xl p-6 backdrop-blur-xl">
               <div className="space-y-6">
                 {/* Group nodes by level */}
-                {[1, 2, 3, 4, 5].map(level => {
-                  const levelNodes = nodes.filter(node => node.level === level);
+                {[1, 2, 3, 4, 5].map((level) => {
+                  const levelNodes = nodes.filter(
+                    (node) => node.level === level,
+                  );
                   if (levelNodes.length === 0) return null;
 
                   return (
@@ -381,11 +413,12 @@ export default function KnowledgeTreeSystem() {
                             onClick={() => setSelectedNode(node)}
                             className={`
                               relative p-4 rounded-xl border-2 cursor-pointer transition-all duration-300
-                              ${node.isCompleted 
-                                ? "bg-gradient-to-br from-cyber-green/20 to-cyber-blue/20 border-cyber-green"
-                                : node.isUnlocked
-                                  ? `bg-gradient-to-br ${getCategoryColor(node.category)}/10 ${getCategoryBorder(node.category)} hover:shadow-lg`
-                                  : "bg-gray-600/20 border-gray-600 opacity-50 cursor-not-allowed"
+                              ${
+                                node.isCompleted
+                                  ? "bg-gradient-to-br from-cyber-green/20 to-cyber-blue/20 border-cyber-green"
+                                  : node.isUnlocked
+                                    ? `bg-gradient-to-br ${getCategoryColor(node.category)}/10 ${getCategoryBorder(node.category)} hover:shadow-lg`
+                                    : "bg-gray-600/20 border-gray-600 opacity-50 cursor-not-allowed"
                               }
                             `}
                           >
@@ -404,15 +437,17 @@ export default function KnowledgeTreeSystem() {
 
                             {/* Node Content */}
                             <div className="flex items-start gap-3">
-                              <div className={`
+                              <div
+                                className={`
                                 p-2 rounded-lg ${
-                                  node.isCompleted 
+                                  node.isCompleted
                                     ? "bg-cyber-green text-white"
                                     : node.isUnlocked
                                       ? `bg-gradient-to-br ${getCategoryColor(node.category)} text-white`
                                       : "bg-gray-600 text-gray-400"
                                 }
-                              `}>
+                              `}
+                              >
                                 {node.icon}
                               </div>
 
@@ -429,7 +464,8 @@ export default function KnowledgeTreeSystem() {
                                   <div className="space-y-1">
                                     <div className="flex justify-between text-xs">
                                       <span className="text-gray-400">
-                                        {node.completedTasks.length}/{node.tasks.length} tasks
+                                        {node.completedTasks.length}/
+                                        {node.tasks.length} tasks
                                       </span>
                                       <span className="text-cyber-green">
                                         {Math.round(node.progress)}%
@@ -475,22 +511,33 @@ export default function KnowledgeTreeSystem() {
               {selectedNode ? (
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
-                    <div className={`p-3 rounded-lg bg-gradient-to-br ${getCategoryColor(selectedNode.category)} text-white`}>
+                    <div
+                      className={`p-3 rounded-lg bg-gradient-to-br ${getCategoryColor(selectedNode.category)} text-white`}
+                    >
                       {selectedNode.icon}
                     </div>
                     <div>
-                      <h3 className="font-bold text-white">{selectedNode.title}</h3>
-                      <p className="text-sm text-gray-400">Level {selectedNode.level}</p>
+                      <h3 className="font-bold text-white">
+                        {selectedNode.title}
+                      </h3>
+                      <p className="text-sm text-gray-400">
+                        Level {selectedNode.level}
+                      </p>
                     </div>
                   </div>
 
-                  <p className="text-gray-300 text-sm">{selectedNode.description}</p>
+                  <p className="text-gray-300 text-sm">
+                    {selectedNode.description}
+                  </p>
 
                   {/* Tasks */}
                   <div className="space-y-2">
-                    <h4 className="font-bold text-cyber-green text-sm">Tasks:</h4>
+                    <h4 className="font-bold text-cyber-green text-sm">
+                      Tasks:
+                    </h4>
                     {selectedNode.tasks.map((task, index) => {
-                      const isCompleted = selectedNode.completedTasks.includes(task);
+                      const isCompleted =
+                        selectedNode.completedTasks.includes(task);
                       return (
                         <div
                           key={index}
@@ -505,9 +552,11 @@ export default function KnowledgeTreeSystem() {
                               <div className="w-4 h-4 border border-gray-400 rounded-full" />
                             )}
                           </div>
-                          <span className={`text-sm ${
-                            isCompleted ? "text-cyber-green" : "text-gray-300"
-                          }`}>
+                          <span
+                            className={`text-sm ${
+                              isCompleted ? "text-cyber-green" : "text-gray-300"
+                            }`}
+                          >
                             {task}
                           </span>
                         </div>
@@ -556,22 +605,31 @@ export default function KnowledgeTreeSystem() {
 
                 {/* Milestone Icon */}
                 <div className="flex items-center gap-3 mb-4">
-                  <div className={`p-3 rounded-lg ${
-                    milestone.rarity === "legendary" ? "bg-gradient-to-r from-yellow-400 to-orange-500" :
-                    milestone.rarity === "epic" ? "bg-gradient-to-r from-purple-400 to-purple-600" :
-                    milestone.rarity === "rare" ? "bg-gradient-to-r from-blue-400 to-blue-600" :
-                    "bg-gradient-to-r from-gray-400 to-gray-600"
-                  } text-white`}>
+                  <div
+                    className={`p-3 rounded-lg ${
+                      milestone.rarity === "legendary"
+                        ? "bg-gradient-to-r from-yellow-400 to-orange-500"
+                        : milestone.rarity === "epic"
+                          ? "bg-gradient-to-r from-purple-400 to-purple-600"
+                          : milestone.rarity === "rare"
+                            ? "bg-gradient-to-r from-blue-400 to-blue-600"
+                            : "bg-gradient-to-r from-gray-400 to-gray-600"
+                    } text-white`}
+                  >
                     {milestone.icon}
                   </div>
-                  
+
                   <div>
                     <h3 className="font-bold text-white">{milestone.title}</h3>
-                    <p className="text-xs text-gray-400 capitalize">{milestone.rarity}</p>
+                    <p className="text-xs text-gray-400 capitalize">
+                      {milestone.rarity}
+                    </p>
                   </div>
                 </div>
 
-                <p className="text-gray-300 text-sm mb-4">{milestone.description}</p>
+                <p className="text-gray-300 text-sm mb-4">
+                  {milestone.description}
+                </p>
 
                 {/* Progress */}
                 <div className="space-y-2 mb-4">
@@ -585,8 +643,8 @@ export default function KnowledgeTreeSystem() {
                     <motion.div
                       className="h-full bg-gradient-to-r from-cyber-green to-cyber-blue"
                       initial={{ width: 0 }}
-                      animate={{ 
-                        width: `${(milestone.currentProgress / milestone.requirement) * 100}%` 
+                      animate={{
+                        width: `${(milestone.currentProgress / milestone.requirement) * 100}%`,
                       }}
                       transition={{ duration: 0.5 }}
                     />
@@ -595,7 +653,9 @@ export default function KnowledgeTreeSystem() {
 
                 {/* Rewards */}
                 <div className="space-y-2">
-                  <div className="text-xs font-bold text-gray-400">REWARDS:</div>
+                  <div className="text-xs font-bold text-gray-400">
+                    REWARDS:
+                  </div>
                   <div className="flex flex-wrap gap-2 text-xs">
                     <div className="bg-cyber-purple/20 border border-cyber-purple/30 rounded px-2 py-1 text-cyber-purple">
                       {milestone.reward.xp} XP

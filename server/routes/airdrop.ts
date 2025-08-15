@@ -1,6 +1,6 @@
-import { Request, Response, Router } from 'express';
-import { rateLimit } from 'express-rate-limit';
-import { body, validationResult } from 'express-validator';
+import { Request, Response, Router } from "express";
+import { rateLimit } from "express-rate-limit";
+import { body, validationResult } from "express-validator";
 
 const router = Router();
 
@@ -8,13 +8,15 @@ const router = Router();
 const airdropLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 10, // Limit each IP to 10 requests per windowMs
-  message: { error: 'Too many verification attempts, please try again later.' },
+  message: { error: "Too many verification attempts, please try again later." },
 });
 
 const botTokenLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 3, // Limit bot token verification attempts
-  message: { error: 'Too many bot token verification attempts, please try again later.' },
+  message: {
+    error: "Too many bot token verification attempts, please try again later.",
+  },
 });
 
 // Interface for bot token verification
@@ -41,17 +43,19 @@ const isValidBotToken = (token: string): boolean => {
 };
 
 // Verify bot token with Telegram API
-const verifyTelegramBot = async (token: string): Promise<{ valid: boolean; botInfo?: any }> => {
+const verifyTelegramBot = async (
+  token: string,
+): Promise<{ valid: boolean; botInfo?: any }> => {
   try {
     const response = await fetch(`https://api.telegram.org/bot${token}/getMe`, {
-      method: 'GET',
+      method: "GET",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
     const data = await response.json();
-    
+
     if (data.ok && data.result) {
       return {
         valid: true,
@@ -68,28 +72,29 @@ const verifyTelegramBot = async (token: string): Promise<{ valid: boolean; botIn
       return { valid: false };
     }
   } catch (error) {
-    console.error('Telegram bot verification error:', error);
+    console.error("Telegram bot verification error:", error);
     return { valid: false };
   }
 };
 
 // POST /api/airdrop/verify-bot-token
-router.post('/verify-bot-token', 
+router.post(
+  "/verify-bot-token",
   botTokenLimiter,
   [
-    body('token')
+    body("token")
       .isString()
       .isLength({ min: 35, max: 50 })
-      .withMessage('Invalid bot token format'),
-    body('userId')
+      .withMessage("Invalid bot token format"),
+    body("userId")
       .isString()
       .isLength({ min: 1, max: 100 })
-      .withMessage('User ID is required'),
-    body('walletAddress')
+      .withMessage("User ID is required"),
+    body("walletAddress")
       .optional()
       .isString()
       .isLength({ min: 32, max: 44 })
-      .withMessage('Invalid wallet address format'),
+      .withMessage("Invalid wallet address format"),
   ],
   async (req: Request, res: Response) => {
     try {
@@ -98,7 +103,7 @@ router.post('/verify-bot-token',
       if (!errors.isEmpty()) {
         return res.status(400).json({
           success: false,
-          error: 'Validation failed',
+          error: "Validation failed",
           details: errors.array(),
         });
       }
@@ -109,19 +114,21 @@ router.post('/verify-bot-token',
       if (!isValidBotToken(token)) {
         return res.status(400).json({
           success: false,
-          error: 'Invalid bot token format',
-          message: 'Bot token must follow Telegram format: {bot_id}:{auth_token}',
+          error: "Invalid bot token format",
+          message:
+            "Bot token must follow Telegram format: {bot_id}:{auth_token}",
         });
       }
 
       // Verify with Telegram API
       const verification = await verifyTelegramBot(token);
-      
+
       if (!verification.valid) {
         return res.status(400).json({
           success: false,
-          error: 'Bot token verification failed',
-          message: 'The provided bot token is invalid or the bot is not accessible',
+          error: "Bot token verification failed",
+          message:
+            "The provided bot token is invalid or the bot is not accessible",
         });
       }
 
@@ -130,8 +137,8 @@ router.post('/verify-bot-token',
       if (!botInfo.canJoinGroups) {
         return res.status(400).json({
           success: false,
-          error: 'Insufficient bot permissions',
-          message: 'Bot must be able to join groups for verification',
+          error: "Insufficient bot permissions",
+          message: "Bot must be able to join groups for verification",
         });
       }
 
@@ -139,7 +146,7 @@ router.post('/verify-bot-token',
       const verificationRecord = {
         userId,
         walletAddress,
-        botToken: token.substring(0, 10) + '...' + token.slice(-4), // Store only partial token for security
+        botToken: token.substring(0, 10) + "..." + token.slice(-4), // Store only partial token for security
         botInfo: {
           id: botInfo.id,
           username: botInfo.username,
@@ -147,11 +154,11 @@ router.post('/verify-bot-token',
         },
         verifiedAt: new Date().toISOString(),
         ipAddress: req.ip,
-        userAgent: req.get('User-Agent'),
+        userAgent: req.get("User-Agent"),
       };
 
       // Log successful verification
-      console.log('Bot token verified successfully:', {
+      console.log("Bot token verified successfully:", {
         userId,
         botUsername: botInfo.username,
         timestamp: new Date().toISOString(),
@@ -159,7 +166,7 @@ router.post('/verify-bot-token',
 
       res.json({
         success: true,
-        message: 'Bot token verified successfully',
+        message: "Bot token verified successfully",
         data: {
           botInfo: {
             username: botInfo.username,
@@ -173,35 +180,35 @@ router.post('/verify-bot-token',
           multiplier: 2,
         },
       });
-
     } catch (error) {
-      console.error('Bot token verification error:', error);
+      console.error("Bot token verification error:", error);
       res.status(500).json({
         success: false,
-        error: 'Internal server error',
-        message: 'An error occurred during bot token verification',
+        error: "Internal server error",
+        message: "An error occurred during bot token verification",
       });
     }
-  }
+  },
 );
 
 // POST /api/airdrop/verify-task
-router.post('/verify-task',
+router.post(
+  "/verify-task",
   airdropLimiter,
   [
-    body('taskId')
+    body("taskId")
       .isString()
       .isLength({ min: 1, max: 50 })
-      .withMessage('Task ID is required'),
-    body('userId')
+      .withMessage("Task ID is required"),
+    body("userId")
       .isString()
       .isLength({ min: 1, max: 100 })
-      .withMessage('User ID is required'),
-    body('walletAddress')
+      .withMessage("User ID is required"),
+    body("walletAddress")
       .optional()
       .isString()
       .isLength({ min: 32, max: 44 })
-      .withMessage('Invalid wallet address format'),
+      .withMessage("Invalid wallet address format"),
   ],
   async (req: Request, res: Response) => {
     try {
@@ -209,70 +216,71 @@ router.post('/verify-task',
       if (!errors.isEmpty()) {
         return res.status(400).json({
           success: false,
-          error: 'Validation failed',
+          error: "Validation failed",
           details: errors.array(),
         });
       }
 
-      const { taskId, userId, walletAddress, proof } = req.body as TaskVerification;
+      const { taskId, userId, walletAddress, proof } =
+        req.body as TaskVerification;
 
       // Simulate task verification based on task type
       let verificationResult = { success: false, reward: 0 };
 
       switch (taskId) {
-        case 'follow_twitter':
+        case "follow_twitter":
           // In production, this would check Twitter API
           verificationResult = { success: true, reward: 50 };
           break;
-          
-        case 'join_telegram':
+
+        case "join_telegram":
           // In production, this would check Telegram group membership
           verificationResult = { success: true, reward: 50 };
           break;
-          
-        case 'first_scan':
+
+        case "first_scan":
           // In production, this would check scan history
           verificationResult = { success: true, reward: 100 };
           break;
-          
-        case 'daily_scan_streak':
+
+        case "daily_scan_streak":
           // In production, this would check blockchain data
           verificationResult = { success: true, reward: 500 };
           break;
-          
-        case 'stake_100_verm':
+
+        case "stake_100_verm":
           // In production, this would check staking contract
           if (walletAddress) {
             verificationResult = { success: true, reward: 300 };
           }
           break;
-          
-        case 'refer_5_users':
+
+        case "refer_5_users":
           // In production, this would check referral database
           verificationResult = { success: true, reward: 750 };
           break;
-          
-        case 'premium_trade':
+
+        case "premium_trade":
           // In production, this would check trading history
           verificationResult = { success: true, reward: 400 };
           break;
-          
-        case 'legendary_hunter':
+
+        case "legendary_hunter":
           // In production, this would check all requirements
           verificationResult = { success: true, reward: 2000 };
           break;
-          
+
         default:
           return res.status(400).json({
             success: false,
-            error: 'Unknown task',
-            message: 'The specified task ID is not recognized',
+            error: "Unknown task",
+            message: "The specified task ID is not recognized",
           });
       }
 
       if (verificationResult.success) {
         // Log successful task completion
-        console.log('Task completed successfully:', {
+        console.log("Task completed successfully:", {
           taskId,
           userId,
           reward: verificationResult.reward,
@@ -281,7 +289,7 @@ router.post('/verify-task',
 
         res.json({
           success: true,
-          message: 'Task verified successfully',
+          message: "Task verified successfully",
           data: {
             taskId,
             reward: verificationResult.reward,
@@ -291,24 +299,24 @@ router.post('/verify-task',
       } else {
         res.status(400).json({
           success: false,
-          error: 'Task verification failed',
-          message: 'Unable to verify task completion',
+          error: "Task verification failed",
+          message: "Unable to verify task completion",
         });
       }
-
     } catch (error) {
-      console.error('Task verification error:', error);
+      console.error("Task verification error:", error);
       res.status(500).json({
         success: false,
-        error: 'Internal server error',
-        message: 'An error occurred during task verification',
+        error: "Internal server error",
+        message: "An error occurred during task verification",
       });
     }
-  }
+  },
 );
 
 // GET /api/airdrop/leaderboard
-router.get('/leaderboard', 
+router.get(
+  "/leaderboard",
   airdropLimiter,
   async (req: Request, res: Response) => {
     try {
@@ -326,7 +334,7 @@ router.get('/leaderboard',
         },
         {
           rank: 2,
-          userId: "user_2", 
+          userId: "user_2",
           username: "ScanMaster_Pro",
           avatar: "🥈",
           totalEarned: 12750,
@@ -338,7 +346,7 @@ router.get('/leaderboard',
           rank: 3,
           userId: "user_3",
           username: "CryptoHunter",
-          avatar: "🥉", 
+          avatar: "🥉",
           totalEarned: 11200,
           tasksCompleted: 22,
           streak: 28,
@@ -357,7 +365,7 @@ router.get('/leaderboard',
         {
           rank: 5,
           userId: "user_5",
-          username: "NimRev_Alpha", 
+          username: "NimRev_Alpha",
           avatar: "⚡",
           totalEarned: 8650,
           tasksCompleted: 17,
@@ -375,52 +383,48 @@ router.get('/leaderboard',
           lastUpdated: new Date().toISOString(),
         },
       });
-
     } catch (error) {
-      console.error('Leaderboard fetch error:', error);
+      console.error("Leaderboard fetch error:", error);
       res.status(500).json({
         success: false,
-        error: 'Internal server error',
-        message: 'Unable to fetch leaderboard data',
+        error: "Internal server error",
+        message: "Unable to fetch leaderboard data",
       });
     }
-  }
+  },
 );
 
 // GET /api/airdrop/stats
-router.get('/stats',
-  airdropLimiter,
-  async (req: Request, res: Response) => {
-    try {
-      // Generate realistic stats
-      const stats = {
-        totalVermDetected: 2938402 + Math.floor(Date.now() / 1000) % 10000,
-        activeHunters: 1247,
-        totalRewards: 2400000,
-        successRate: 72.4,
-        averageScanTime: 12,
-        threatsBlocked: 2847,
-        lastUpdated: new Date().toISOString(),
-      };
+router.get("/stats", airdropLimiter, async (req: Request, res: Response) => {
+  try {
+    // Generate realistic stats
+    const stats = {
+      totalVermDetected: 2938402 + (Math.floor(Date.now() / 1000) % 10000),
+      activeHunters: 1247,
+      totalRewards: 2400000,
+      successRate: 72.4,
+      averageScanTime: 12,
+      threatsBlocked: 2847,
+      lastUpdated: new Date().toISOString(),
+    };
 
-      res.json({
-        success: true,
-        data: stats,
-      });
-
-    } catch (error) {
-      console.error('Stats fetch error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Internal server error',
-        message: 'Unable to fetch statistics',
-      });
-    }
+    res.json({
+      success: true,
+      data: stats,
+    });
+  } catch (error) {
+    console.error("Stats fetch error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Internal server error",
+      message: "Unable to fetch statistics",
+    });
   }
-);
+});
 
 // GET /api/airdrop/user-progress/:userId
-router.get('/user-progress/:userId',
+router.get(
+  "/user-progress/:userId",
   airdropLimiter,
   async (req: Request, res: Response) => {
     try {
@@ -429,7 +433,7 @@ router.get('/user-progress/:userId',
       if (!userId) {
         return res.status(400).json({
           success: false,
-          error: 'User ID is required',
+          error: "User ID is required",
         });
       }
 
@@ -444,11 +448,7 @@ router.get('/user-progress/:userId',
         nextMilestone: 1000,
         referralCount: Math.floor(Math.random() * 10),
         botTokenVerified: Math.random() > 0.7,
-        completedTasks: [
-          'follow_twitter',
-          'join_telegram',
-          'first_scan',
-        ],
+        completedTasks: ["follow_twitter", "join_telegram", "first_scan"],
         lastActive: new Date().toISOString(),
       };
 
@@ -456,16 +456,15 @@ router.get('/user-progress/:userId',
         success: true,
         data: mockProgress,
       });
-
     } catch (error) {
-      console.error('User progress fetch error:', error);
+      console.error("User progress fetch error:", error);
       res.status(500).json({
         success: false,
-        error: 'Internal server error',
-        message: 'Unable to fetch user progress',
+        error: "Internal server error",
+        message: "Unable to fetch user progress",
       });
     }
-  }
+  },
 );
 
 export default router;

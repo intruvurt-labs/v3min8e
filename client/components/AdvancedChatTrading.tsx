@@ -109,15 +109,18 @@ export default function AdvancedChatTrading() {
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
   const [isScanning, setIsScanning] = useState(false);
   const [screenProtection, setScreenProtection] = useState(true);
-  const [encryptionSettings, setEncryptionSettings] = useState<EncryptionSettings>({
-    level: "advanced",
-    keyRotation: true,
-    perfectForwardSecrecy: true,
-    messageExpiry: 60,
-  });
+  const [encryptionSettings, setEncryptionSettings] =
+    useState<EncryptionSettings>({
+      level: "advanced",
+      keyRotation: true,
+      perfectForwardSecrecy: true,
+      messageExpiry: 60,
+    });
   const [activeTradeOffers, setActiveTradeOffers] = useState<TradeOffer[]>([]);
   const [showTradeModal, setShowTradeModal] = useState(false);
-  const [selectedTradeUser, setSelectedTradeUser] = useState<OnlineUser | null>(null);
+  const [selectedTradeUser, setSelectedTradeUser] = useState<OnlineUser | null>(
+    null,
+  );
   const [tradeFormData, setTradeFormData] = useState({
     offeringToken: "SOL",
     offeringAmount: "",
@@ -134,8 +137,8 @@ export default function AdvancedChatTrading() {
   // Advanced encryption functions
   const generateEncryptionKey = () => {
     const key = Array.from(crypto.getRandomValues(new Uint8Array(32)))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
     return key;
   };
 
@@ -189,18 +192,27 @@ export default function AdvancedChatTrading() {
           e.key === "F12"
         ) {
           e.preventDefault();
-          addSystemMessage("🛡️ SCREENSHOT_BLOCKED: Advanced protection active", "alert");
+          addSystemMessage(
+            "🛡️ SCREENSHOT_BLOCKED: Advanced protection active",
+            "alert",
+          );
         }
       };
 
       const preventContext = (e: MouseEvent) => {
         e.preventDefault();
-        addSystemMessage("🛡️ CONTEXT_BLOCKED: Military-grade security enabled", "alert");
+        addSystemMessage(
+          "🛡️ CONTEXT_BLOCKED: Military-grade security enabled",
+          "alert",
+        );
       };
 
       const preventDeveloperTools = () => {
         if (window.outerHeight - window.innerHeight > 200) {
-          addSystemMessage("🛡️ DEVTOOLS_DETECTED: Security breach attempt blocked", "alert");
+          addSystemMessage(
+            "🛡️ DEVTOOLS_DETECTED: Security breach attempt blocked",
+            "alert",
+          );
         }
       };
 
@@ -220,17 +232,19 @@ export default function AdvancedChatTrading() {
   useEffect(() => {
     const glitchTexts = [
       "QUANTUM_ENCRYPTION_ACTIVE",
-      "P2P_TRADING_PROTOCOL_ENABLED", 
+      "P2P_TRADING_PROTOCOL_ENABLED",
       "ZERO_KNOWLEDGE_PROOF_VERIFIED",
       "BLOCKCHAIN_BRIDGE_ESTABLISHED",
       "MULTI_SIG_ESCROW_READY",
       "ATOMIC_SWAP_INITIALIZED",
       "DECENTRALIZED_EXCHANGE_ONLINE",
-      "SMART_CONTRACT_VERIFIED"
+      "SMART_CONTRACT_VERIFIED",
     ];
-    
+
     const interval = setInterval(() => {
-      setGlitchText(glitchTexts[Math.floor(Math.random() * glitchTexts.length)]);
+      setGlitchText(
+        glitchTexts[Math.floor(Math.random() * glitchTexts.length)],
+      );
     }, 2500);
 
     return () => clearInterval(interval);
@@ -251,52 +265,58 @@ export default function AdvancedChatTrading() {
   // Initialize enhanced online users
   useEffect(() => {
     setOnlineUsers([
-      { 
-        id: "1", 
-        username: "CryptoTrader_Pro", 
-        role: "admin", 
+      {
+        id: "1",
+        username: "CryptoTrader_Pro",
+        role: "admin",
         lastSeen: Date.now(),
         reputation: 980,
         tradingEnabled: true,
-        verificationLevel: "premium"
+        verificationLevel: "premium",
       },
-      { 
-        id: "2", 
-        username: "DeFi_Master", 
-        role: "premium", 
+      {
+        id: "2",
+        username: "DeFi_Master",
+        role: "premium",
         lastSeen: Date.now() - 30000,
         reputation: 875,
         tradingEnabled: true,
-        verificationLevel: "verified"
+        verificationLevel: "verified",
       },
-      { 
-        id: "3", 
-        username: "Yield_Farmer", 
-        role: "scanner", 
+      {
+        id: "3",
+        username: "Yield_Farmer",
+        role: "scanner",
         lastSeen: Date.now() - 120000,
         reputation: 720,
         tradingEnabled: true,
-        verificationLevel: "verified"
+        verificationLevel: "verified",
       },
-      { 
-        id: "4", 
-        username: "Anonymous_Whale", 
-        role: "ghost", 
+      {
+        id: "4",
+        username: "Anonymous_Whale",
+        role: "ghost",
         lastSeen: Date.now() - 60000,
         reputation: 650,
         tradingEnabled: false,
-        verificationLevel: "basic"
+        verificationLevel: "basic",
       },
     ]);
 
     // Enhanced welcome messages
     addSystemMessage("🌐 ADVANCED TRADING PROTOCOL INITIALIZED", "system");
-    addSystemMessage(`🔐 Encryption Level: ${encryptionSettings.level.toUpperCase()}`, "system");
+    addSystemMessage(
+      `🔐 Encryption Level: ${encryptionSettings.level.toUpperCase()}`,
+      "system",
+    );
     addSystemMessage("⚡ P2P Trading: ENABLED | Escrow: ACTIVE", "system");
     addSystemMessage("🛡️ Zero-Knowledge Proofs: VERIFIED", "system");
   }, []);
 
-  const addSystemMessage = (message: string, type: "system" | "alert" = "system") => {
+  const addSystemMessage = (
+    message: string,
+    type: "system" | "alert" = "system",
+  ) => {
     const systemMsg: ChatMessage = {
       id: Date.now().toString(),
       user: "NIMREV_PROTOCOL",
@@ -306,35 +326,45 @@ export default function AdvancedChatTrading() {
       encrypted: true,
       encryptionLevel: encryptionSettings.level,
     };
-    setMessages(prev => [...prev, systemMsg]);
+    setMessages((prev) => [...prev, systemMsg]);
   };
 
   const detectAddressInMessage = (message: string): string | null => {
     const solanaRegex = /[1-9A-HJ-NP-Za-km-z]{32,44}/g;
     const ethRegex = /0x[a-fA-F0-9]{40}/g;
-    
+
     const solanaMatch = message.match(solanaRegex);
     const ethMatch = message.match(ethRegex);
-    
+
     return solanaMatch?.[0] || ethMatch?.[0] || null;
   };
 
   const scanAddress = async (address: string) => {
     setIsScanning(true);
-    
+
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
       const mockRiskScore = Math.floor(Math.random() * 100);
-      const riskLevel = mockRiskScore > 70 ? "danger" : mockRiskScore > 40 ? "warning" : "safe";
-      
+      const riskLevel =
+        mockRiskScore > 70 ? "danger" : mockRiskScore > 40 ? "warning" : "safe";
+
       const findings = [];
       if (riskLevel === "danger") {
-        findings.push("⚠️ High-risk trading patterns detected", "🚨 Potential rug pull indicators found");
+        findings.push(
+          "⚠️ High-risk trading patterns detected",
+          "🚨 Potential rug pull indicators found",
+        );
       } else if (riskLevel === "warning") {
-        findings.push("⚡ Unusual volume spikes detected", "📊 Medium risk indicators present");
+        findings.push(
+          "⚡ Unusual volume spikes detected",
+          "📊 Medium risk indicators present",
+        );
       } else {
-        findings.push("✅ Clean transaction history", "🔍 No major risk factors identified");
+        findings.push(
+          "✅ Clean transaction history",
+          "🔍 No major risk factors identified",
+        );
       }
 
       const scanResult: ChatMessage = {
@@ -353,9 +383,12 @@ export default function AdvancedChatTrading() {
         encryptionLevel: encryptionSettings.level,
       };
 
-      setMessages(prev => [...prev, scanResult]);
+      setMessages((prev) => [...prev, scanResult]);
     } catch (error) {
-      addSystemMessage("❌ SCAN_ERROR: Enhanced scanner temporarily unavailable", "alert");
+      addSystemMessage(
+        "❌ SCAN_ERROR: Enhanced scanner temporarily unavailable",
+        "alert",
+      );
     } finally {
       setIsScanning(false);
     }
@@ -381,12 +414,13 @@ export default function AdvancedChatTrading() {
         decimals: 6,
       },
       status: "pending",
-      expiresAt: Date.now() + (parseFloat(tradeFormData.expiryHours) * 60 * 60 * 1000),
+      expiresAt:
+        Date.now() + parseFloat(tradeFormData.expiryHours) * 60 * 60 * 1000,
       conditions: tradeFormData.conditions ? [tradeFormData.conditions] : [],
       reputation_required: 500,
     };
 
-    setActiveTradeOffers(prev => [...prev, tradeOffer]);
+    setActiveTradeOffers((prev) => [...prev, tradeOffer]);
 
     const tradeMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -399,9 +433,9 @@ export default function AdvancedChatTrading() {
       encryptionLevel: encryptionSettings.level,
     };
 
-    setMessages(prev => [...prev, tradeMessage]);
+    setMessages((prev) => [...prev, tradeMessage]);
     setShowTradeModal(false);
-    
+
     // Reset form
     setTradeFormData({
       offeringToken: "SOL",
@@ -414,29 +448,34 @@ export default function AdvancedChatTrading() {
   };
 
   const acceptTradeOffer = (tradeId: string) => {
-    setActiveTradeOffers(prev => 
-      prev.map(trade => 
-        trade.id === tradeId 
-          ? { ...trade, status: "accepted" }
-          : trade
-      )
+    setActiveTradeOffers((prev) =>
+      prev.map((trade) =>
+        trade.id === tradeId ? { ...trade, status: "accepted" } : trade,
+      ),
     );
 
-    addSystemMessage(`✅ TRADE_ACCEPTED: Escrow contract initiated for trade ${tradeId.slice(-8)}`, "system");
-    
+    addSystemMessage(
+      `✅ TRADE_ACCEPTED: Escrow contract initiated for trade ${tradeId.slice(-8)}`,
+      "system",
+    );
+
     // Simulate smart contract execution
     setTimeout(() => {
-      addSystemMessage(`🔄 ATOMIC_SWAP_EXECUTING: Multi-signature validation in progress...`, "system");
-      
+      addSystemMessage(
+        `🔄 ATOMIC_SWAP_EXECUTING: Multi-signature validation in progress...`,
+        "system",
+      );
+
       setTimeout(() => {
-        addSystemMessage(`🎉 TRADE_COMPLETED: Tokens successfully swapped via secure escrow`, "system");
-        
-        setActiveTradeOffers(prev => 
-          prev.map(trade => 
-            trade.id === tradeId 
-              ? { ...trade, status: "completed" }
-              : trade
-          )
+        addSystemMessage(
+          `🎉 TRADE_COMPLETED: Tokens successfully swapped via secure escrow`,
+          "system",
+        );
+
+        setActiveTradeOffers((prev) =>
+          prev.map((trade) =>
+            trade.id === tradeId ? { ...trade, status: "completed" } : trade,
+          ),
         );
       }, 3000);
     }, 2000);
@@ -445,8 +484,11 @@ export default function AdvancedChatTrading() {
   const sendMessage = async () => {
     if (!newMessage.trim() || !currentProfile) return;
 
-    const encryptedContent = await encryptMessage(newMessage, encryptionSettings.level);
-    
+    const encryptedContent = await encryptMessage(
+      newMessage,
+      encryptionSettings.level,
+    );
+
     const userMsg: ChatMessage = {
       id: Date.now().toString(),
       user: currentProfile.username,
@@ -458,12 +500,15 @@ export default function AdvancedChatTrading() {
       encryptionLevel: encryptionSettings.level,
     };
 
-    setMessages(prev => [...prev, userMsg]);
+    setMessages((prev) => [...prev, userMsg]);
 
     // Check for address in message and auto-scan
     const detectedAddress = detectAddressInMessage(newMessage);
     if (detectedAddress) {
-      addSystemMessage(`🎯 ADDRESS_DETECTED: Initiating enhanced scan on ${detectedAddress.substring(0, 8)}...`, "system");
+      addSystemMessage(
+        `🎯 ADDRESS_DETECTED: Initiating enhanced scan on ${detectedAddress.substring(0, 8)}...`,
+        "system",
+      );
       await scanAddress(detectedAddress);
     }
 
@@ -472,23 +517,33 @@ export default function AdvancedChatTrading() {
 
   const getRoleIcon = (role: string) => {
     switch (role) {
-      case "admin": return <Crown className="w-4 h-4 text-cyber-orange" />;
-      case "premium": return <Zap className="w-4 h-4 text-cyber-purple" />;
-      case "scanner": return <Search className="w-4 h-4 text-cyber-blue" />;
-      default: return <Skull className="w-4 h-4 text-cyber-green" />;
+      case "admin":
+        return <Crown className="w-4 h-4 text-cyber-orange" />;
+      case "premium":
+        return <Zap className="w-4 h-4 text-cyber-purple" />;
+      case "scanner":
+        return <Search className="w-4 h-4 text-cyber-blue" />;
+      default:
+        return <Skull className="w-4 h-4 text-cyber-green" />;
     }
   };
 
   const getVerificationBadge = (level: string) => {
     switch (level) {
-      case "premium": return <CheckSquare className="w-3 h-3 text-yellow-400" />;
-      case "verified": return <CheckCircle className="w-3 h-3 text-blue-400" />;
-      default: return null;
+      case "premium":
+        return <CheckSquare className="w-3 h-3 text-yellow-400" />;
+      case "verified":
+        return <CheckCircle className="w-3 h-3 text-blue-400" />;
+      default:
+        return null;
     }
   };
 
   const formatTimestamp = (timestamp: number) => {
-    return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return new Date(timestamp).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   const copyToClipboard = (text: string) => {
@@ -536,12 +591,15 @@ export default function AdvancedChatTrading() {
               <h3 className="text-lg font-cyber font-bold text-cyber-green">
                 P2P_TRADING_PROTOCOL_V2
               </h3>
-              <p className="text-xs font-mono text-gray-400 glitch" data-text={glitchText}>
+              <p
+                className="text-xs font-mono text-gray-400 glitch"
+                data-text={glitchText}
+              >
                 {glitchText}
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowEncryptionModal(true)}
@@ -550,19 +608,23 @@ export default function AdvancedChatTrading() {
             >
               <Key className="w-4 h-4" />
             </button>
-            
+
             <button
               onClick={() => setScreenProtection(!screenProtection)}
               className={`p-2 rounded-lg border ${
-                screenProtection 
-                  ? "bg-cyber-blue/20 border-cyber-blue text-cyber-blue" 
+                screenProtection
+                  ? "bg-cyber-blue/20 border-cyber-blue text-cyber-blue"
                   : "bg-gray-500/20 border-gray-500 text-gray-400"
               } transition-all duration-300`}
               title="Advanced Protection"
             >
-              {screenProtection ? <ShieldCheck className="w-4 h-4" /> : <Shield className="w-4 h-4" />}
+              {screenProtection ? (
+                <ShieldCheck className="w-4 h-4" />
+              ) : (
+                <Shield className="w-4 h-4" />
+              )}
             </button>
-            
+
             <div className="flex items-center gap-1 text-cyber-green">
               <Activity className="w-4 h-4 animate-pulse" />
               <span className="text-xs font-mono">{onlineUsers.length}</span>
@@ -577,37 +639,53 @@ export default function AdvancedChatTrading() {
           {/* Messages */}
           <div className="flex-1 p-4 overflow-y-auto space-y-3 cyber-grid">
             {messages.map((msg) => (
-              <div key={msg.id} className={`${msg.type === "user" ? "ml-8" : "mr-8"}`}>
-                <div className={`inline-block max-w-full ${
-                  msg.type === "system" ? "w-full text-center" :
-                  msg.type === "alert" ? "w-full text-center" :
-                  msg.type === "scan" ? "w-full" :
-                  msg.type === "trade_offer" ? "w-full" :
-                  msg.type === "user" ? "ml-auto" : ""
-                }`}>
+              <div
+                key={msg.id}
+                className={`${msg.type === "user" ? "ml-8" : "mr-8"}`}
+              >
+                <div
+                  className={`inline-block max-w-full ${
+                    msg.type === "system"
+                      ? "w-full text-center"
+                      : msg.type === "alert"
+                        ? "w-full text-center"
+                        : msg.type === "scan"
+                          ? "w-full"
+                          : msg.type === "trade_offer"
+                            ? "w-full"
+                            : msg.type === "user"
+                              ? "ml-auto"
+                              : ""
+                  }`}
+                >
                   {/* Enhanced Message bubble */}
-                  <div className={`relative p-3 rounded-lg ${
-                    msg.type === "system" 
-                      ? "bg-cyber-green/10 border border-cyber-green/30 text-cyber-green"
-                    : msg.type === "alert"
-                      ? "bg-red-500/10 border border-red-500/30 text-red-400"
-                    : msg.type === "scan"
-                      ? "bg-cyber-blue/10 border border-cyber-blue/30"
-                    : msg.type === "trade_offer"
-                      ? "bg-cyber-orange/10 border border-cyber-orange/30"
-                    : msg.type === "user"
-                      ? "bg-cyber-purple/10 border border-cyber-purple/30 text-right"
-                      : "bg-gray-500/10 border border-gray-500/30"
-                  }`}>
-                    
+                  <div
+                    className={`relative p-3 rounded-lg ${
+                      msg.type === "system"
+                        ? "bg-cyber-green/10 border border-cyber-green/30 text-cyber-green"
+                        : msg.type === "alert"
+                          ? "bg-red-500/10 border border-red-500/30 text-red-400"
+                          : msg.type === "scan"
+                            ? "bg-cyber-blue/10 border border-cyber-blue/30"
+                            : msg.type === "trade_offer"
+                              ? "bg-cyber-orange/10 border border-cyber-orange/30"
+                              : msg.type === "user"
+                                ? "bg-cyber-purple/10 border border-cyber-purple/30 text-right"
+                                : "bg-gray-500/10 border border-gray-500/30"
+                    }`}
+                  >
                     {/* Advanced encryption indicator */}
                     {msg.encrypted && (
                       <div className="absolute -top-2 -right-2 flex items-center gap-1">
-                        <div className={`w-2 h-2 rounded-full ${
-                          msg.encryptionLevel === "military" ? "bg-red-400" :
-                          msg.encryptionLevel === "advanced" ? "bg-yellow-400" :
-                          "bg-green-400"
-                        } animate-pulse`}></div>
+                        <div
+                          className={`w-2 h-2 rounded-full ${
+                            msg.encryptionLevel === "military"
+                              ? "bg-red-400"
+                              : msg.encryptionLevel === "advanced"
+                                ? "bg-yellow-400"
+                                : "bg-green-400"
+                          } animate-pulse`}
+                        ></div>
                         <Lock className="w-3 h-3 text-cyber-green" />
                       </div>
                     )}
@@ -622,11 +700,17 @@ export default function AdvancedChatTrading() {
                     {/* Message header */}
                     {msg.type !== "system" && msg.type !== "alert" && (
                       <div className="flex items-center gap-2 mb-1 text-xs">
-                        <span className={`font-cyber font-bold ${
-                          msg.type === "scan" ? "text-cyber-blue" :
-                          msg.type === "trade_offer" ? "text-cyber-orange" :
-                          msg.type === "user" ? "text-cyber-purple" : "text-gray-400"
-                        }`}>
+                        <span
+                          className={`font-cyber font-bold ${
+                            msg.type === "scan"
+                              ? "text-cyber-blue"
+                              : msg.type === "trade_offer"
+                                ? "text-cyber-orange"
+                                : msg.type === "user"
+                                  ? "text-cyber-purple"
+                                  : "text-gray-400"
+                          }`}
+                        >
                           {msg.user}
                         </span>
                         <span className="text-gray-500 font-mono">
@@ -641,13 +725,19 @@ export default function AdvancedChatTrading() {
                     )}
 
                     {/* Message content */}
-                    <div className={`font-mono text-sm ${
-                      msg.type === "scan" ? "text-cyber-blue" :
-                      msg.type === "trade_offer" ? "text-cyber-orange" :
-                      msg.type === "user" ? "text-white" : ""
-                    }`}>
-                      {msg.encrypted && msg.type === "user" 
-                        ? "[ENCRYPTED_MESSAGE]" 
+                    <div
+                      className={`font-mono text-sm ${
+                        msg.type === "scan"
+                          ? "text-cyber-blue"
+                          : msg.type === "trade_offer"
+                            ? "text-cyber-orange"
+                            : msg.type === "user"
+                              ? "text-white"
+                              : ""
+                      }`}
+                    >
+                      {msg.encrypted && msg.type === "user"
+                        ? "[ENCRYPTED_MESSAGE]"
                         : msg.message}
                     </div>
 
@@ -655,26 +745,43 @@ export default function AdvancedChatTrading() {
                     {msg.scanResult && (
                       <div className="mt-3 p-3 bg-dark-bg/50 rounded border border-cyber-blue/20">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-cyber text-cyber-blue">ENHANCED_SCAN_RESULT</span>
-                          <div className={`flex items-center gap-1 ${
-                            msg.scanResult.riskLevel === "safe" ? "text-cyber-green" :
-                            msg.scanResult.riskLevel === "warning" ? "text-cyber-orange" :
-                            "text-red-400"
-                          }`}>
-                            {msg.scanResult.riskLevel === "safe" ? <CheckCircle className="w-4 h-4" /> :
-                             msg.scanResult.riskLevel === "warning" ? <AlertTriangle className="w-4 h-4" /> :
-                             <Shield className="w-4 h-4" />}
+                          <span className="text-xs font-cyber text-cyber-blue">
+                            ENHANCED_SCAN_RESULT
+                          </span>
+                          <div
+                            className={`flex items-center gap-1 ${
+                              msg.scanResult.riskLevel === "safe"
+                                ? "text-cyber-green"
+                                : msg.scanResult.riskLevel === "warning"
+                                  ? "text-cyber-orange"
+                                  : "text-red-400"
+                            }`}
+                          >
+                            {msg.scanResult.riskLevel === "safe" ? (
+                              <CheckCircle className="w-4 h-4" />
+                            ) : msg.scanResult.riskLevel === "warning" ? (
+                              <AlertTriangle className="w-4 h-4" />
+                            ) : (
+                              <Shield className="w-4 h-4" />
+                            )}
                             <span className="text-xs font-bold">
                               {msg.scanResult.riskLevel.toUpperCase()}
                             </span>
                           </div>
                         </div>
-                        
+
                         <div className="text-xs space-y-1">
                           <div className="flex items-center justify-between">
-                            <span>Risk Score: <span className="font-bold">{msg.scanResult.riskScore}/100</span></span>
+                            <span>
+                              Risk Score:{" "}
+                              <span className="font-bold">
+                                {msg.scanResult.riskScore}/100
+                              </span>
+                            </span>
                             <button
-                              onClick={() => copyToClipboard(msg.scanResult!.address)}
+                              onClick={() =>
+                                copyToClipboard(msg.scanResult!.address)
+                              }
                               className="text-cyber-blue hover:text-white transition-colors"
                             >
                               <Copy className="w-3 h-3" />
@@ -682,7 +789,9 @@ export default function AdvancedChatTrading() {
                           </div>
                           <div className="space-y-1">
                             {msg.scanResult.findings.map((finding, i) => (
-                              <div key={i} className="text-gray-300">• {finding}</div>
+                              <div key={i} className="text-gray-300">
+                                • {finding}
+                              </div>
                             ))}
                           </div>
                         </div>
@@ -693,73 +802,101 @@ export default function AdvancedChatTrading() {
                     {msg.tradeOffer && (
                       <div className="mt-3 p-4 bg-dark-bg/50 rounded border border-cyber-orange/20">
                         <div className="flex items-center justify-between mb-3">
-                          <span className="text-sm font-cyber text-cyber-orange">P2P_TRADE_OFFER</span>
-                          <div className={`px-2 py-1 rounded text-xs font-bold ${
-                            msg.tradeOffer.status === "pending" ? "bg-yellow-500/20 text-yellow-400" :
-                            msg.tradeOffer.status === "accepted" ? "bg-blue-500/20 text-blue-400" :
-                            msg.tradeOffer.status === "completed" ? "bg-green-500/20 text-green-400" :
-                            "bg-red-500/20 text-red-400"
-                          }`}>
+                          <span className="text-sm font-cyber text-cyber-orange">
+                            P2P_TRADE_OFFER
+                          </span>
+                          <div
+                            className={`px-2 py-1 rounded text-xs font-bold ${
+                              msg.tradeOffer.status === "pending"
+                                ? "bg-yellow-500/20 text-yellow-400"
+                                : msg.tradeOffer.status === "accepted"
+                                  ? "bg-blue-500/20 text-blue-400"
+                                  : msg.tradeOffer.status === "completed"
+                                    ? "bg-green-500/20 text-green-400"
+                                    : "bg-red-500/20 text-red-400"
+                            }`}
+                          >
                             {msg.tradeOffer.status.toUpperCase()}
                           </div>
                         </div>
-                        
+
                         <div className="grid grid-cols-3 gap-2 items-center text-sm">
                           <div className="text-center">
                             <div className="text-cyber-green font-bold">
-                              {msg.tradeOffer.offering.amount} {msg.tradeOffer.offering.symbol}
+                              {msg.tradeOffer.offering.amount}{" "}
+                              {msg.tradeOffer.offering.symbol}
                             </div>
-                            <div className="text-xs text-gray-400">Offering</div>
+                            <div className="text-xs text-gray-400">
+                              Offering
+                            </div>
                           </div>
-                          
+
                           <div className="text-center">
                             <ArrowUpDown className="w-4 h-4 text-cyber-blue mx-auto" />
                           </div>
-                          
+
                           <div className="text-center">
                             <div className="text-cyber-purple font-bold">
-                              {msg.tradeOffer.requesting.amount} {msg.tradeOffer.requesting.symbol}
+                              {msg.tradeOffer.requesting.amount}{" "}
+                              {msg.tradeOffer.requesting.symbol}
                             </div>
-                            <div className="text-xs text-gray-400">Requesting</div>
+                            <div className="text-xs text-gray-400">
+                              Requesting
+                            </div>
                           </div>
                         </div>
 
                         <div className="mt-2 text-xs text-gray-300">
-                          <div>Expires: {new Date(msg.tradeOffer.expiresAt).toLocaleString()}</div>
-                          {msg.tradeOffer.conditions && msg.tradeOffer.conditions.length > 0 && (
-                            <div>Conditions: {msg.tradeOffer.conditions.join(", ")}</div>
-                          )}
+                          <div>
+                            Expires:{" "}
+                            {new Date(
+                              msg.tradeOffer.expiresAt,
+                            ).toLocaleString()}
+                          </div>
+                          {msg.tradeOffer.conditions &&
+                            msg.tradeOffer.conditions.length > 0 && (
+                              <div>
+                                Conditions:{" "}
+                                {msg.tradeOffer.conditions.join(", ")}
+                              </div>
+                            )}
                         </div>
 
-                        {msg.tradeOffer.status === "pending" && msg.tradeOffer.recipient === currentProfile?.username && (
-                          <div className="mt-3 flex gap-2">
-                            <button
-                              onClick={() => acceptTradeOffer(msg.tradeOffer!.id)}
-                              className="flex-1 px-3 py-1 bg-cyber-green/20 border border-cyber-green text-cyber-green rounded hover:bg-cyber-green hover:text-dark-bg transition-all text-xs"
-                            >
-                              Accept Trade
-                            </button>
-                            <button className="flex-1 px-3 py-1 bg-red-500/20 border border-red-500 text-red-400 rounded hover:bg-red-500 hover:text-white transition-all text-xs">
-                              Reject
-                            </button>
-                          </div>
-                        )}
+                        {msg.tradeOffer.status === "pending" &&
+                          msg.tradeOffer.recipient ===
+                            currentProfile?.username && (
+                            <div className="mt-3 flex gap-2">
+                              <button
+                                onClick={() =>
+                                  acceptTradeOffer(msg.tradeOffer!.id)
+                                }
+                                className="flex-1 px-3 py-1 bg-cyber-green/20 border border-cyber-green text-cyber-green rounded hover:bg-cyber-green hover:text-dark-bg transition-all text-xs"
+                              >
+                                Accept Trade
+                              </button>
+                              <button className="flex-1 px-3 py-1 bg-red-500/20 border border-red-500 text-red-400 rounded hover:bg-red-500 hover:text-white transition-all text-xs">
+                                Reject
+                              </button>
+                            </div>
+                          )}
                       </div>
                     )}
                   </div>
                 </div>
               </div>
             ))}
-            
+
             {isScanning && (
               <div className="text-center">
                 <div className="inline-flex items-center gap-2 bg-cyber-blue/10 border border-cyber-blue/30 rounded-lg p-3">
                   <Search className="w-4 h-4 text-cyber-blue animate-spin" />
-                  <span className="text-cyber-blue font-mono text-sm">ENHANCED_SCANNING...</span>
+                  <span className="text-cyber-blue font-mono text-sm">
+                    ENHANCED_SCANNING...
+                  </span>
                 </div>
               </div>
             )}
-            
+
             <div ref={messagesEndRef} />
           </div>
 
@@ -782,9 +919,11 @@ export default function AdvancedChatTrading() {
                 <Send className="w-4 h-4" />
               </button>
             </div>
-            
+
             <div className="flex items-center justify-between mt-2 text-xs text-gray-400 font-mono">
-              <span>🔒 Military-grade encryption active | 🛡️ Zero-knowledge protocol</span>
+              <span>
+                🔒 Military-grade encryption active | 🛡️ Zero-knowledge protocol
+              </span>
               <span>Level: {encryptionSettings.level.toUpperCase()}</span>
             </div>
           </div>
@@ -797,7 +936,9 @@ export default function AdvancedChatTrading() {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-cyber-green" />
-                <span className="text-sm font-cyber font-bold text-cyber-green">ONLINE_TRADERS</span>
+                <span className="text-sm font-cyber font-bold text-cyber-green">
+                  ONLINE_TRADERS
+                </span>
               </div>
               <button
                 onClick={() => setShowTradeModal(true)}
@@ -807,10 +948,13 @@ export default function AdvancedChatTrading() {
                 <DollarSign className="w-3 h-3" />
               </button>
             </div>
-            
+
             <div className="space-y-2 max-h-40 overflow-y-auto">
               {onlineUsers.map((user) => (
-                <div key={user.id} className="flex items-center gap-2 p-2 rounded bg-dark-bg/30 border border-cyber-green/20">
+                <div
+                  key={user.id}
+                  className="flex items-center gap-2 p-2 rounded bg-dark-bg/30 border border-cyber-green/20"
+                >
                   <div className="flex items-center gap-1">
                     {getRoleIcon(user.role)}
                     {getVerificationBadge(user.verificationLevel)}
@@ -845,23 +989,33 @@ export default function AdvancedChatTrading() {
           <div>
             <div className="flex items-center gap-2 mb-3">
               <TrendingUp className="w-4 h-4 text-cyber-orange" />
-              <span className="text-sm font-cyber font-bold text-cyber-orange">ACTIVE_TRADES</span>
+              <span className="text-sm font-cyber font-bold text-cyber-orange">
+                ACTIVE_TRADES
+              </span>
             </div>
-            
+
             <div className="space-y-2 max-h-32 overflow-y-auto">
               {activeTradeOffers.slice(0, 3).map((trade) => (
-                <div key={trade.id} className="p-2 bg-cyber-orange/10 border border-cyber-orange/20 rounded text-xs">
+                <div
+                  key={trade.id}
+                  className="p-2 bg-cyber-orange/10 border border-cyber-orange/20 rounded text-xs"
+                >
                   <div className="font-bold text-cyber-orange">
-                    {trade.offering.amount} {trade.offering.symbol} ⇄ {trade.requesting.amount} {trade.requesting.symbol}
+                    {trade.offering.amount} {trade.offering.symbol} ⇄{" "}
+                    {trade.requesting.amount} {trade.requesting.symbol}
                   </div>
                   <div className="text-gray-400">
                     {trade.offerer} → {trade.recipient}
                   </div>
-                  <div className={`text-xs ${
-                    trade.status === "pending" ? "text-yellow-400" :
-                    trade.status === "completed" ? "text-green-400" :
-                    "text-blue-400"
-                  }`}>
+                  <div
+                    className={`text-xs ${
+                      trade.status === "pending"
+                        ? "text-yellow-400"
+                        : trade.status === "completed"
+                          ? "text-green-400"
+                          : "text-blue-400"
+                    }`}
+                  >
                     {trade.status.toUpperCase()}
                   </div>
                 </div>
@@ -928,7 +1082,12 @@ export default function AdvancedChatTrading() {
                     </label>
                     <select
                       value={tradeFormData.offeringToken}
-                      onChange={(e) => setTradeFormData(prev => ({ ...prev, offeringToken: e.target.value }))}
+                      onChange={(e) =>
+                        setTradeFormData((prev) => ({
+                          ...prev,
+                          offeringToken: e.target.value,
+                        }))
+                      }
                       className="w-full bg-dark-bg/50 border border-cyber-green/30 rounded px-2 py-1 text-white text-sm"
                     >
                       <option value="SOL">SOL</option>
@@ -940,7 +1099,12 @@ export default function AdvancedChatTrading() {
                     <input
                       type="number"
                       value={tradeFormData.offeringAmount}
-                      onChange={(e) => setTradeFormData(prev => ({ ...prev, offeringAmount: e.target.value }))}
+                      onChange={(e) =>
+                        setTradeFormData((prev) => ({
+                          ...prev,
+                          offeringAmount: e.target.value,
+                        }))
+                      }
                       placeholder="Amount"
                       className="w-full mt-1 bg-dark-bg/50 border border-cyber-green/30 rounded px-2 py-1 text-white text-sm"
                     />
@@ -952,7 +1116,12 @@ export default function AdvancedChatTrading() {
                     </label>
                     <select
                       value={tradeFormData.requestingToken}
-                      onChange={(e) => setTradeFormData(prev => ({ ...prev, requestingToken: e.target.value }))}
+                      onChange={(e) =>
+                        setTradeFormData((prev) => ({
+                          ...prev,
+                          requestingToken: e.target.value,
+                        }))
+                      }
                       className="w-full bg-dark-bg/50 border border-cyber-purple/30 rounded px-2 py-1 text-white text-sm"
                     >
                       <option value="USDC">USDC</option>
@@ -964,7 +1133,12 @@ export default function AdvancedChatTrading() {
                     <input
                       type="number"
                       value={tradeFormData.requestingAmount}
-                      onChange={(e) => setTradeFormData(prev => ({ ...prev, requestingAmount: e.target.value }))}
+                      onChange={(e) =>
+                        setTradeFormData((prev) => ({
+                          ...prev,
+                          requestingAmount: e.target.value,
+                        }))
+                      }
                       placeholder="Amount"
                       className="w-full mt-1 bg-dark-bg/50 border border-cyber-purple/30 rounded px-2 py-1 text-white text-sm"
                     />
@@ -978,7 +1152,12 @@ export default function AdvancedChatTrading() {
                   <input
                     type="text"
                     value={tradeFormData.conditions}
-                    onChange={(e) => setTradeFormData(prev => ({ ...prev, conditions: e.target.value }))}
+                    onChange={(e) =>
+                      setTradeFormData((prev) => ({
+                        ...prev,
+                        conditions: e.target.value,
+                      }))
+                    }
                     placeholder="e.g., Min reputation 700"
                     className="w-full bg-dark-bg/50 border border-cyber-blue/30 rounded px-2 py-1 text-white text-sm"
                   />
@@ -990,7 +1169,12 @@ export default function AdvancedChatTrading() {
                   </label>
                   <select
                     value={tradeFormData.expiryHours}
-                    onChange={(e) => setTradeFormData(prev => ({ ...prev, expiryHours: e.target.value }))}
+                    onChange={(e) =>
+                      setTradeFormData((prev) => ({
+                        ...prev,
+                        expiryHours: e.target.value,
+                      }))
+                    }
                     className="w-full bg-dark-bg/50 border border-gray-500/30 rounded px-2 py-1 text-white text-sm"
                   >
                     <option value="1">1 Hour</option>
@@ -1003,10 +1187,14 @@ export default function AdvancedChatTrading() {
                 {selectedTradeUser && (
                   <div className="p-3 bg-cyber-blue/10 border border-cyber-blue/20 rounded">
                     <div className="text-sm text-cyber-blue">
-                      Trading with: <span className="font-bold">{selectedTradeUser.username}</span>
+                      Trading with:{" "}
+                      <span className="font-bold">
+                        {selectedTradeUser.username}
+                      </span>
                     </div>
                     <div className="text-xs text-gray-400">
-                      Reputation: {selectedTradeUser.reputation} | {selectedTradeUser.verificationLevel}
+                      Reputation: {selectedTradeUser.reputation} |{" "}
+                      {selectedTradeUser.verificationLevel}
                     </div>
                   </div>
                 )}
@@ -1018,10 +1206,13 @@ export default function AdvancedChatTrading() {
                   >
                     Cancel
                   </button>
-                  
+
                   <button
                     onClick={createTradeOffer}
-                    disabled={!tradeFormData.offeringAmount || !tradeFormData.requestingAmount}
+                    disabled={
+                      !tradeFormData.offeringAmount ||
+                      !tradeFormData.requestingAmount
+                    }
                     className="flex-1 px-4 py-2 bg-gradient-to-r from-cyber-orange to-cyber-purple text-white rounded hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     <ArrowUpDown className="w-4 h-4" />
@@ -1068,21 +1259,45 @@ export default function AdvancedChatTrading() {
                   </label>
                   <div className="space-y-2">
                     {[
-                      { value: "basic", label: "Basic (AES-128)", desc: "Standard encryption" },
-                      { value: "advanced", label: "Advanced (AES-256)", desc: "Military-grade" },
-                      { value: "military", label: "Military (ChaCha20)", desc: "Quantum-resistant" },
+                      {
+                        value: "basic",
+                        label: "Basic (AES-128)",
+                        desc: "Standard encryption",
+                      },
+                      {
+                        value: "advanced",
+                        label: "Advanced (AES-256)",
+                        desc: "Military-grade",
+                      },
+                      {
+                        value: "military",
+                        label: "Military (ChaCha20)",
+                        desc: "Quantum-resistant",
+                      },
                     ].map((level) => (
-                      <label key={level.value} className="flex items-center gap-3 p-2 border border-gray-600 rounded cursor-pointer hover:border-cyber-green">
+                      <label
+                        key={level.value}
+                        className="flex items-center gap-3 p-2 border border-gray-600 rounded cursor-pointer hover:border-cyber-green"
+                      >
                         <input
                           type="radio"
                           value={level.value}
                           checked={encryptionSettings.level === level.value}
-                          onChange={(e) => setEncryptionSettings(prev => ({ ...prev, level: e.target.value as any }))}
+                          onChange={(e) =>
+                            setEncryptionSettings((prev) => ({
+                              ...prev,
+                              level: e.target.value as any,
+                            }))
+                          }
                           className="text-cyber-green"
                         />
                         <div>
-                          <div className="text-white font-mono text-sm">{level.label}</div>
-                          <div className="text-gray-400 text-xs">{level.desc}</div>
+                          <div className="text-white font-mono text-sm">
+                            {level.label}
+                          </div>
+                          <div className="text-gray-400 text-xs">
+                            {level.desc}
+                          </div>
                         </div>
                       </label>
                     ))}
@@ -1091,32 +1306,54 @@ export default function AdvancedChatTrading() {
 
                 <div className="space-y-3">
                   <label className="flex items-center justify-between">
-                    <span className="text-sm text-gray-300">Perfect Forward Secrecy</span>
+                    <span className="text-sm text-gray-300">
+                      Perfect Forward Secrecy
+                    </span>
                     <button
-                      onClick={() => setEncryptionSettings(prev => ({ ...prev, perfectForwardSecrecy: !prev.perfectForwardSecrecy }))}
+                      onClick={() =>
+                        setEncryptionSettings((prev) => ({
+                          ...prev,
+                          perfectForwardSecrecy: !prev.perfectForwardSecrecy,
+                        }))
+                      }
                       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                        encryptionSettings.perfectForwardSecrecy ? "bg-cyber-green" : "bg-gray-600"
+                        encryptionSettings.perfectForwardSecrecy
+                          ? "bg-cyber-green"
+                          : "bg-gray-600"
                       }`}
                     >
                       <span
                         className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                          encryptionSettings.perfectForwardSecrecy ? "translate-x-6" : "translate-x-1"
+                          encryptionSettings.perfectForwardSecrecy
+                            ? "translate-x-6"
+                            : "translate-x-1"
                         }`}
                       />
                     </button>
                   </label>
 
                   <label className="flex items-center justify-between">
-                    <span className="text-sm text-gray-300">Auto Key Rotation</span>
+                    <span className="text-sm text-gray-300">
+                      Auto Key Rotation
+                    </span>
                     <button
-                      onClick={() => setEncryptionSettings(prev => ({ ...prev, keyRotation: !prev.keyRotation }))}
+                      onClick={() =>
+                        setEncryptionSettings((prev) => ({
+                          ...prev,
+                          keyRotation: !prev.keyRotation,
+                        }))
+                      }
                       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                        encryptionSettings.keyRotation ? "bg-cyber-green" : "bg-gray-600"
+                        encryptionSettings.keyRotation
+                          ? "bg-cyber-green"
+                          : "bg-gray-600"
                       }`}
                     >
                       <span
                         className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                          encryptionSettings.keyRotation ? "translate-x-6" : "translate-x-1"
+                          encryptionSettings.keyRotation
+                            ? "translate-x-6"
+                            : "translate-x-1"
                         }`}
                       />
                     </button>
@@ -1129,7 +1366,12 @@ export default function AdvancedChatTrading() {
                   </label>
                   <select
                     value={encryptionSettings.messageExpiry}
-                    onChange={(e) => setEncryptionSettings(prev => ({ ...prev, messageExpiry: parseInt(e.target.value) }))}
+                    onChange={(e) =>
+                      setEncryptionSettings((prev) => ({
+                        ...prev,
+                        messageExpiry: parseInt(e.target.value),
+                      }))
+                    }
                     className="w-full bg-dark-bg/50 border border-gray-500/30 rounded px-3 py-2 text-white"
                   >
                     <option value={15}>15 minutes</option>
@@ -1141,7 +1383,8 @@ export default function AdvancedChatTrading() {
 
                 <div className="p-3 bg-cyber-blue/10 border border-cyber-blue/20 rounded">
                   <div className="text-xs font-mono text-cyber-blue">
-                    Current Key: {encryptionKey.slice(0, 8)}...{encryptionKey.slice(-8)}
+                    Current Key: {encryptionKey.slice(0, 8)}...
+                    {encryptionKey.slice(-8)}
                   </div>
                   <button
                     onClick={() => setEncryptionKey(generateEncryptionKey())}

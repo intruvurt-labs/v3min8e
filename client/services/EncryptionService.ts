@@ -41,8 +41,8 @@ class AdvancedEncryptionService {
   // Convert ArrayBuffer to hex string
   private arrayBufferToHex(buffer: ArrayBuffer): string {
     return Array.from(new Uint8Array(buffer))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
   }
 
   // Convert hex string to ArrayBuffer
@@ -55,10 +55,13 @@ class AdvancedEncryptionService {
   }
 
   // Basic encryption using AES-GCM
-  async encryptBasic(message: string, password: string): Promise<EncryptedMessage> {
+  async encryptBasic(
+    message: string,
+    password: string,
+  ): Promise<EncryptedMessage> {
     const encoder = new TextEncoder();
     const data = encoder.encode(message);
-    
+
     // Generate salt and derive key
     const salt = this.generateRandomBytes(16);
     const keyMaterial = await crypto.subtle.importKey(
@@ -66,9 +69,9 @@ class AdvancedEncryptionService {
       encoder.encode(password),
       { name: "PBKDF2" },
       false,
-      ["deriveKey"]
+      ["deriveKey"],
     );
-    
+
     const key = await crypto.subtle.deriveKey(
       {
         name: "PBKDF2",
@@ -79,7 +82,7 @@ class AdvancedEncryptionService {
       keyMaterial,
       { name: "AES-GCM", length: 128 },
       false,
-      ["encrypt"]
+      ["encrypt"],
     );
 
     // Generate IV and encrypt
@@ -87,12 +90,14 @@ class AdvancedEncryptionService {
     const encrypted = await crypto.subtle.encrypt(
       { name: "AES-GCM", iv: iv },
       key,
-      data
+      data,
     );
 
     const timestamp = Date.now();
-    const expiresAt = this.config.messageExpiry > 0 ? 
-      timestamp + (this.config.messageExpiry * 60 * 1000) : undefined;
+    const expiresAt =
+      this.config.messageExpiry > 0
+        ? timestamp + this.config.messageExpiry * 60 * 1000
+        : undefined;
 
     return {
       content: this.arrayBufferToHex(encrypted),
@@ -105,10 +110,13 @@ class AdvancedEncryptionService {
   }
 
   // Advanced encryption using AES-256-GCM
-  async encryptAdvanced(message: string, password: string): Promise<EncryptedMessage> {
+  async encryptAdvanced(
+    message: string,
+    password: string,
+  ): Promise<EncryptedMessage> {
     const encoder = new TextEncoder();
     const data = encoder.encode(message);
-    
+
     // Generate salt and derive key with higher iterations
     const salt = this.generateRandomBytes(32);
     const keyMaterial = await crypto.subtle.importKey(
@@ -116,9 +124,9 @@ class AdvancedEncryptionService {
       encoder.encode(password),
       { name: "PBKDF2" },
       false,
-      ["deriveKey"]
+      ["deriveKey"],
     );
-    
+
     const key = await crypto.subtle.deriveKey(
       {
         name: "PBKDF2",
@@ -129,7 +137,7 @@ class AdvancedEncryptionService {
       keyMaterial,
       { name: "AES-GCM", length: 256 }, // 256-bit key
       false,
-      ["encrypt"]
+      ["encrypt"],
     );
 
     // Generate IV and encrypt
@@ -137,12 +145,14 @@ class AdvancedEncryptionService {
     const encrypted = await crypto.subtle.encrypt(
       { name: "AES-GCM", iv: iv },
       key,
-      data
+      data,
     );
 
     const timestamp = Date.now();
-    const expiresAt = this.config.messageExpiry > 0 ? 
-      timestamp + (this.config.messageExpiry * 60 * 1000) : undefined;
+    const expiresAt =
+      this.config.messageExpiry > 0
+        ? timestamp + this.config.messageExpiry * 60 * 1000
+        : undefined;
 
     return {
       content: this.arrayBufferToHex(encrypted),
@@ -155,28 +165,31 @@ class AdvancedEncryptionService {
   }
 
   // Military-grade encryption simulation using ChaCha20-Poly1305 concept
-  async encryptMilitary(message: string, password: string): Promise<EncryptedMessage> {
+  async encryptMilitary(
+    message: string,
+    password: string,
+  ): Promise<EncryptedMessage> {
     // Since Web Crypto API doesn't support ChaCha20-Poly1305, we simulate with AES-256
     // but with additional security measures
     const encoder = new TextEncoder();
-    
+
     // Add noise to the message for traffic analysis resistance
     const noise = this.arrayBufferToHex(this.generateRandomBytes(16));
     const paddedMessage = message + `[NOISE:${noise}]`;
     const data = encoder.encode(paddedMessage);
-    
+
     // Use multiple rounds of key derivation
     const salt1 = this.generateRandomBytes(32);
     const salt2 = this.generateRandomBytes(32);
-    
+
     let keyMaterial = await crypto.subtle.importKey(
       "raw",
       encoder.encode(password + salt1.toString()),
       { name: "PBKDF2" },
       false,
-      ["deriveKey"]
+      ["deriveKey"],
     );
-    
+
     // First round
     let intermediateKey = await crypto.subtle.deriveKey(
       {
@@ -188,7 +201,7 @@ class AdvancedEncryptionService {
       keyMaterial,
       { name: "HMAC", hash: "SHA-512" },
       true,
-      ["sign"]
+      ["sign"],
     );
 
     // Export and re-import for second round
@@ -198,7 +211,7 @@ class AdvancedEncryptionService {
       keyBytes,
       { name: "PBKDF2" },
       false,
-      ["deriveKey"]
+      ["deriveKey"],
     );
 
     // Second round - final encryption key
@@ -212,7 +225,7 @@ class AdvancedEncryptionService {
       keyMaterial,
       { name: "AES-GCM", length: 256 },
       false,
-      ["encrypt"]
+      ["encrypt"],
     );
 
     // Generate IV and encrypt
@@ -220,12 +233,14 @@ class AdvancedEncryptionService {
     const encrypted = await crypto.subtle.encrypt(
       { name: "AES-GCM", iv: iv },
       finalKey,
-      data
+      data,
     );
 
     const timestamp = Date.now();
-    const expiresAt = this.config.messageExpiry > 0 ? 
-      timestamp + (this.config.messageExpiry * 60 * 1000) : undefined;
+    const expiresAt =
+      this.config.messageExpiry > 0
+        ? timestamp + this.config.messageExpiry * 60 * 1000
+        : undefined;
 
     return {
       content: this.arrayBufferToHex(encrypted),
@@ -238,7 +253,10 @@ class AdvancedEncryptionService {
   }
 
   // Main encryption method
-  async encryptMessage(message: string, password: string): Promise<EncryptedMessage> {
+  async encryptMessage(
+    message: string,
+    password: string,
+  ): Promise<EncryptedMessage> {
     try {
       switch (this.config.level) {
         case "basic":
@@ -257,7 +275,10 @@ class AdvancedEncryptionService {
   }
 
   // Decrypt basic message
-  async decryptBasic(encryptedMsg: EncryptedMessage, password: string): Promise<string> {
+  async decryptBasic(
+    encryptedMsg: EncryptedMessage,
+    password: string,
+  ): Promise<string> {
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
 
@@ -268,9 +289,9 @@ class AdvancedEncryptionService {
       encoder.encode(password),
       { name: "PBKDF2" },
       false,
-      ["deriveKey"]
+      ["deriveKey"],
     );
-    
+
     const key = await crypto.subtle.deriveKey(
       {
         name: "PBKDF2",
@@ -281,24 +302,27 @@ class AdvancedEncryptionService {
       keyMaterial,
       { name: "AES-GCM", length: 128 },
       false,
-      ["decrypt"]
+      ["decrypt"],
     );
 
     // Decrypt
     const iv = this.hexToArrayBuffer(encryptedMsg.iv!);
     const encryptedData = this.hexToArrayBuffer(encryptedMsg.content);
-    
+
     const decrypted = await crypto.subtle.decrypt(
       { name: "AES-GCM", iv: iv },
       key,
-      encryptedData
+      encryptedData,
     );
 
     return decoder.decode(decrypted);
   }
 
   // Decrypt advanced message
-  async decryptAdvanced(encryptedMsg: EncryptedMessage, password: string): Promise<string> {
+  async decryptAdvanced(
+    encryptedMsg: EncryptedMessage,
+    password: string,
+  ): Promise<string> {
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
 
@@ -309,9 +333,9 @@ class AdvancedEncryptionService {
       encoder.encode(password),
       { name: "PBKDF2" },
       false,
-      ["deriveKey"]
+      ["deriveKey"],
     );
-    
+
     const key = await crypto.subtle.deriveKey(
       {
         name: "PBKDF2",
@@ -322,24 +346,27 @@ class AdvancedEncryptionService {
       keyMaterial,
       { name: "AES-GCM", length: 256 },
       false,
-      ["decrypt"]
+      ["decrypt"],
     );
 
     // Decrypt
     const iv = this.hexToArrayBuffer(encryptedMsg.iv!);
     const encryptedData = this.hexToArrayBuffer(encryptedMsg.content);
-    
+
     const decrypted = await crypto.subtle.decrypt(
       { name: "AES-GCM", iv: iv },
       key,
-      encryptedData
+      encryptedData,
     );
 
     return decoder.decode(decrypted);
   }
 
   // Decrypt military message
-  async decryptMilitary(encryptedMsg: EncryptedMessage, password: string): Promise<string> {
+  async decryptMilitary(
+    encryptedMsg: EncryptedMessage,
+    password: string,
+  ): Promise<string> {
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
 
@@ -354,9 +381,9 @@ class AdvancedEncryptionService {
       encoder.encode(password + salt1.toString()),
       { name: "PBKDF2" },
       false,
-      ["deriveKey"]
+      ["deriveKey"],
     );
-    
+
     // First round
     let intermediateKey = await crypto.subtle.deriveKey(
       {
@@ -368,7 +395,7 @@ class AdvancedEncryptionService {
       keyMaterial,
       { name: "HMAC", hash: "SHA-512" },
       true,
-      ["sign"]
+      ["sign"],
     );
 
     // Export and re-import for second round
@@ -378,7 +405,7 @@ class AdvancedEncryptionService {
       keyBytes,
       { name: "PBKDF2" },
       false,
-      ["deriveKey"]
+      ["deriveKey"],
     );
 
     // Second round - final decryption key
@@ -392,32 +419,35 @@ class AdvancedEncryptionService {
       keyMaterial,
       { name: "AES-GCM", length: 256 },
       false,
-      ["decrypt"]
+      ["decrypt"],
     );
 
     // Decrypt
     const iv = this.hexToArrayBuffer(encryptedMsg.iv!);
     const encryptedData = this.hexToArrayBuffer(encryptedMsg.content);
-    
+
     const decrypted = await crypto.subtle.decrypt(
       { name: "AES-GCM", iv: iv },
       finalKey,
-      encryptedData
+      encryptedData,
     );
 
     const decryptedText = decoder.decode(decrypted);
-    
+
     // Remove noise padding
     const noiseIndex = decryptedText.lastIndexOf("[NOISE:");
     if (noiseIndex !== -1) {
       return decryptedText.substring(0, noiseIndex);
     }
-    
+
     return decryptedText;
   }
 
   // Main decryption method
-  async decryptMessage(encryptedMsg: EncryptedMessage, password: string): Promise<string> {
+  async decryptMessage(
+    encryptedMsg: EncryptedMessage,
+    password: string,
+  ): Promise<string> {
     try {
       // Check if message has expired
       if (encryptedMsg.expiresAt && Date.now() > encryptedMsg.expiresAt) {
@@ -448,14 +478,17 @@ class AdvancedEncryptionService {
         namedCurve: "P-384", // Strong curve
       },
       false, // Not extractable for security
-      ["deriveKey"]
+      ["deriveKey"],
     );
 
     return keyPair;
   }
 
   // Derive shared secret using ECDH
-  async deriveSharedSecret(privateKey: CryptoKey, publicKey: CryptoKey): Promise<CryptoKey> {
+  async deriveSharedSecret(
+    privateKey: CryptoKey,
+    publicKey: CryptoKey,
+  ): Promise<CryptoKey> {
     return await crypto.subtle.deriveKey(
       {
         name: "ECDH",
@@ -467,7 +500,7 @@ class AdvancedEncryptionService {
         length: 256,
       },
       false,
-      ["encrypt", "decrypt"]
+      ["encrypt", "decrypt"],
     );
   }
 

@@ -1,4 +1,10 @@
-import { useState, useEffect, createContext, useContext, ReactNode } from "react";
+import {
+  useState,
+  useEffect,
+  createContext,
+  useContext,
+  ReactNode,
+} from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Bell,
@@ -20,7 +26,14 @@ import {
 
 interface Notification {
   id: string;
-  type: "scan" | "reward" | "achievement" | "trade" | "social" | "system" | "milestone";
+  type:
+    | "scan"
+    | "reward"
+    | "achievement"
+    | "trade"
+    | "social"
+    | "system"
+    | "milestone";
   title: string;
   message: string;
   timestamp: number;
@@ -34,7 +47,9 @@ interface Notification {
 interface NotificationContextType {
   notifications: Notification[];
   unreadCount: number;
-  addNotification: (notification: Omit<Notification, "id" | "timestamp" | "read">) => void;
+  addNotification: (
+    notification: Omit<Notification, "id" | "timestamp" | "read">,
+  ) => void;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
   removeNotification: (id: string) => void;
@@ -46,7 +61,9 @@ const NotificationContext = createContext<NotificationContextType | null>(null);
 export const useNotifications = () => {
   const context = useContext(NotificationContext);
   if (!context) {
-    throw new Error("useNotifications must be used within NotificationProvider");
+    throw new Error(
+      "useNotifications must be used within NotificationProvider",
+    );
   }
   return context;
 };
@@ -73,7 +90,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
         actionLabel: "View Details",
       },
       {
-        id: "2", 
+        id: "2",
         type: "reward",
         title: "Daily Reward Available",
         message: "Claim your Day 4 reward: 2x Scan Multiplier",
@@ -85,7 +102,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       },
       {
         id: "3",
-        type: "achievement", 
+        type: "achievement",
         title: "Level Up!",
         message: "Congratulations! You've reached Level 5",
         timestamp: Date.now() - 1200000,
@@ -96,16 +113,18 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     setNotifications(demoNotifications);
   }, []);
 
-  const addNotification = (notification: Omit<Notification, "id" | "timestamp" | "read">) => {
+  const addNotification = (
+    notification: Omit<Notification, "id" | "timestamp" | "read">,
+  ) => {
     const newNotification: Notification = {
       ...notification,
       id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       timestamp: Date.now(),
       read: false,
     };
-    
-    setNotifications(prev => [newNotification, ...prev]);
-    
+
+    setNotifications((prev) => [newNotification, ...prev]);
+
     // Auto-remove low priority notifications after 10 seconds
     if (notification.priority === "low") {
       setTimeout(() => {
@@ -115,35 +134,37 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
   };
 
   const markAsRead = (id: string) => {
-    setNotifications(prev => prev.map(notif =>
-      notif.id === id ? { ...notif, read: true } : notif
-    ));
+    setNotifications((prev) =>
+      prev.map((notif) => (notif.id === id ? { ...notif, read: true } : notif)),
+    );
   };
 
   const markAllAsRead = () => {
-    setNotifications(prev => prev.map(notif => ({ ...notif, read: true })));
+    setNotifications((prev) => prev.map((notif) => ({ ...notif, read: true })));
   };
 
   const removeNotification = (id: string) => {
-    setNotifications(prev => prev.filter(notif => notif.id !== id));
+    setNotifications((prev) => prev.filter((notif) => notif.id !== id));
   };
 
   const clearAll = () => {
     setNotifications([]);
   };
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
-    <NotificationContext.Provider value={{
-      notifications,
-      unreadCount,
-      addNotification,
-      markAsRead,
-      markAllAsRead,
-      removeNotification,
-      clearAll,
-    }}>
+    <NotificationContext.Provider
+      value={{
+        notifications,
+        unreadCount,
+        addNotification,
+        markAsRead,
+        markAllAsRead,
+        removeNotification,
+        clearAll,
+      }}
+    >
       {children}
     </NotificationContext.Provider>
   );
@@ -151,29 +172,48 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
 
 // Notification Bell Component
 export function NotificationBell() {
-  const { notifications, unreadCount, markAsRead, markAllAsRead, removeNotification } = useNotifications();
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    removeNotification,
+  } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case "scan": return <Shield className="w-4 h-4" />;
-      case "reward": return <Gift className="w-4 h-4" />;
-      case "achievement": return <Star className="w-4 h-4" />;
-      case "trade": return <TrendingUp className="w-4 h-4" />;
-      case "social": return <Users className="w-4 h-4" />;
-      case "system": return <Info className="w-4 h-4" />;
-      case "milestone": return <Target className="w-4 h-4" />;
-      default: return <Bell className="w-4 h-4" />;
+      case "scan":
+        return <Shield className="w-4 h-4" />;
+      case "reward":
+        return <Gift className="w-4 h-4" />;
+      case "achievement":
+        return <Star className="w-4 h-4" />;
+      case "trade":
+        return <TrendingUp className="w-4 h-4" />;
+      case "social":
+        return <Users className="w-4 h-4" />;
+      case "system":
+        return <Info className="w-4 h-4" />;
+      case "milestone":
+        return <Target className="w-4 h-4" />;
+      default:
+        return <Bell className="w-4 h-4" />;
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case "critical": return "border-red-500 bg-red-500/10 text-red-400";
-      case "high": return "border-cyber-orange bg-cyber-orange/10 text-cyber-orange";
-      case "medium": return "border-cyber-blue bg-cyber-blue/10 text-cyber-blue";
-      case "low": return "border-gray-500 bg-gray-500/10 text-gray-400";
-      default: return "border-gray-500 bg-gray-500/10 text-gray-400";
+      case "critical":
+        return "border-red-500 bg-red-500/10 text-red-400";
+      case "high":
+        return "border-cyber-orange bg-cyber-orange/10 text-cyber-orange";
+      case "medium":
+        return "border-cyber-blue bg-cyber-blue/10 text-cyber-blue";
+      case "low":
+        return "border-gray-500 bg-gray-500/10 text-gray-400";
+      default:
+        return "border-gray-500 bg-gray-500/10 text-gray-400";
     }
   };
 
@@ -218,9 +258,11 @@ export function NotificationBell() {
             <div className="flex items-center justify-between p-4 border-b border-cyber-green/20">
               <div className="flex items-center gap-2">
                 <Bell className="w-5 h-5 text-cyber-green" />
-                <span className="font-cyber font-bold text-cyber-green">NOTIFICATIONS</span>
+                <span className="font-cyber font-bold text-cyber-green">
+                  NOTIFICATIONS
+                </span>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 {unreadCount > 0 && (
                   <button
@@ -264,15 +306,20 @@ export function NotificationBell() {
                       }}
                     >
                       <div className="flex items-start gap-3">
-                        <div className={`mt-1 ${
-                          notification.priority === "critical" ? "text-red-400" :
-                          notification.priority === "high" ? "text-cyber-orange" :
-                          notification.priority === "medium" ? "text-cyber-blue" :
-                          "text-gray-400"
-                        }`}>
+                        <div
+                          className={`mt-1 ${
+                            notification.priority === "critical"
+                              ? "text-red-400"
+                              : notification.priority === "high"
+                                ? "text-cyber-orange"
+                                : notification.priority === "medium"
+                                  ? "text-cyber-blue"
+                                  : "text-gray-400"
+                          }`}
+                        >
                           {getNotificationIcon(notification.type)}
                         </div>
-                        
+
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
                             <h4 className="text-sm font-bold text-white truncate">
@@ -282,11 +329,11 @@ export function NotificationBell() {
                               {formatTime(notification.timestamp)}
                             </span>
                           </div>
-                          
+
                           <p className="text-xs text-gray-300 mt-1">
                             {notification.message}
                           </p>
-                          
+
                           {notification.actionLabel && (
                             <div className="mt-2">
                               <span className="text-xs text-cyber-blue hover:text-cyber-green">
@@ -319,9 +366,12 @@ export function NotificationBell() {
 }
 
 // Toast Notification Component for immediate alerts
-export function ToastNotification({ notification, onDismiss }: { 
-  notification: Notification; 
-  onDismiss: () => void; 
+export function ToastNotification({
+  notification,
+  onDismiss,
+}: {
+  notification: Notification;
+  onDismiss: () => void;
 }) {
   useEffect(() => {
     const timer = setTimeout(onDismiss, 5000);
@@ -330,19 +380,27 @@ export function ToastNotification({ notification, onDismiss }: {
 
   const getToastIcon = () => {
     switch (notification.priority) {
-      case "critical": return <AlertTriangle className="w-5 h-5 text-red-400" />;
-      case "high": return <Zap className="w-5 h-5 text-cyber-orange" />;
-      case "medium": return <Info className="w-5 h-5 text-cyber-blue" />;
-      default: return <CheckCircle className="w-5 h-5 text-cyber-green" />;
+      case "critical":
+        return <AlertTriangle className="w-5 h-5 text-red-400" />;
+      case "high":
+        return <Zap className="w-5 h-5 text-cyber-orange" />;
+      case "medium":
+        return <Info className="w-5 h-5 text-cyber-blue" />;
+      default:
+        return <CheckCircle className="w-5 h-5 text-cyber-green" />;
     }
   };
 
   const getBorderColor = () => {
     switch (notification.priority) {
-      case "critical": return "border-red-500";
-      case "high": return "border-cyber-orange";
-      case "medium": return "border-cyber-blue";
-      default: return "border-cyber-green";
+      case "critical":
+        return "border-red-500";
+      case "high":
+        return "border-cyber-orange";
+      case "medium":
+        return "border-cyber-blue";
+      default:
+        return "border-cyber-green";
     }
   };
 
@@ -355,11 +413,11 @@ export function ToastNotification({ notification, onDismiss }: {
     >
       <div className="flex items-start gap-3">
         {getToastIcon()}
-        
+
         <div className="flex-1">
           <h4 className="font-bold text-white text-sm">{notification.title}</h4>
           <p className="text-gray-300 text-xs mt-1">{notification.message}</p>
-          
+
           {notification.actionLabel && (
             <button className="text-xs text-cyber-blue hover:text-cyber-green mt-2">
               {notification.actionLabel} →
@@ -367,10 +425,7 @@ export function ToastNotification({ notification, onDismiss }: {
           )}
         </div>
 
-        <button
-          onClick={onDismiss}
-          className="p-1 hover:bg-white/10 rounded"
-        >
+        <button onClick={onDismiss} className="p-1 hover:bg-white/10 rounded">
           <X className="w-4 h-4 text-gray-400" />
         </button>
       </div>
@@ -412,13 +467,15 @@ export function useRealTimeNotifications() {
         },
       ];
 
-      const randomNotif = notifications[Math.floor(Math.random() * notifications.length)];
+      const randomNotif =
+        notifications[Math.floor(Math.random() * notifications.length)];
       addNotification(randomNotif);
     };
 
     // Generate notifications every 30-60 seconds
     const interval = setInterval(() => {
-      if (Math.random() > 0.7) { // 30% chance
+      if (Math.random() > 0.7) {
+        // 30% chance
         generateRandomNotification();
       }
     }, 30000);

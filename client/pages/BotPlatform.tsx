@@ -479,7 +479,10 @@ export default function BotPlatform() {
               }
             }
           } catch (error) {
-            console.log("Bot status check failed:", error?.message || "Network error");
+            console.log(
+              "Bot status check failed:",
+              error?.message || "Network error",
+            );
             // Set fallback data for offline state
             checks.botCore = false;
             checks.network = false;
@@ -507,7 +510,10 @@ export default function BotPlatform() {
               }
             }
           } catch (error) {
-            console.log("Scanner status check failed:", error?.message || "Network error");
+            console.log(
+              "Scanner status check failed:",
+              error?.message || "Network error",
+            );
             // Set fallback data for offline state
             checks.scanner = false;
           }
@@ -526,7 +532,10 @@ export default function BotPlatform() {
               checks.scanner = true;
             }
           } catch (error) {
-            console.log("Scanner check failed:", error?.message || "Network error");
+            console.log(
+              "Scanner check failed:",
+              error?.message || "Network error",
+            );
             // Fallback: assume scanner is available but offline
             checks.scanner = false;
           }
@@ -667,7 +676,10 @@ export default function BotPlatform() {
           });
         }
       } catch (error) {
-        console.error("Failed to fetch bot stats:", error?.message || "Network error");
+        console.error(
+          "Failed to fetch bot stats:",
+          error?.message || "Network error",
+        );
         // Set fallback demo data when network fails
         setBotStats({
           activeGroups: "Demo Mode",

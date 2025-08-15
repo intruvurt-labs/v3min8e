@@ -80,7 +80,9 @@ interface LeaderboardEntry {
 export default function Airdrop() {
   const { connected, publicKey } = useWallet();
   const { currentProfile } = useProfile();
-  const [activeTab, setActiveTab] = useState<"overview" | "tasks" | "leaderboard" | "verification">("overview");
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "tasks" | "leaderboard" | "verification"
+  >("overview");
   const [tasks, setTasks] = useState<AirdropTask[]>([]);
   const [userProgress, setUserProgress] = useState<UserAirdropProgress>({
     totalEarned: 0,
@@ -106,7 +108,8 @@ export default function Airdrop() {
       {
         id: "follow_twitter",
         title: "Follow @nimrevxyz",
-        description: "Follow our official Twitter account for updates and alpha",
+        description:
+          "Follow our official Twitter account for updates and alpha",
         type: "social",
         reward: 50,
         status: "available",
@@ -134,7 +137,8 @@ export default function Airdrop() {
       {
         id: "verify_bot_token",
         title: "Verify Bot Token",
-        description: "Verify your Telegram bot token to unlock premium features",
+        description:
+          "Verify your Telegram bot token to unlock premium features",
         type: "bot",
         reward: 200,
         multiplier: 2,
@@ -163,7 +167,8 @@ export default function Airdrop() {
       {
         id: "daily_scan_streak",
         title: "7-Day Scan Streak",
-        description: "Perform at least one scan every day for 7 consecutive days",
+        description:
+          "Perform at least one scan every day for 7 consecutive days",
         type: "scan",
         reward: 500,
         multiplier: 3,
@@ -209,7 +214,8 @@ export default function Airdrop() {
       {
         id: "premium_trade",
         title: "Complete P2P Trade",
-        description: "Successfully complete a trade using our P2P trading system",
+        description:
+          "Successfully complete a trade using our P2P trading system",
         type: "trading",
         reward: 400,
         multiplier: 2,
@@ -249,8 +255,8 @@ export default function Airdrop() {
       const now = Date.now();
       const timeDiff = now - lastScanUpdate;
       const growth = Math.floor((timeDiff / 1000) * (Math.random() * 3 + 1)); // 1-4 per second
-      
-      setTotalVermDetected(prev => prev + growth);
+
+      setTotalVermDetected((prev) => prev + growth);
       setLastScanUpdate(now);
     }, 2000);
 
@@ -278,13 +284,48 @@ export default function Airdrop() {
   const generateLeaderboard = () => {
     // Mock leaderboard data - in production this would come from API
     const mockLeaderboard: LeaderboardEntry[] = [
-      { rank: 1, username: "VermExterminator", avatar: "🏆", totalEarned: 15420, tasksCompleted: 28, streak: 45 },
-      { rank: 2, username: "ScanMaster_Pro", avatar: "🥈", totalEarned: 12750, tasksCompleted: 24, streak: 32 },
-      { rank: 3, username: "CryptoHunter", avatar: "🥉", totalEarned: 11200, tasksCompleted: 22, streak: 28 },
-      { rank: 4, username: "DataGhost_01", avatar: "👻", totalEarned: 9840, tasksCompleted: 19, streak: 25 },
-      { rank: 5, username: "NimRev_Alpha", avatar: "⚡", totalEarned: 8650, tasksCompleted: 17, streak: 22 },
+      {
+        rank: 1,
+        username: "VermExterminator",
+        avatar: "🏆",
+        totalEarned: 15420,
+        tasksCompleted: 28,
+        streak: 45,
+      },
+      {
+        rank: 2,
+        username: "ScanMaster_Pro",
+        avatar: "🥈",
+        totalEarned: 12750,
+        tasksCompleted: 24,
+        streak: 32,
+      },
+      {
+        rank: 3,
+        username: "CryptoHunter",
+        avatar: "🥉",
+        totalEarned: 11200,
+        tasksCompleted: 22,
+        streak: 28,
+      },
+      {
+        rank: 4,
+        username: "DataGhost_01",
+        avatar: "👻",
+        totalEarned: 9840,
+        tasksCompleted: 19,
+        streak: 25,
+      },
+      {
+        rank: 5,
+        username: "NimRev_Alpha",
+        avatar: "⚡",
+        totalEarned: 8650,
+        tasksCompleted: 17,
+        streak: 22,
+      },
     ];
-    
+
     setLeaderboard(mockLeaderboard);
   };
 
@@ -293,9 +334,9 @@ export default function Airdrop() {
     setIsTaskModalOpen(true);
 
     // Update task status
-    setTasks(prev => prev.map(t => 
-      t.id === task.id ? { ...t, status: "in_progress" } : t
-    ));
+    setTasks((prev) =>
+      prev.map((t) => (t.id === task.id ? { ...t, status: "in_progress" } : t)),
+    );
 
     // Handle different task types
     if (task.externalUrl) {
@@ -304,23 +345,27 @@ export default function Airdrop() {
   };
 
   const completeTask = async (taskId: string) => {
-    const task = tasks.find(t => t.id === taskId);
+    const task = tasks.find((t) => t.id === taskId);
     if (!task) return;
 
     setIsVerifying(true);
 
     try {
       // Simulate API verification
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       // Update task status
-      setTasks(prev => prev.map(t => 
-        t.id === taskId ? { 
-          ...t, 
-          status: "completed",
-          lastCompleted: Date.now()
-        } : t
-      ));
+      setTasks((prev) =>
+        prev.map((t) =>
+          t.id === taskId
+            ? {
+                ...t,
+                status: "completed",
+                lastCompleted: Date.now(),
+              }
+            : t,
+        ),
+      );
 
       // Update user progress
       const newProgress = {
@@ -340,12 +385,11 @@ export default function Airdrop() {
 
       // Show success notification (would integrate with GlobalNotificationSystem)
       console.log(`Task completed! Earned ${task.reward} VERM tokens`);
-
     } catch (error) {
       console.error("Task verification failed:", error);
-      setTasks(prev => prev.map(t => 
-        t.id === taskId ? { ...t, status: "failed" } : t
-      ));
+      setTasks((prev) =>
+        prev.map((t) => (t.id === taskId ? { ...t, status: "failed" } : t)),
+      );
     } finally {
       setIsVerifying(false);
     }
@@ -368,7 +412,7 @@ export default function Airdrop() {
       });
 
       const result = await response.json();
-      
+
       if (result.success) {
         await completeTask("verify_bot_token");
         setVerificationCode("");
@@ -384,26 +428,36 @@ export default function Airdrop() {
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case "easy": return "text-cyber-green border-cyber-green";
-      case "medium": return "text-cyber-blue border-cyber-blue";
-      case "hard": return "text-cyber-orange border-cyber-orange";
-      case "legendary": return "text-cyber-purple border-cyber-purple";
-      default: return "text-gray-400 border-gray-400";
+      case "easy":
+        return "text-cyber-green border-cyber-green";
+      case "medium":
+        return "text-cyber-blue border-cyber-blue";
+      case "hard":
+        return "text-cyber-orange border-cyber-orange";
+      case "legendary":
+        return "text-cyber-purple border-cyber-purple";
+      default:
+        return "text-gray-400 border-gray-400";
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "completed": return "bg-cyber-green/20 border-cyber-green text-cyber-green";
-      case "in_progress": return "bg-cyber-blue/20 border-cyber-blue text-cyber-blue";
-      case "failed": return "bg-red-500/20 border-red-500 text-red-400";
-      case "locked": return "bg-gray-500/20 border-gray-500 text-gray-400";
-      default: return "bg-cyber-orange/20 border-cyber-orange text-cyber-orange";
+      case "completed":
+        return "bg-cyber-green/20 border-cyber-green text-cyber-green";
+      case "in_progress":
+        return "bg-cyber-blue/20 border-cyber-blue text-cyber-blue";
+      case "failed":
+        return "bg-red-500/20 border-red-500 text-red-400";
+      case "locked":
+        return "bg-gray-500/20 border-gray-500 text-gray-400";
+      default:
+        return "bg-cyber-orange/20 border-cyber-orange text-cyber-orange";
     }
   };
 
   const copyReferralLink = () => {
-    const referralLink = `https://nimrev.xyz/airdrop?ref=${currentProfile?.id || 'guest'}`;
+    const referralLink = `https://nimrev.xyz/airdrop?ref=${currentProfile?.id || "guest"}`;
     navigator.clipboard.writeText(referralLink);
     // Show notification
   };
@@ -413,7 +467,7 @@ export default function Airdrop() {
       <div className="min-h-screen bg-dark-bg text-foreground relative overflow-hidden">
         <CyberGrid intensity="low" animated={true} />
         <CyberNav />
-        
+
         <div className="relative z-10 pt-24 pb-16 px-4">
           <div className="max-w-4xl mx-auto text-center">
             <div className="w-20 h-20 bg-gradient-to-r from-cyber-red to-cyber-orange rounded-full flex items-center justify-center mx-auto mb-6">
@@ -423,7 +477,8 @@ export default function Airdrop() {
               WALLET CONNECTION REQUIRED
             </h1>
             <p className="text-xl text-gray-300 mb-8">
-              Connect your wallet and create a profile to participate in the VERM airdrop
+              Connect your wallet and create a profile to participate in the
+              VERM airdrop
             </p>
             <div className="bg-cyber-red/10 border border-cyber-red/30 rounded-lg p-6">
               <p className="text-gray-300">
@@ -432,7 +487,7 @@ export default function Airdrop() {
             </div>
           </div>
         </div>
-        
+
         <CyberFooter />
       </div>
     );
@@ -447,7 +502,7 @@ export default function Airdrop() {
         <div className="max-w-6xl mx-auto">
           {/* Header with live stats */}
           <div className="text-center mb-8">
-            <motion.h1 
+            <motion.h1
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               className="text-5xl font-cyber font-bold text-cyber-green mb-4 neon-glow"
@@ -455,9 +510,10 @@ export default function Airdrop() {
               VERM PROTOCOL AIRDROP
             </motion.h1>
             <p className="text-xl text-gray-300 mb-6">
-              The Vermin are on-chain. Solana's about to get a little less sanitary.
+              The Vermin are on-chain. Solana's about to get a little less
+              sanitary.
             </p>
-            
+
             {/* Live Stats */}
             <div className="bg-cyber-green/10 border border-cyber-green/30 rounded-xl p-6 mb-8">
               <h2 className="text-2xl font-cyber font-bold text-cyber-green mb-2">
@@ -490,35 +546,49 @@ export default function Airdrop() {
                 <span className="text-cyber-green text-sm">Total Earned</span>
                 <Coins className="w-4 h-4 text-cyber-green" />
               </div>
-              <div className="text-2xl font-bold text-white">{userProgress.totalEarned}</div>
+              <div className="text-2xl font-bold text-white">
+                {userProgress.totalEarned}
+              </div>
               <div className="text-xs text-gray-400">VERM tokens</div>
             </div>
-            
+
             <div className="bg-dark-bg/60 border border-cyber-blue/30 rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-cyber-blue text-sm">Tasks Done</span>
                 <Target className="w-4 h-4 text-cyber-blue" />
               </div>
-              <div className="text-2xl font-bold text-white">{userProgress.tasksCompleted}</div>
-              <div className="text-xs text-gray-400">of {tasks.length} total</div>
+              <div className="text-2xl font-bold text-white">
+                {userProgress.tasksCompleted}
+              </div>
+              <div className="text-xs text-gray-400">
+                of {tasks.length} total
+              </div>
             </div>
-            
+
             <div className="bg-dark-bg/60 border border-cyber-orange/30 rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-cyber-orange text-sm">Current Streak</span>
+                <span className="text-cyber-orange text-sm">
+                  Current Streak
+                </span>
                 <TrendingUp className="w-4 h-4 text-cyber-orange" />
               </div>
-              <div className="text-2xl font-bold text-white">{userProgress.currentStreak}</div>
+              <div className="text-2xl font-bold text-white">
+                {userProgress.currentStreak}
+              </div>
               <div className="text-xs text-gray-400">days active</div>
             </div>
-            
+
             <div className="bg-dark-bg/60 border border-cyber-purple/30 rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-cyber-purple text-sm">Hunter Rank</span>
                 <Crown className="w-4 h-4 text-cyber-purple" />
               </div>
-              <div className="text-lg font-bold text-white">{userProgress.rank}</div>
-              <div className="text-xs text-gray-400">Level up at {userProgress.nextMilestone}</div>
+              <div className="text-lg font-bold text-white">
+                {userProgress.rank}
+              </div>
+              <div className="text-xs text-gray-400">
+                Level up at {userProgress.nextMilestone}
+              </div>
             </div>
           </div>
 
@@ -526,10 +596,26 @@ export default function Airdrop() {
           <div className="flex justify-center mb-8">
             <div className="bg-dark-bg/60 border border-cyber-green/30 rounded-lg p-1 flex">
               {[
-                { id: "overview", label: "Overview", icon: <Globe className="w-4 h-4" /> },
-                { id: "tasks", label: "Tasks", icon: <Target className="w-4 h-4" /> },
-                { id: "leaderboard", label: "Leaderboard", icon: <Trophy className="w-4 h-4" /> },
-                { id: "verification", label: "Bot Verification", icon: <Bot className="w-4 h-4" /> },
+                {
+                  id: "overview",
+                  label: "Overview",
+                  icon: <Globe className="w-4 h-4" />,
+                },
+                {
+                  id: "tasks",
+                  label: "Tasks",
+                  icon: <Target className="w-4 h-4" />,
+                },
+                {
+                  id: "leaderboard",
+                  label: "Leaderboard",
+                  icon: <Trophy className="w-4 h-4" />,
+                },
+                {
+                  id: "verification",
+                  label: "Bot Verification",
+                  icon: <Bot className="w-4 h-4" />,
+                },
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -565,22 +651,51 @@ export default function Airdrop() {
                   </h3>
                   <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {[
-                      { title: "Deploy Tracking Beacons", desc: "via our dApp", icon: "📡", progress: 65 },
-                      { title: "Stake $VERM", desc: "to fund surveillance cats", icon: "🐱", progress: 40 },
-                      { title: "Vote on Proposals", desc: "rodent suppression plans", icon: "🗳️", progress: 80 },
-                      { title: "Buy Rat Traps (NFTs)", desc: "collect rare traps", icon: "🪤", progress: 25 },
+                      {
+                        title: "Deploy Tracking Beacons",
+                        desc: "via our dApp",
+                        icon: "📡",
+                        progress: 65,
+                      },
+                      {
+                        title: "Stake $VERM",
+                        desc: "to fund surveillance cats",
+                        icon: "🐱",
+                        progress: 40,
+                      },
+                      {
+                        title: "Vote on Proposals",
+                        desc: "rodent suppression plans",
+                        icon: "🗳️",
+                        progress: 80,
+                      },
+                      {
+                        title: "Buy Rat Traps (NFTs)",
+                        desc: "collect rare traps",
+                        icon: "🪤",
+                        progress: 25,
+                      },
                     ].map((item, index) => (
-                      <div key={index} className="bg-dark-bg/40 border border-cyber-blue/20 rounded-lg p-4">
+                      <div
+                        key={index}
+                        className="bg-dark-bg/40 border border-cyber-blue/20 rounded-lg p-4"
+                      >
                         <div className="text-2xl mb-2">{item.icon}</div>
-                        <h4 className="font-bold text-white mb-1">{item.title}</h4>
-                        <p className="text-xs text-gray-400 mb-3">{item.desc}</p>
+                        <h4 className="font-bold text-white mb-1">
+                          {item.title}
+                        </h4>
+                        <p className="text-xs text-gray-400 mb-3">
+                          {item.desc}
+                        </p>
                         <div className="w-full bg-gray-700 rounded-full h-2">
-                          <div 
+                          <div
                             className="bg-cyber-blue h-2 rounded-full transition-all duration-500"
                             style={{ width: `${item.progress}%` }}
                           ></div>
                         </div>
-                        <div className="text-xs text-cyber-blue mt-1">{item.progress}% complete</div>
+                        <div className="text-xs text-cyber-blue mt-1">
+                          {item.progress}% complete
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -592,22 +707,28 @@ export default function Airdrop() {
                     🧪 VermTech Labs
                   </h3>
                   <p className="text-gray-300 mb-4">
-                    We're experimenting with rodent AI that predicts rug pulls 12 blocks in advance.
-                    Accuracy: 72.4% unless bribed.
+                    We're experimenting with rodent AI that predicts rug pulls
+                    12 blocks in advance. Accuracy: 72.4% unless bribed.
                   </p>
                   <div className="grid md:grid-cols-3 gap-4">
                     <div className="bg-cyber-orange/10 border border-cyber-orange/30 rounded-lg p-4">
-                      <h4 className="font-bold text-cyber-orange mb-2">🤖 AI Predictions</h4>
+                      <h4 className="font-bold text-cyber-orange mb-2">
+                        🤖 AI Predictions
+                      </h4>
                       <div className="text-2xl font-bold text-white">72.4%</div>
                       <div className="text-xs text-gray-400">Success Rate</div>
                     </div>
                     <div className="bg-cyber-orange/10 border border-cyber-orange/30 rounded-lg p-4">
-                      <h4 className="font-bold text-cyber-orange mb-2">⚡ Real-time Scans</h4>
+                      <h4 className="font-bold text-cyber-orange mb-2">
+                        ⚡ Real-time Scans
+                      </h4>
                       <div className="text-2xl font-bold text-white">12s</div>
                       <div className="text-xs text-gray-400">Average Speed</div>
                     </div>
                     <div className="bg-cyber-orange/10 border border-cyber-orange/30 rounded-lg p-4">
-                      <h4 className="font-bold text-cyber-orange mb-2">🛡️ Threats Blocked</h4>
+                      <h4 className="font-bold text-cyber-orange mb-2">
+                        🛡️ Threats Blocked
+                      </h4>
                       <div className="text-2xl font-bold text-white">2,847</div>
                       <div className="text-xs text-gray-400">This Week</div>
                     </div>
@@ -622,12 +743,15 @@ export default function Airdrop() {
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
                       <p className="text-gray-300 mb-4">
-                        Invite hunters to join the resistance. Earn 10% of their rewards plus bonus multipliers.
+                        Invite hunters to join the resistance. Earn 10% of their
+                        rewards plus bonus multipliers.
                       </p>
                       <div className="space-y-2">
                         <div className="flex justify-between">
                           <span className="text-gray-400">Referrals:</span>
-                          <span className="text-white font-bold">{userProgress.referralCount}</span>
+                          <span className="text-white font-bold">
+                            {userProgress.referralCount}
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-400">Bonus Earned:</span>
@@ -674,22 +798,32 @@ export default function Airdrop() {
                     key={task.id}
                     whileHover={{ scale: 1.02 }}
                     className={`border rounded-xl p-6 cursor-pointer transition-all duration-300 ${
-                      task.status === "locked" 
-                        ? "border-gray-500/30 bg-gray-500/10 opacity-50" 
+                      task.status === "locked"
+                        ? "border-gray-500/30 bg-gray-500/10 opacity-50"
                         : `border-cyber-green/30 bg-dark-bg/60 hover:border-cyber-green/50`
                     }`}
-                    onClick={() => task.status !== "locked" && task.status !== "completed" && startTask(task)}
+                    onClick={() =>
+                      task.status !== "locked" &&
+                      task.status !== "completed" &&
+                      startTask(task)
+                    }
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-4 flex-1">
-                        <div className={`p-3 rounded-lg border ${getDifficultyColor(task.difficulty)}`}>
+                        <div
+                          className={`p-3 rounded-lg border ${getDifficultyColor(task.difficulty)}`}
+                        >
                           {task.icon}
                         </div>
-                        
+
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-lg font-bold text-white">{task.title}</h3>
-                            <div className={`px-2 py-1 rounded-full text-xs font-bold border ${getDifficultyColor(task.difficulty)}`}>
+                            <h3 className="text-lg font-bold text-white">
+                              {task.title}
+                            </h3>
+                            <div
+                              className={`px-2 py-1 rounded-full text-xs font-bold border ${getDifficultyColor(task.difficulty)}`}
+                            >
                               {task.difficulty.toUpperCase()}
                             </div>
                             {task.multiplier && (
@@ -698,9 +832,11 @@ export default function Airdrop() {
                               </div>
                             )}
                           </div>
-                          
-                          <p className="text-gray-300 mb-3">{task.description}</p>
-                          
+
+                          <p className="text-gray-300 mb-3">
+                            {task.description}
+                          </p>
+
                           <div className="flex items-center gap-6 text-sm">
                             <div className="flex items-center gap-1 text-gray-400">
                               <Clock className="w-4 h-4" />
@@ -711,7 +847,7 @@ export default function Airdrop() {
                               {task.reward} VERM
                             </div>
                           </div>
-                          
+
                           {task.requirements && (
                             <div className="mt-2 text-xs text-gray-400">
                               Requirements: {task.requirements.join(", ")}
@@ -719,15 +855,22 @@ export default function Airdrop() {
                           )}
                         </div>
                       </div>
-                      
+
                       <div className="flex flex-col items-end gap-2">
-                        <div className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(task.status)}`}>
-                          {task.status === "in_progress" ? "IN PROGRESS" :
-                           task.status === "completed" ? "COMPLETED" :
-                           task.status === "failed" ? "FAILED" :
-                           task.status === "locked" ? "LOCKED" : "AVAILABLE"}
+                        <div
+                          className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(task.status)}`}
+                        >
+                          {task.status === "in_progress"
+                            ? "IN PROGRESS"
+                            : task.status === "completed"
+                              ? "COMPLETED"
+                              : task.status === "failed"
+                                ? "FAILED"
+                                : task.status === "locked"
+                                  ? "LOCKED"
+                                  : "AVAILABLE"}
                         </div>
-                        
+
                         {task.status === "completed" ? (
                           <CheckCircle className="w-6 h-6 text-cyber-green" />
                         ) : task.status === "locked" ? (
@@ -766,31 +909,38 @@ export default function Airdrop() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
                     className={`border rounded-xl p-6 ${
-                      entry.rank <= 3 
-                        ? "border-cyber-orange/50 bg-cyber-orange/10" 
+                      entry.rank <= 3
+                        ? "border-cyber-orange/50 bg-cyber-orange/10"
                         : "border-cyber-green/30 bg-dark-bg/60"
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl font-bold ${
-                          entry.rank === 1 ? "bg-yellow-500 text-black" :
-                          entry.rank === 2 ? "bg-gray-300 text-black" :
-                          entry.rank === 3 ? "bg-yellow-600 text-white" :
-                          "bg-cyber-green/20 text-cyber-green"
-                        }`}>
+                        <div
+                          className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl font-bold ${
+                            entry.rank === 1
+                              ? "bg-yellow-500 text-black"
+                              : entry.rank === 2
+                                ? "bg-gray-300 text-black"
+                                : entry.rank === 3
+                                  ? "bg-yellow-600 text-white"
+                                  : "bg-cyber-green/20 text-cyber-green"
+                          }`}
+                        >
                           {entry.rank <= 3 ? entry.avatar : entry.rank}
                         </div>
-                        
+
                         <div>
-                          <h4 className="text-lg font-bold text-white">{entry.username}</h4>
+                          <h4 className="text-lg font-bold text-white">
+                            {entry.username}
+                          </h4>
                           <div className="flex items-center gap-4 text-sm text-gray-400">
                             <span>Tasks: {entry.tasksCompleted}</span>
                             <span>Streak: {entry.streak} days</span>
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="text-right">
                         <div className="text-2xl font-bold text-cyber-green">
                           {entry.totalEarned.toLocaleString()}
@@ -806,11 +956,17 @@ export default function Airdrop() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-full bg-cyber-blue/20 border border-cyber-blue flex items-center justify-center">
-                        <span className="text-cyber-blue font-bold">#{leaderboard.length + 1}</span>
+                        <span className="text-cyber-blue font-bold">
+                          #{leaderboard.length + 1}
+                        </span>
                       </div>
                       <div>
-                        <h4 className="text-lg font-bold text-white">{currentProfile.username}</h4>
-                        <div className="text-sm text-gray-400">Your Position</div>
+                        <h4 className="text-lg font-bold text-white">
+                          {currentProfile.username}
+                        </h4>
+                        <div className="text-sm text-gray-400">
+                          Your Position
+                        </div>
                       </div>
                     </div>
                     <div className="text-right">
@@ -840,7 +996,8 @@ export default function Airdrop() {
                     BOT TOKEN VERIFICATION
                   </h3>
                   <p className="text-gray-300">
-                    Verify your Telegram bot token to unlock premium features and higher rewards
+                    Verify your Telegram bot token to unlock premium features
+                    and higher rewards
                   </p>
                 </div>
 
@@ -863,7 +1020,9 @@ export default function Airdrop() {
                     </div>
 
                     <div className="bg-cyber-blue/10 border border-cyber-blue/20 rounded-lg p-4">
-                      <h4 className="font-bold text-cyber-blue mb-2">What you'll unlock:</h4>
+                      <h4 className="font-bold text-cyber-blue mb-2">
+                        What you'll unlock:
+                      </h4>
                       <ul className="space-y-1 text-sm text-gray-300">
                         <li>• 2x reward multiplier on all tasks</li>
                         <li>• Access to premium scanning features</li>
@@ -895,8 +1054,12 @@ export default function Airdrop() {
                       <div className="bg-cyber-green/10 border border-cyber-green/30 rounded-lg p-4 flex items-center gap-3">
                         <CheckCircle className="w-5 h-5 text-cyber-green" />
                         <div>
-                          <div className="font-bold text-cyber-green">Bot Token Verified!</div>
-                          <div className="text-sm text-gray-300">Premium features are now active</div>
+                          <div className="font-bold text-cyber-green">
+                            Bot Token Verified!
+                          </div>
+                          <div className="text-sm text-gray-300">
+                            Premium features are now active
+                          </div>
                         </div>
                       </div>
                     )}
@@ -930,27 +1093,33 @@ export default function Airdrop() {
                 <h3 className="text-xl font-cyber font-bold text-cyber-green mb-4">
                   {selectedTask.title}
                 </h3>
-                <p className="text-gray-300 mb-6">
-                  {selectedTask.description}
-                </p>
+                <p className="text-gray-300 mb-6">{selectedTask.description}</p>
 
                 <div className="space-y-4">
                   <div className="bg-cyber-green/10 border border-cyber-green/20 rounded-lg p-4">
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-300">Reward:</span>
-                      <span className="font-bold text-cyber-green">{selectedTask.reward} VERM</span>
+                      <span className="font-bold text-cyber-green">
+                        {selectedTask.reward} VERM
+                      </span>
                     </div>
                     {selectedTask.multiplier && (
                       <div className="flex justify-between items-center mt-2">
-                        <span className="text-sm text-gray-300">Multiplier:</span>
-                        <span className="font-bold text-cyber-orange">{selectedTask.multiplier}x</span>
+                        <span className="text-sm text-gray-300">
+                          Multiplier:
+                        </span>
+                        <span className="font-bold text-cyber-orange">
+                          {selectedTask.multiplier}x
+                        </span>
                       </div>
                     )}
                   </div>
 
                   {selectedTask.requirements && (
                     <div className="text-left">
-                      <h4 className="font-bold text-white mb-2">Requirements:</h4>
+                      <h4 className="font-bold text-white mb-2">
+                        Requirements:
+                      </h4>
                       <ul className="text-sm text-gray-300 space-y-1">
                         {selectedTask.requirements.map((req, index) => (
                           <li key={index}>• {req}</li>
@@ -966,7 +1135,7 @@ export default function Airdrop() {
                     >
                       Cancel
                     </button>
-                    
+
                     <button
                       onClick={() => completeTask(selectedTask.id)}
                       disabled={isVerifying}

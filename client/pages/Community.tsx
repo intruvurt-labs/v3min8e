@@ -36,9 +36,12 @@ export default function Community() {
                 🌐 LIVE COMMUNITY CHAT
               </h2>
               <p className="text-lg text-gray-300 font-mono mb-6">
-                Advanced P2P trading with military-grade encryption, atomic swaps, and zero-knowledge proofs.
+                Advanced P2P trading with military-grade encryption, atomic
+                swaps, and zero-knowledge proofs.
                 <br />
-                <span className="text-cyber-green">Trade tokens securely with live address scanning!</span>
+                <span className="text-cyber-green">
+                  Trade tokens securely with live address scanning!
+                </span>
               </p>
             </div>
 
@@ -47,16 +50,20 @@ export default function Community() {
             <div className="mt-6 text-center">
               <div className="inline-flex items-center gap-4 bg-dark-bg/60 border border-cyber-green/30 rounded-lg p-4">
                 <div className="text-xs font-mono text-gray-300">
-                  <span className="text-cyber-green">🆓 FREE:</span> Chat & basic trading
+                  <span className="text-cyber-green">🆓 FREE:</span> Chat &
+                  basic trading
                 </div>
                 <div className="text-xs font-mono text-gray-300">
-                  <span className="text-cyber-purple">👑 PREMIUM:</span> Advanced P2P trading & escrow
+                  <span className="text-cyber-purple">👑 PREMIUM:</span>{" "}
+                  Advanced P2P trading & escrow
                 </div>
                 <div className="text-xs font-mono text-gray-300">
-                  <span className="text-cyber-blue">��� MILITARY:</span> Quantum-resistant encryption
+                  <span className="text-cyber-blue">��� MILITARY:</span>{" "}
+                  Quantum-resistant encryption
                 </div>
                 <div className="text-xs font-mono text-gray-300">
-                  <span className="text-cyber-orange">⚡ ATOMIC:</span> Zero-trust swaps
+                  <span className="text-cyber-orange">⚡ ATOMIC:</span>{" "}
+                  Zero-trust swaps
                 </div>
               </div>
             </div>
@@ -80,20 +87,33 @@ export default function Community() {
               <div className="grid md:grid-cols-3 gap-6 mt-8">
                 <div className="bg-cyber-green/10 border border-cyber-green/30 rounded-lg p-4">
                   <div className="text-2xl mb-2">🔍</div>
-                  <h3 className="text-lg font-cyber font-bold text-cyber-green mb-2">LIVE SCANNING</h3>
-                  <p className="text-sm text-gray-300 font-mono">Paste any blockchain address in chat for instant risk analysis</p>
+                  <h3 className="text-lg font-cyber font-bold text-cyber-green mb-2">
+                    LIVE SCANNING
+                  </h3>
+                  <p className="text-sm text-gray-300 font-mono">
+                    Paste any blockchain address in chat for instant risk
+                    analysis
+                  </p>
                 </div>
 
                 <div className="bg-cyber-blue/10 border border-cyber-blue/30 rounded-lg p-4">
                   <div className="text-2xl mb-2">🔒</div>
-                  <h3 className="text-lg font-cyber font-bold text-cyber-blue mb-2">ENCRYPTED CHAT</h3>
-                  <p className="text-sm text-gray-300 font-mono">End-to-end encryption keeps conversations secure</p>
+                  <h3 className="text-lg font-cyber font-bold text-cyber-blue mb-2">
+                    ENCRYPTED CHAT
+                  </h3>
+                  <p className="text-sm text-gray-300 font-mono">
+                    End-to-end encryption keeps conversations secure
+                  </p>
                 </div>
 
                 <div className="bg-cyber-purple/10 border border-cyber-purple/30 rounded-lg p-4">
                   <div className="text-2xl mb-2">🛡️</div>
-                  <h3 className="text-lg font-cyber font-bold text-cyber-purple mb-2">SCREEN PROTECTION</h3>
-                  <p className="text-sm text-gray-300 font-mono">Anti-screenshot technology protects sensitive data</p>
+                  <h3 className="text-lg font-cyber font-bold text-cyber-purple mb-2">
+                    SCREEN PROTECTION
+                  </h3>
+                  <p className="text-sm text-gray-300 font-mono">
+                    Anti-screenshot technology protects sensitive data
+                  </p>
                 </div>
               </div>
             </div>

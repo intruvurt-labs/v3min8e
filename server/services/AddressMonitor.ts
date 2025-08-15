@@ -144,7 +144,7 @@ export class AddressMonitor extends EventEmitter {
 
       if (error) {
         const now = Date.now();
-        const shouldLog = (now - this.lastErrorLogged) > this.ERROR_LOG_THROTTLE;
+        const shouldLog = now - this.lastErrorLogged > this.ERROR_LOG_THROTTLE;
 
         if (shouldLog) {
           console.error("Failed to load watched addresses:", {
@@ -184,21 +184,23 @@ export class AddressMonitor extends EventEmitter {
 
       // Only log if we have addresses or if it's been a while
       const now = Date.now();
-      const shouldLog = (addresses?.length > 0) || (now - this.lastErrorLogged) > this.ERROR_LOG_THROTTLE;
+      const shouldLog =
+        addresses?.length > 0 ||
+        now - this.lastErrorLogged > this.ERROR_LOG_THROTTLE;
 
       if (shouldLog) {
         console.log(`📋 Loaded ${addresses?.length || 0} watched addresses`);
       }
     } catch (error) {
       const now = Date.now();
-      const shouldLog = (now - this.lastErrorLogged) > this.ERROR_LOG_THROTTLE;
+      const shouldLog = now - this.lastErrorLogged > this.ERROR_LOG_THROTTLE;
 
       if (shouldLog) {
         console.error("Failed to load watched addresses:", {
-          message: error instanceof Error ? error.message : 'Unknown error',
+          message: error instanceof Error ? error.message : "Unknown error",
           details: error instanceof Error ? error.stack : String(error),
-          hint: 'Check database connection and Supabase configuration',
-          code: 'UNKNOWN_ERROR'
+          hint: "Check database connection and Supabase configuration",
+          code: "UNKNOWN_ERROR",
         });
         this.lastErrorLogged = now;
       }

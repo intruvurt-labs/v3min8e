@@ -37,12 +37,12 @@ export const handleVermPrice: RequestHandler = async (req, res) => {
     const now = Date.now();
 
     // Return cached data if still valid
-    if (priceCache && (now - lastFetched) < CACHE_DURATION) {
+    if (priceCache && now - lastFetched < CACHE_DURATION) {
       return res.status(200).set(headers).json(priceCache);
     }
 
     // Throttle logging to reduce spam
-    const shouldLog = (now - logThrottle) > LOG_THROTTLE_INTERVAL;
+    const shouldLog = now - logThrottle > LOG_THROTTLE_INTERVAL;
     if (shouldLog) {
       console.log("Fetching VERM price data for token:", tokenAddress);
       logThrottle = now;

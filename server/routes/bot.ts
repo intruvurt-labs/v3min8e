@@ -40,9 +40,9 @@ router.get("/stats", async (req, res) => {
     };
 
     // Add CORS headers for better compatibility
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET');
-    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "GET");
+    res.header("Access-Control-Allow-Headers", "Content-Type");
 
     res.json(stats);
   } catch (error) {
@@ -120,9 +120,9 @@ router.get("/status", async (req, res) => {
     };
 
     // Add CORS headers for better compatibility
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET');
-    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "GET");
+    res.header("Access-Control-Allow-Headers", "Content-Type");
 
     res.json(systemHealth);
   } catch (error) {
@@ -184,9 +184,9 @@ router.get("/scanner/status", async (req, res) => {
     };
 
     // Add CORS headers for better compatibility
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET');
-    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "GET");
+    res.header("Access-Control-Allow-Headers", "Content-Type");
 
     res.json(scannerHealth);
   } catch (error) {

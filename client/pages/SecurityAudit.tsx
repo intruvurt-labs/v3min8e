@@ -546,7 +546,8 @@ export default function SecurityAudit() {
                   🎯 INSTANT ADDRESS SCANNER
                 </h2>
                 <p className="text-lg text-gray-300 font-mono">
-                  Free live scanning • Paste any Solana or Ethereum address for instant risk analysis
+                  Free live scanning • Paste any Solana or Ethereum address for
+                  instant risk analysis
                 </p>
               </div>
 
@@ -555,13 +556,16 @@ export default function SecurityAudit() {
               <div className="mt-8 text-center">
                 <div className="inline-flex items-center gap-6 bg-dark-bg/60 border border-cyber-green/20 rounded-lg p-4">
                   <div className="text-xs font-mono text-gray-300">
-                    <span className="text-cyber-green">🆓 FREE:</span> Basic address scanning
+                    <span className="text-cyber-green">🆓 FREE:</span> Basic
+                    address scanning
                   </div>
                   <div className="text-xs font-mono text-gray-300">
-                    <span className="text-cyber-purple">💎 PREMIUM:</span> Smart contract audits below
+                    <span className="text-cyber-purple">💎 PREMIUM:</span> Smart
+                    contract audits below
                   </div>
                   <div className="text-xs font-mono text-gray-300">
-                    <span className="text-cyber-blue">⚡ LIVE:</span> Real-time threat detection
+                    <span className="text-cyber-blue">⚡ LIVE:</span> Real-time
+                    threat detection
                   </div>
                 </div>
               </div>
