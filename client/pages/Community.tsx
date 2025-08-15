@@ -2,7 +2,7 @@ import CyberGrid from "@/components/CyberGrid";
 import CyberNav from "@/components/CyberNav";
 import CyberFooter from "@/components/CyberFooter";
 import CryptoTwitterFeed from "@/components/CryptoTwitterFeed";
-import CyberpunkChat from "@/components/CyberpunkChat";
+import AdvancedChatTrading from "@/components/AdvancedChatTrading";
 
 export default function Community() {
   return (
@@ -36,24 +36,27 @@ export default function Community() {
                 🌐 LIVE COMMUNITY CHAT
               </h2>
               <p className="text-lg text-gray-300 font-mono mb-6">
-                Real-time chat with live address scanning, end-to-end encryption, and screenshot protection.
+                Advanced P2P trading with military-grade encryption, atomic swaps, and zero-knowledge proofs.
                 <br />
-                <span className="text-cyber-green">Drop any Solana/Ethereum address to scan instantly!</span>
+                <span className="text-cyber-green">Trade tokens securely with live address scanning!</span>
               </p>
             </div>
 
-            <CyberpunkChat />
+            <AdvancedChatTrading />
 
             <div className="mt-6 text-center">
               <div className="inline-flex items-center gap-4 bg-dark-bg/60 border border-cyber-green/30 rounded-lg p-4">
                 <div className="text-xs font-mono text-gray-300">
-                  <span className="text-cyber-green">🆓 FREE:</span> Basic chat & community features
+                  <span className="text-cyber-green">🆓 FREE:</span> Chat & basic trading
                 </div>
                 <div className="text-xs font-mono text-gray-300">
-                  <span className="text-cyber-purple">👑 PREMIUM:</span> Live address scanning & advanced tools
+                  <span className="text-cyber-purple">👑 PREMIUM:</span> Advanced P2P trading & escrow
                 </div>
                 <div className="text-xs font-mono text-gray-300">
-                  <span className="text-cyber-blue">🔒 SECURE:</span> E2E encryption & screenshot protection
+                  <span className="text-cyber-blue">��� MILITARY:</span> Quantum-resistant encryption
+                </div>
+                <div className="text-xs font-mono text-gray-300">
+                  <span className="text-cyber-orange">⚡ ATOMIC:</span> Zero-trust swaps
                 </div>
               </div>
             </div>
