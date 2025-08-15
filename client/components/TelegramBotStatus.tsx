@@ -96,24 +96,38 @@ export default function TelegramBotStatus({
           let isReal = false;
 
           // Extract real data from bot API
-          if (responses[0].status === "fulfilled" && responses[0].value.success) {
-            const botData = responses[0].value.data;
-            if (botData.isReal) {
-              realActiveUsers = botData.activeUsers || 0;
-              realMessagesProcessed = botData.messagesProcessed || prev.messagesProcessed;
-              realUptime = botData.uptime || `${confidence}%`;
-              dataSource = "Bot API";
-              isReal = true;
+          if (responses[0].status === "fulfilled") {
+            const botResponse = responses[0].value;
+            if (botResponse.ok) {
+              try {
+                const botData = await botResponse.json();
+                if (botData.isReal) {
+                  realActiveUsers = botData.activeUsers || 0;
+                  realMessagesProcessed = botData.messagesProcessed || prev.messagesProcessed;
+                  realUptime = botData.uptime || `${confidence}%`;
+                  dataSource = "Bot API";
+                  isReal = true;
+                }
+              } catch (jsonError) {
+                console.log("Bot API response parsing failed:", jsonError.message);
+              }
             }
           }
 
           // Extract real data from NimRev API
-          if (responses[1].status === "fulfilled" && responses[1].value.success) {
-            const nimrevData = responses[1].value.data;
-            if (nimrevData.stats) {
-              realActiveUsers = nimrevData.stats.activeUsers || realActiveUsers;
-              realMessagesProcessed = nimrevData.stats.messagesProcessed || realMessagesProcessed;
-              realUptime = nimrevData.stats.uptime || realUptime;
+          if (responses[1].status === "fulfilled") {
+            const nimrevResponse = responses[1].value;
+            if (nimrevResponse.ok) {
+              try {
+                const nimrevData = await nimrevResponse.json();
+                if (nimrevData.stats) {
+                  realActiveUsers = nimrevData.stats.activeUsers || realActiveUsers;
+                  realMessagesProcessed = nimrevData.stats.messagesProcessed || realMessagesProcessed;
+                  realUptime = nimrevData.stats.uptime || realUptime;
+                }
+              } catch (jsonError) {
+                console.log("NimRev API response parsing failed:", jsonError.message);
+              }
             }
           }
 
