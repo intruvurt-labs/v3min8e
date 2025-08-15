@@ -143,7 +143,7 @@ export default function TelegramBotStatus({
           isOnline: botRunning,
           responseTime,
           activeUsers: realActiveUsers,
-          messagesProcessed: realMessagesProcessed || prev.messagesProcessed,
+          messagesProcessed: realMessagesProcessed || prev?.messagesProcessed || 0,
           lastUpdate: new Date(),
           uptime: realUptime,
           isReal,
