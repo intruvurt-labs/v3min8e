@@ -21,8 +21,8 @@ export default function TelegramBotStatus({
     isOnline: false,
     responseTime: "checking...",
     activeUsers: 0,
-    messagesProcessed: 1242,
-    uptime: "99.8%",
+    messagesProcessed: 0,
+    uptime: "Starting...",
     lastUpdate: new Date(),
   });
 
@@ -84,25 +84,53 @@ export default function TelegramBotStatus({
           confidence = 25;
         }
 
+        // Get real data from API responses
+        let realActiveUsers = 0;
+        let realMessagesProcessed = prev.messagesProcessed;
+        let realUptime = "0%";
+
+        // Extract real data from bot API
+        if (responses[0].status === "fulfilled" && responses[0].value.success) {
+          const botData = responses[0].value.data;
+          realActiveUsers = botData.activeUsers || 0;
+          realMessagesProcessed = botData.messagesProcessed || prev.messagesProcessed;
+          realUptime = botData.uptime || `${confidence}%`;
+        }
+
+        // Extract real data from NimRev API
+        if (responses[1].status === "fulfilled" && responses[1].value.success) {
+          const nimrevData = responses[1].value.data;
+          if (nimrevData.stats) {
+            realActiveUsers = nimrevData.stats.activeUsers || realActiveUsers;
+            realMessagesProcessed = nimrevData.stats.messagesProcessed || realMessagesProcessed;
+            realUptime = nimrevData.stats.uptime || realUptime;
+          }
+        }
+
+        // If no real data available, show "No Data" instead of fake numbers
+        if (!botRunning || confidence === 0) {
+          realActiveUsers = 0;
+          realUptime = "Offline";
+        }
+
         setMetrics((prev) => ({
           ...prev,
           isOnline: botRunning,
           responseTime,
-          activeUsers: botRunning ? Math.floor(Math.random() * 20) + 35 : 0,
-          messagesProcessed: botRunning
-            ? prev.messagesProcessed + Math.floor(Math.random() * 3)
-            : prev.messagesProcessed,
+          activeUsers: realActiveUsers,
+          messagesProcessed: realMessagesProcessed,
           lastUpdate: new Date(),
-          uptime: botRunning ? `${confidence}%` : "0%",
+          uptime: realUptime,
         }));
       } catch (error) {
         console.error("Failed to check bot status:", error?.message || error);
-        // Graceful fallback to demo mode
+        // Show real offline status instead of fake demo mode
         setMetrics((prev) => ({
           ...prev,
-          isOnline: true, // Show as online in demo mode
-          responseTime: "demo",
-          uptime: "demo",
+          isOnline: false,
+          responseTime: "error",
+          activeUsers: 0,
+          uptime: "Connection Failed",
           lastUpdate: new Date(),
         }));
       }
