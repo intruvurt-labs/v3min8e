@@ -2,6 +2,7 @@ import CyberGrid from "@/components/CyberGrid";
 import CyberNav from "@/components/CyberNav";
 import CyberFooter from "@/components/CyberFooter";
 import CryptoTwitterFeed from "@/components/CryptoTwitterFeed";
+import AdvancedChatTrading from "@/components/AdvancedChatTrading";
 
 export default function Community() {
   return (
@@ -20,18 +21,58 @@ export default function Community() {
             </div>
 
             <h1 className="text-4xl lg:text-6xl font-cyber font-black text-cyber-green mb-6 neon-glow">
-              COMMUNITY
+              DATA GHOST NETWORK
             </h1>
             <p className="text-xl text-cyber-blue font-mono mb-4">
-              Join the Data Ghost Network
+              Live Chat • Address Scanning • E2E Encryption
             </p>
             <div className="w-24 h-1 bg-gradient-to-r from-cyber-green via-cyber-blue to-cyber-orange mx-auto animate-cyber-scan"></div>
           </div>
 
+          {/* Main Chat Feature */}
+          <section className="mb-16">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-cyber font-bold text-cyber-purple mb-4 neon-glow">
+                🌐 LIVE COMMUNITY CHAT
+              </h2>
+              <p className="text-lg text-gray-300 font-mono mb-6">
+                Advanced P2P trading with military-grade encryption, atomic
+                swaps, and zero-knowledge proofs.
+                <br />
+                <span className="text-cyber-green">
+                  Trade tokens securely with live address scanning!
+                </span>
+              </p>
+            </div>
+
+            <AdvancedChatTrading />
+
+            <div className="mt-6 text-center">
+              <div className="inline-flex items-center gap-4 bg-dark-bg/60 border border-cyber-green/30 rounded-lg p-4">
+                <div className="text-xs font-mono text-gray-300">
+                  <span className="text-cyber-green">🆓 FREE:</span> Chat &
+                  basic trading
+                </div>
+                <div className="text-xs font-mono text-gray-300">
+                  <span className="text-cyber-purple">👑 PREMIUM:</span>{" "}
+                  Advanced P2P trading & escrow
+                </div>
+                <div className="text-xs font-mono text-gray-300">
+                  <span className="text-cyber-blue">��� MILITARY:</span>{" "}
+                  Quantum-resistant encryption
+                </div>
+                <div className="text-xs font-mono text-gray-300">
+                  <span className="text-cyber-orange">⚡ ATOMIC:</span>{" "}
+                  Zero-trust swaps
+                </div>
+              </div>
+            </div>
+          </section>
+
           {/* Philosophy */}
           <section className="mb-16 text-center">
             <div className="max-w-4xl mx-auto">
-              <h2 className="text-3xl font-cyber font-bold text-cyber-purple mb-8 neon-glow">
+              <h2 className="text-3xl font-cyber font-bold text-cyber-orange mb-8 neon-glow">
                 "In a world full of bots, be the Ghost."
               </h2>
               <p className="text-lg text-gray-300 font-mono leading-relaxed mb-8">
@@ -42,6 +83,39 @@ export default function Community() {
                 intelligent observers who see patterns before they become
                 obvious.
               </p>
+
+              <div className="grid md:grid-cols-3 gap-6 mt-8">
+                <div className="bg-cyber-green/10 border border-cyber-green/30 rounded-lg p-4">
+                  <div className="text-2xl mb-2">🔍</div>
+                  <h3 className="text-lg font-cyber font-bold text-cyber-green mb-2">
+                    LIVE SCANNING
+                  </h3>
+                  <p className="text-sm text-gray-300 font-mono">
+                    Paste any blockchain address in chat for instant risk
+                    analysis
+                  </p>
+                </div>
+
+                <div className="bg-cyber-blue/10 border border-cyber-blue/30 rounded-lg p-4">
+                  <div className="text-2xl mb-2">🔒</div>
+                  <h3 className="text-lg font-cyber font-bold text-cyber-blue mb-2">
+                    ENCRYPTED CHAT
+                  </h3>
+                  <p className="text-sm text-gray-300 font-mono">
+                    End-to-end encryption keeps conversations secure
+                  </p>
+                </div>
+
+                <div className="bg-cyber-purple/10 border border-cyber-purple/30 rounded-lg p-4">
+                  <div className="text-2xl mb-2">🛡️</div>
+                  <h3 className="text-lg font-cyber font-bold text-cyber-purple mb-2">
+                    SCREEN PROTECTION
+                  </h3>
+                  <p className="text-sm text-gray-300 font-mono">
+                    Anti-screenshot technology protects sensitive data
+                  </p>
+                </div>
+              </div>
             </div>
           </section>
 

@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { WalletProvider } from "@/hooks/useWallet";
+import { StatusProvider } from "@/components/UnifiedStatusManager";
 import Index from "./pages/Index";
 import Explorer from "./pages/Explorer";
 import Grid from "./pages/Grid";
@@ -18,6 +19,7 @@ import Whitepaper from "./pages/Whitepaper";
 import Technology from "./pages/Technology";
 import Roadmap from "./pages/Roadmap";
 import Community from "./pages/Community";
+import Airdrop from "./pages/Airdrop";
 import Contact from "./pages/Contact";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
@@ -34,37 +36,40 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <WalletProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/grid" element={<Grid />} />
-            <Route path="/scanner" element={<Grid />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/terminal" element={<Terminal />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/explorer" element={<Explorer />} />
-            <Route path="/staking" element={<StakingEnhanced />} />
-            <Route path="/whitepaper" element={<Whitepaper />} />
-            <Route path="/technology" element={<Technology />} />
-            <Route path="/roadmap" element={<Roadmap />} />
-            <Route path="/community" element={<Community />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/disclaimer" element={<Disclaimer />} />
-            <Route path="/age-restriction" element={<AgeRestriction />} />
-            <Route path="/nimrev" element={<NimRevDashboard />} />
-            <Route path="/bot-platform" element={<BotPlatform />} />
-            <Route path="/bot-dashboard" element={<BotPlatform />} />
-            <Route path="/security-audit" element={<SecurityAudit />} />
-            <Route path="/blogs" element={<Blogs />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <StatusProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/grid" element={<Grid />} />
+              <Route path="/scanner" element={<Grid />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/terminal" element={<Terminal />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/explorer" element={<Explorer />} />
+              <Route path="/staking" element={<StakingEnhanced />} />
+              <Route path="/whitepaper" element={<Whitepaper />} />
+              <Route path="/technology" element={<Technology />} />
+              <Route path="/roadmap" element={<Roadmap />} />
+              <Route path="/community" element={<Community />} />
+              <Route path="/airdrop" element={<Airdrop />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/disclaimer" element={<Disclaimer />} />
+              <Route path="/age-restriction" element={<AgeRestriction />} />
+              <Route path="/nimrev" element={<NimRevDashboard />} />
+              <Route path="/bot-platform" element={<BotPlatform />} />
+              <Route path="/bot-dashboard" element={<BotPlatform />} />
+              <Route path="/security-audit" element={<SecurityAudit />} />
+              <Route path="/blogs" element={<Blogs />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </StatusProvider>
     </WalletProvider>
   </QueryClientProvider>
 );

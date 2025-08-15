@@ -21,6 +21,9 @@ import paymentRoutes from "./payment";
 // Import security audit routes
 import securityAuditRoutes from "./security-audit";
 
+// Import airdrop routes
+import airdropRoutes from "./airdrop";
+
 // Import NimRev routes
 import {
   getSystemStatus,
@@ -84,4 +87,7 @@ export function setupRoutes(app: Express) {
 
   // Security audit routes
   app.use("/api/security-audit", securityAuditRoutes);
+
+  // Airdrop routes
+  app.use("/api/airdrop", airdropRoutes);
 }

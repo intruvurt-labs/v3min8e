@@ -35,6 +35,8 @@ export class AddressMonitor extends EventEmitter {
   private monitoringIntervals: Map<string, NodeJS.Timeout> = new Map();
   private isRunning = false;
   private watchedAddresses: Map<string, WatchedAddress> = new Map();
+  private lastErrorLogged = 0;
+  private readonly ERROR_LOG_THROTTLE = 300000; // Log errors only once per 5 minutes
 
   // Pre-emptive rug detection thresholds
   private rugDetectionThresholds = {
@@ -96,7 +98,7 @@ export class AddressMonitor extends EventEmitter {
     // Refresh watched addresses periodically (reduced frequency to prevent timeouts)
     const refreshInterval = setInterval(() => {
       this.loadWatchedAddresses();
-    }, 300000); // Refresh every 5 minutes (reduced from 1 minute)
+    }, 600000); // Refresh every 10 minutes (further reduced)
 
     this.monitoringIntervals.set("refresh", refreshInterval);
     console.log("✅ Address Monitor started");
@@ -124,6 +126,12 @@ export class AddressMonitor extends EventEmitter {
         );
       });
 
+      // Skip database call if Supabase is not properly configured
+      if (!supabase || !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+        // Return empty array to prevent errors in demo mode
+        return;
+      }
+
       const dbQuery = supabase
         .from("watched_addresses")
         .select("*")
@@ -135,14 +143,20 @@ export class AddressMonitor extends EventEmitter {
       ]);
 
       if (error) {
-        console.error("Failed to load watched addresses:", {
-          message: error.message,
-          details: error.details || "No additional details",
-          hint:
-            error.hint ||
-            "Check database connection and Supabase configuration",
-          code: error.code || "UNKNOWN_ERROR",
-        });
+        const now = Date.now();
+        const shouldLog = now - this.lastErrorLogged > this.ERROR_LOG_THROTTLE;
+
+        if (shouldLog) {
+          console.error("Failed to load watched addresses:", {
+            message: error.message,
+            details: error.details || "No additional details",
+            hint:
+              error.hint ||
+              "Check database connection and Supabase configuration",
+            code: error.code || "UNKNOWN_ERROR",
+          });
+          this.lastErrorLogged = now;
+        }
         return;
       }
 
@@ -167,9 +181,29 @@ export class AddressMonitor extends EventEmitter {
       }
 
       this.watchedAddresses = newAddresses;
-      console.log(`📋 Loaded ${addresses?.length || 0} watched addresses`);
+
+      // Only log if we have addresses or if it's been a while
+      const now = Date.now();
+      const shouldLog =
+        addresses?.length > 0 ||
+        now - this.lastErrorLogged > this.ERROR_LOG_THROTTLE;
+
+      if (shouldLog) {
+        console.log(`📋 Loaded ${addresses?.length || 0} watched addresses`);
+      }
     } catch (error) {
-      console.error("Failed to load watched addresses:", error);
+      const now = Date.now();
+      const shouldLog = now - this.lastErrorLogged > this.ERROR_LOG_THROTTLE;
+
+      if (shouldLog) {
+        console.error("Failed to load watched addresses:", {
+          message: error instanceof Error ? error.message : "Unknown error",
+          details: error instanceof Error ? error.stack : String(error),
+          hint: "Check database connection and Supabase configuration",
+          code: "UNKNOWN_ERROR",
+        });
+        this.lastErrorLogged = now;
+      }
     }
   }
 

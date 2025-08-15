@@ -29,6 +29,7 @@ const navItems: NavItem[] = [
   { name: "LITEPAPER", href: "/whitepaper", description: "NimRev Docs" },
   { name: "BLUEPRINT", href: "/technology", description: "Core Systems" },
   { name: "COMMUNITY", href: "/community", description: "Join Network" },
+  { name: "AIRDROP 🎁", href: "/airdrop", description: "VERM Token Airdrop" },
   { name: "CONTACT", href: "/contact", description: "Secure Channel" },
 ];
 
