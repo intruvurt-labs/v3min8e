@@ -12,6 +12,8 @@ interface BotMetrics {
   messagesProcessed: number;
   uptime: string;
   lastUpdate: Date;
+  isReal?: boolean;
+  dataSource?: string;
 }
 
 export default function TelegramBotStatus({
@@ -90,11 +92,18 @@ export default function TelegramBotStatus({
         let realUptime = "0%";
 
         // Extract real data from bot API
+        let dataSource = "No Connection";
+        let isReal = false;
+
         if (responses[0].status === "fulfilled" && responses[0].value.success) {
           const botData = responses[0].value.data;
-          realActiveUsers = botData.activeUsers || 0;
-          realMessagesProcessed = botData.messagesProcessed || prev.messagesProcessed;
-          realUptime = botData.uptime || `${confidence}%`;
+          if (botData.isReal) {
+            realActiveUsers = botData.activeUsers || 0;
+            realMessagesProcessed = botData.messagesProcessed || prev.messagesProcessed;
+            realUptime = botData.uptime || `${confidence}%`;
+            dataSource = "Bot API";
+            isReal = true;
+          }
         }
 
         // Extract real data from NimRev API
@@ -121,6 +130,8 @@ export default function TelegramBotStatus({
           messagesProcessed: realMessagesProcessed,
           lastUpdate: new Date(),
           uptime: realUptime,
+          isReal,
+          dataSource,
         }));
       } catch (error) {
         console.error("Failed to check bot status:", error?.message || error);
@@ -163,8 +174,8 @@ export default function TelegramBotStatus({
                 NIMREV BOT
               </h3>
               <p className="text-cyber-blue text-xs font-mono opacity-80">
-                Telegram Intelligence
-              </p>
+              {metrics.isReal ? "Live Data" : "No Data"}
+            </p>
             </div>
           </div>
           <div className="text-right">
@@ -174,6 +185,9 @@ export default function TelegramBotStatus({
               {metrics.isOnline ? "ONLINE" : "OFFLINE"}
             </div>
             <div className="text-xs text-gray-400 font-mono">
+              {metrics.dataSource || "Offline"}
+            </div>
+            <div className="text-xs text-gray-500 font-mono">
               {metrics.lastUpdate.toLocaleTimeString()}
             </div>
           </div>
