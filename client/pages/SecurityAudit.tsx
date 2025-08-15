@@ -538,6 +538,36 @@ export default function SecurityAudit() {
             </div>
           </div>
 
+          {/* Live Address Scanner Section */}
+          <section className="mb-16">
+            <div className="bg-dark-bg/80 backdrop-blur-xl border border-cyber-green/30 rounded-2xl p-8">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-cyber font-bold text-cyber-purple mb-4 neon-glow">
+                  🎯 INSTANT ADDRESS SCANNER
+                </h2>
+                <p className="text-lg text-gray-300 font-mono">
+                  Free live scanning • Paste any Solana or Ethereum address for instant risk analysis
+                </p>
+              </div>
+
+              <LiveAddressScanner />
+
+              <div className="mt-8 text-center">
+                <div className="inline-flex items-center gap-6 bg-dark-bg/60 border border-cyber-green/20 rounded-lg p-4">
+                  <div className="text-xs font-mono text-gray-300">
+                    <span className="text-cyber-green">🆓 FREE:</span> Basic address scanning
+                  </div>
+                  <div className="text-xs font-mono text-gray-300">
+                    <span className="text-cyber-purple">💎 PREMIUM:</span> Smart contract audits below
+                  </div>
+                  <div className="text-xs font-mono text-gray-300">
+                    <span className="text-cyber-blue">⚡ LIVE:</span> Real-time threat detection
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
           {/* Pricing Model Explanation */}
           <section className="mb-16">
             <div className="border border-cyber-blue/30 p-8 bg-cyber-blue/5">
