@@ -145,6 +145,8 @@ export default function TelegramBotStatus({
           activeUsers: 0,
           uptime: "Connection Failed",
           lastUpdate: new Date(),
+          isReal: false,
+          dataSource: "Error",
         }));
       }
     };
