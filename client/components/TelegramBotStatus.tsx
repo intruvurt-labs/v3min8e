@@ -26,6 +26,8 @@ export default function TelegramBotStatus({
     messagesProcessed: 0,
     uptime: "Starting...",
     lastUpdate: new Date(),
+    isReal: false,
+    dataSource: "Initializing...",
   });
 
   useEffect(() => {
