@@ -19,6 +19,7 @@ import Whitepaper from "./pages/Whitepaper";
 import Technology from "./pages/Technology";
 import Roadmap from "./pages/Roadmap";
 import Community from "./pages/Community";
+import Airdrop from "./pages/Airdrop";
 import Contact from "./pages/Contact";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
