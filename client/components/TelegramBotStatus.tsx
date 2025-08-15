@@ -86,69 +86,67 @@ export default function TelegramBotStatus({
           confidence = 25;
         }
 
-        // Process API responses and update metrics
-        setMetrics((prev) => {
-          // Get real data from API responses
-          let realActiveUsers = 0;
-          let realMessagesProcessed = prev.messagesProcessed; // Now prev is defined inside setMetrics
-          let realUptime = "0%";
-          let dataSource = "No Connection";
-          let isReal = false;
+        // Parse API responses
+        let realActiveUsers = 0;
+        let realMessagesProcessed = 0;
+        let realUptime = "0%";
+        let dataSource = "No Connection";
+        let isReal = false;
 
-          // Extract real data from bot API
-          if (responses[0].status === "fulfilled") {
-            const botResponse = responses[0].value;
-            if (botResponse.ok) {
-              try {
-                const botData = await botResponse.json();
-                if (botData.isReal) {
-                  realActiveUsers = botData.activeUsers || 0;
-                  realMessagesProcessed = botData.messagesProcessed || prev.messagesProcessed;
-                  realUptime = botData.uptime || `${confidence}%`;
-                  dataSource = "Bot API";
-                  isReal = true;
-                }
-              } catch (jsonError) {
-                console.log("Bot API response parsing failed:", jsonError.message);
+        // Extract real data from bot API
+        if (responses[0].status === "fulfilled") {
+          const botResponse = responses[0].value;
+          if (botResponse.ok) {
+            try {
+              const botData = await botResponse.json();
+              if (botData.isReal) {
+                realActiveUsers = botData.activeUsers || 0;
+                realMessagesProcessed = botData.messagesProcessed || 0;
+                realUptime = botData.uptime || `${confidence}%`;
+                dataSource = "Bot API";
+                isReal = true;
               }
+            } catch (jsonError) {
+              console.log("Bot API response parsing failed:", jsonError.message);
             }
           }
+        }
 
-          // Extract real data from NimRev API
-          if (responses[1].status === "fulfilled") {
-            const nimrevResponse = responses[1].value;
-            if (nimrevResponse.ok) {
-              try {
-                const nimrevData = await nimrevResponse.json();
-                if (nimrevData.stats) {
-                  realActiveUsers = nimrevData.stats.activeUsers || realActiveUsers;
-                  realMessagesProcessed = nimrevData.stats.messagesProcessed || realMessagesProcessed;
-                  realUptime = nimrevData.stats.uptime || realUptime;
-                }
-              } catch (jsonError) {
-                console.log("NimRev API response parsing failed:", jsonError.message);
+        // Extract real data from NimRev API
+        if (responses[1].status === "fulfilled") {
+          const nimrevResponse = responses[1].value;
+          if (nimrevResponse.ok) {
+            try {
+              const nimrevData = await nimrevResponse.json();
+              if (nimrevData.stats) {
+                realActiveUsers = nimrevData.stats.activeUsers || realActiveUsers;
+                realMessagesProcessed = nimrevData.stats.messagesProcessed || realMessagesProcessed;
+                realUptime = nimrevData.stats.uptime || realUptime;
               }
+            } catch (jsonError) {
+              console.log("NimRev API response parsing failed:", jsonError.message);
             }
           }
+        }
 
-          // If no real data available, show "No Data" instead of fake numbers
-          if (!botRunning || confidence === 0) {
-            realActiveUsers = 0;
-            realUptime = "Offline";
-          }
+        // If no real data available, show "No Data" instead of fake numbers
+        if (!botRunning || confidence === 0) {
+          realActiveUsers = 0;
+          realUptime = "Offline";
+        }
 
-          return {
-            ...prev,
-            isOnline: botRunning,
-            responseTime,
-            activeUsers: realActiveUsers,
-            messagesProcessed: realMessagesProcessed,
-            lastUpdate: new Date(),
-            uptime: realUptime,
-            isReal,
-            dataSource,
-          };
-        });
+        // Update metrics with parsed data
+        setMetrics((prev) => ({
+          ...prev,
+          isOnline: botRunning,
+          responseTime,
+          activeUsers: realActiveUsers,
+          messagesProcessed: realMessagesProcessed || prev.messagesProcessed,
+          lastUpdate: new Date(),
+          uptime: realUptime,
+          isReal,
+          dataSource,
+        }));
       } catch (error) {
         console.error("Failed to check bot status:", error?.message || error);
         // Show real offline status instead of fake demo mode
