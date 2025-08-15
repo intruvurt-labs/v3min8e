@@ -28,6 +28,7 @@ import TechTooltip, {
   FlaggedAuditTooltip,
 } from "@/components/TechTooltip";
 import { useWallet } from "@/hooks/useWallet";
+import LiveAddressScanner from "@/components/LiveAddressScanner";
 
 interface AuditPackage {
   id: string;
