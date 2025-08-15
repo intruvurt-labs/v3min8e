@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import styles from "./BotPlatform.module.css";
+import { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { Link } from "react-router-dom";
 import {
   Bot,
@@ -299,82 +301,66 @@ export default function BotPlatform() {
     setIsPaymentOpen(true);
   };
 
-  const handlePayment = async () => {
-    if (!connected) {
-      await connect();
-      return;
-    }
+const handlePayment = async () => {
+  if (!connected) {
+    await connect();
+    return;
+  }
 
-    if (balance < PREMIUM_PRICE_SOL) {
-      alert("Insufficient SOL balance");
-      return;
-    }
+  if ((balance ?? 0) < PREMIUM_PRICE_SOL) {
+    alert(`Insufficient SOL balance: Need ${PREMIUM_PRICE_SOL} SOL`);
+    return;
+  }
 
-    setIsProcessingPayment(true);
-    try {
-      // In production, this would create and sign a real Solana transaction
-      // For demo purposes, simulate the payment process
+  setIsProcessingPayment(true);
+  try {
+    if (!publicKey) throw new Error("Wallet not properly connected");
 
-      // Step 1: Validate wallet connection
-      if (!publicKey) {
-        throw new Error("Wallet not properly connected");
-      }
+    const connection = new Connection("hhttps://api.mainnet-beta.solana.com");
+    const treasuryPubkey = new PublicKey("outofbounds.sol");
 
-      // Step 2: Create mock transaction (in production, use @solana/web3.js)
-      const mockTransaction = {
-        from: publicKey,
-        to: "NimRevTreasury1111111111111111111111111111",
-        amount: PREMIUM_PRICE_SOL,
-        timestamp: Date.now(),
-        signature: `mock_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      };
+    // Create the transfer transaction
+    const transaction = new Transaction().add(
+      SystemProgram.transfer({
+        fromPubkey: typeof publicKey === "string" ? new PublicKey(publicKey) : publicKey,
+        toPubkey: treasuryPubkey,
+        lamports: PREMIUM_PRICE_SOL * LAMPORTS_PER_SOL,
+      })
+    );
 
-      // Step 3: Simulate transaction signing and confirmation
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+    transaction.feePayer = typeof publicKey === "string" ? new PublicKey(publicKey) : publicKey;
+    transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
 
-      // Step 4: Verify transaction on backend (mock verification)
-      const verificationResponse = await fetch("/api/verify-payment", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          signature: mockTransaction.signature,
-          amount: PREMIUM_PRICE_SOL,
-          wallet: publicKey,
-        }),
-      }).catch(() => ({ ok: true })); // Mock success for demo
+    // Sign & send transaction through wallet adapter
+    const signature = await signTransaction(transaction).then(signed =>
+      connection.sendRawTransaction(signed.serialize())
+    );
 
-      if (verificationResponse.ok) {
-        // Step 5: Activate premium features
-        setIsPremium(true);
-        setPaymentSuccess(true);
+    // Confirm transaction
+    await connection.confirmTransaction(signature, "processed");
 
-        // Update configs to enable premium features
-        setConfigs((prev) =>
-          prev.map((config) =>
-            config.isPremium ? { ...config, enabled: true } : config,
-          ),
-        );
+    // If transaction confirmed — unlock premium
+    setIsPremium(true);
+    setPaymentSuccess(true);
+    setConfigs(prev =>
+      prev.map(cfg => (cfg.isPremium ? { ...cfg, enabled: true } : cfg))
+    );
 
-        // Store premium status in localStorage for demo persistence
-        localStorage.setItem("nimrev_premium_status", "true");
-        localStorage.setItem("nimrev_premium_wallet", publicKey);
+    localStorage.setItem("nimrev_premium_status", "true");
+    localStorage.setItem("nimrev_premium_wallet", publicKey.toString());
 
-        setTimeout(() => {
-          setIsPaymentOpen(false);
-          setPaymentSuccess(false);
-        }, 3000);
-      } else {
-        throw new Error("Payment verification failed");
-      }
-    } catch (error) {
-      console.error("Payment failed:", error);
-      alert(`Payment failed: ${error.message}`);
-    } finally {
-      setIsProcessingPayment(false);
-    }
-  };
+    setTimeout(() => {
+      setIsPaymentOpen(false);
+      setPaymentSuccess(false);
+    }, 3000);
+
+  } catch (error: any) {
+    console.error("Payment failed:", error);
+    alert(`Payment failed: ${error.message}`);
+  } finally {
+    setIsProcessingPayment(false);
+  }
+};
 
   // Check for existing premium status on component mount
   useEffect(() => {
@@ -391,7 +377,7 @@ export default function BotPlatform() {
     }
   }, [publicKey]);
 
-  const PREMIUM_PRICE_SOL = 0.045;
+  const PREMIUM_PRICE_SOL = 0.055;
 
   const [botStats, setBotStats] = useState({
     activeGroups: "Loading...",
@@ -416,7 +402,6 @@ export default function BotPlatform() {
 
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [geometricShapes, setGeometricShapes] = useState([]);
-
   useEffect(() => {
     // Generate random geometric shapes
     const shapes = Array.from({ length: 8 }, (_, i) => ({
@@ -439,6 +424,28 @@ export default function BotPlatform() {
       animationDelay: Math.random() * 5,
       animationDuration: 3 + Math.random() * 4,
     }));
+    setGeometricShapes(shapes);
+
+    // Apply dynamic styles to geometric shapes after render
+    setTimeout(() => {
+      document.querySelectorAll<HTMLElement>('.geometric-shape').forEach((el) => {
+        const x = el.getAttribute('data-x');
+        const y = el.getAttribute('data-y');
+        const size = el.getAttribute('data-size');
+        const rotation = el.getAttribute('data-rotation');
+        const animationDelay = el.getAttribute('data-animation-delay');
+        const animationDuration = el.getAttribute('data-animation-duration');
+        if (x && y && size && rotation && animationDelay && animationDuration) {
+          el.style.left = `${x}%`;
+          el.style.top = `${y}%`;
+          el.style.width = `${size}px`;
+          el.style.height = `${size}px`;
+          el.style.transform = `rotate(${rotation}deg)`;
+          el.style.animation = `float ${animationDuration}s ease-in-out infinite`;
+          el.style.animationDelay = `${animationDelay}s`;
+        }
+      });
+    }, 0);
     setGeometricShapes(shapes);
 
     // Real functional system checks for true bot status
@@ -714,57 +721,27 @@ export default function BotPlatform() {
                 <ExternalLink className="w-4 h-4" />
                 <span className="font-mono text-sm">Open Telegram Bot</span>
               </a>
-              <Link
-                to="/dashboard"
-                className="flex items-center gap-2 px-4 py-2 bg-cyber-blue/20 border border-cyber-blue text-cyber-blue rounded-lg hover:bg-cyber-blue hover:text-white transition-all duration-300"
-              >
-                <BarChart3 className="w-4 h-4" />
-                <span className="font-mono text-sm">Dashboard</span>
-              </Link>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative z-10 overflow-hidden py-16 sm:py-32">
-        {/* Enhanced Background with Higher Contrast */}
-        <div className="absolute inset-0 bg-gradient-to-br from-black via-dark-bg to-gray-900" />
-        <div className="absolute inset-0 bg-gradient-to-br from-cyber-purple/60 via-transparent to-cyber-blue/60" />
-
-        {/* Random Abstract Geometrical Shapes */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {geometricShapes.map((shape) => (
-            <div
-              key={shape.id}
-              className="absolute"
-              style={{
-                left: `${shape.x}%`,
-                top: `${shape.y}%`,
-                width: `${shape.size}px`,
-                height: `${shape.size}px`,
-                transform: `rotate(${shape.rotation}deg)`,
-                animation: `float ${shape.animationDuration}s ease-in-out infinite`,
-                animationDelay: `${shape.animationDelay}s`,
-              }}
-            >
-              {shape.type === "circle" ? (
-                <div
-                  className="w-full h-full rounded-full"
-                  style={{ backgroundColor: shape.color }}
-                />
-              ) : (
-                <div
-                  className="w-full h-full"
-                  style={{
-                    backgroundColor: shape.color,
-                    clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)",
-                  }}
-                />
-              )}
-            </div>
-          ))}
+      {/* Render geometric shapes */}
+      {geometricShapes.map((shape: any) => (
+        <div
+          key={shape.id}
+          className={`absolute geometric-shape ${shape.type === "circle" ? "shape-circle" : "polygon-shape"}`}
+          data-x={shape.x}
+          data-y={shape.y}
+          data-size={shape.size}
+          data-rotation={shape.rotation}
+          data-animation-delay={shape.animationDelay}
+          data-animation-duration={shape.animationDuration}
+          data-color={shape.color}
+        >
+          {/* Empty child, styling handled by CSS */}
         </div>
+      ))}
 
         {/* Real-time Bot Status Panel - Left Side */}
         <div className="absolute top-4 sm:top-8 left-4 sm:left-8 z-20">
@@ -800,64 +777,20 @@ export default function BotPlatform() {
                 <div className="relative inline-block">
                   {/* Multiple glitch layers */}
                   <span
-                    className="absolute inset-0 text-cyber-green opacity-70 animate-pulse"
-                    style={{
-                      textShadow: `
-                        0 0 5px #00ff41,
-                        0 0 10px #00ff41,
-                        0 0 15px #00ff41,
-                        2px 2px 0px #003311,
-                        4px 4px 0px #002211,
-                        6px 6px 0px #001111
-                      `,
-                      transform: "translate(-2px, -1px) skew(0.5deg)",
-                      filter: "hue-rotate(90deg)",
-                    }}
+                    className="absolute inset-0 text-cyber-green opacity-70 animate-pulse nimrev-glitch-green"
                   >
                     NimRev
                   </span>
 
                   <span
-                    className="absolute inset-0 text-cyber-blue opacity-60"
-                    style={{
-                      textShadow: `
-                        0 0 5px #0066ff,
-                        0 0 10px #0066ff,
-                        0 0 15px #0066ff,
-                        -2px -2px 0px #001133,
-                        -4px -4px 0px #001122,
-                        -6px -6px 0px #001111
-                      `,
-                      transform: "translate(2px, 1px) skew(-0.5deg)",
-                      filter: "hue-rotate(-90deg)",
-                      animation: "glitch 2s infinite",
-                    }}
+                    className="absolute inset-0 text-cyber-blue opacity-60 nimrev-glitch-blue"
                   >
                     NimRev
                   </span>
 
                   {/* Main text with 3D bevel effect */}
                   <span
-                    className="relative text-white"
-                    style={{
-                      textShadow: `
-                        0 0 10px #ffffff,
-                        1px 1px 0px #cccccc,
-                        2px 2px 0px #aaaaaa,
-                        3px 3px 0px #888888,
-                        4px 4px 0px #666666,
-                        5px 5px 0px #444444,
-                        6px 6px 0px #222222,
-                        7px 7px 0px #000000,
-                        0 0 20px rgba(0, 255, 65, 0.5),
-                        0 0 30px rgba(0, 102, 255, 0.3)
-                      `,
-                      background:
-                        "linear-gradient(45deg, #ffffff, #e0e0e0, #c0c0c0)",
-                      backgroundClip: "text",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                    }}
+                    className="relative text-white nimrev-title-glow"
                   >
                     NimRev
                   </span>
@@ -867,17 +800,7 @@ export default function BotPlatform() {
               {/* Subtitle with enhanced 3D Effect */}
               <div className="relative text-4xl md:text-7xl font-bold mb-8 font-mono">
                 <span
-                  className="bg-gradient-to-r from-cyber-purple via-cyber-blue to-cyber-green bg-clip-text text-transparent"
-                  style={{
-                    textShadow: `
-                      2px 2px 0px rgba(138, 43, 226, 0.5),
-                      4px 4px 0px rgba(30, 144, 255, 0.3),
-                      6px 6px 0px rgba(0, 255, 65, 0.2),
-                      0 0 15px rgba(138, 43, 226, 0.6),
-                      0 0 25px rgba(30, 144, 255, 0.4)
-                    `,
-                    filter: "drop-shadow(0 0 10px rgba(138, 43, 226, 0.8))",
-                  }}
+                  className={`bg-gradient-to-r from-cyber-purple via-cyber-blue to-cyber-green bg-clip-text text-transparent ${styles.gradientTitle}`}
                 >
                   Multi-Tenant Bot
                 </span>
@@ -973,7 +896,7 @@ export default function BotPlatform() {
 
               {/* VERM Token CTA */}
               <a
-                href="https://jup.ag/swap/SOL-VERM"
+                href="https://jup.ag/tokens/Auu4U7cVjm41yVnVtBCwHW2FBAKznPgLR7hQf4Esjups"
                 rel="noopener noreferrer"
                 className="group relative inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-cyber-green via-cyber-blue to-cyber-cyan px-12 py-6 text-lg font-semibold text-white transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-cyber-green/25 font-mono"
               >
@@ -1047,7 +970,6 @@ export default function BotPlatform() {
             </div>
           </div>
         </div>
-      </section>
 
       {/* Features Grid */}
       <section className="py-32 relative z-10">
@@ -1157,6 +1079,8 @@ export default function BotPlatform() {
                       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                         config.enabled ? "bg-cyber-green" : "bg-gray-300"
                       } ${config.isPremium && !isPremium ? "opacity-50 cursor-not-allowed" : ""}`}
+                      aria-label={`Toggle ${config.label}`}
+                      title={`Toggle ${config.label}`}
                     >
                       <span
                         className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
@@ -1178,7 +1102,7 @@ export default function BotPlatform() {
                   </div>
                   <p className="text-xs text-gray-300 mb-3 font-mono">
                     Unlock advanced token gating, one-click buy, and analytics
-                    for just 0.045 SOL (one-time)
+                    for just 0.055 SOL (one-time)
                   </p>
                   <button
                     onClick={() => setIsPaymentOpen(true)}
@@ -1367,6 +1291,7 @@ export default function BotPlatform() {
             <button
               onClick={() => setIsPaymentOpen(false)}
               className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+              title="Close payment modal"
             >
               <X className="w-6 h-6" />
             </button>
