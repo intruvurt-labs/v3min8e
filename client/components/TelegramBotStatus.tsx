@@ -86,53 +86,55 @@ export default function TelegramBotStatus({
           confidence = 25;
         }
 
-        // Get real data from API responses
-        let realActiveUsers = 0;
-        let realMessagesProcessed = prev.messagesProcessed;
-        let realUptime = "0%";
+        // Process API responses and update metrics
+        setMetrics((prev) => {
+          // Get real data from API responses
+          let realActiveUsers = 0;
+          let realMessagesProcessed = prev.messagesProcessed; // Now prev is defined inside setMetrics
+          let realUptime = "0%";
+          let dataSource = "No Connection";
+          let isReal = false;
 
-        // Extract real data from bot API
-        let dataSource = "No Connection";
-        let isReal = false;
-
-        if (responses[0].status === "fulfilled" && responses[0].value.success) {
-          const botData = responses[0].value.data;
-          if (botData.isReal) {
-            realActiveUsers = botData.activeUsers || 0;
-            realMessagesProcessed = botData.messagesProcessed || prev.messagesProcessed;
-            realUptime = botData.uptime || `${confidence}%`;
-            dataSource = "Bot API";
-            isReal = true;
+          // Extract real data from bot API
+          if (responses[0].status === "fulfilled" && responses[0].value.success) {
+            const botData = responses[0].value.data;
+            if (botData.isReal) {
+              realActiveUsers = botData.activeUsers || 0;
+              realMessagesProcessed = botData.messagesProcessed || prev.messagesProcessed;
+              realUptime = botData.uptime || `${confidence}%`;
+              dataSource = "Bot API";
+              isReal = true;
+            }
           }
-        }
 
-        // Extract real data from NimRev API
-        if (responses[1].status === "fulfilled" && responses[1].value.success) {
-          const nimrevData = responses[1].value.data;
-          if (nimrevData.stats) {
-            realActiveUsers = nimrevData.stats.activeUsers || realActiveUsers;
-            realMessagesProcessed = nimrevData.stats.messagesProcessed || realMessagesProcessed;
-            realUptime = nimrevData.stats.uptime || realUptime;
+          // Extract real data from NimRev API
+          if (responses[1].status === "fulfilled" && responses[1].value.success) {
+            const nimrevData = responses[1].value.data;
+            if (nimrevData.stats) {
+              realActiveUsers = nimrevData.stats.activeUsers || realActiveUsers;
+              realMessagesProcessed = nimrevData.stats.messagesProcessed || realMessagesProcessed;
+              realUptime = nimrevData.stats.uptime || realUptime;
+            }
           }
-        }
 
-        // If no real data available, show "No Data" instead of fake numbers
-        if (!botRunning || confidence === 0) {
-          realActiveUsers = 0;
-          realUptime = "Offline";
-        }
+          // If no real data available, show "No Data" instead of fake numbers
+          if (!botRunning || confidence === 0) {
+            realActiveUsers = 0;
+            realUptime = "Offline";
+          }
 
-        setMetrics((prev) => ({
-          ...prev,
-          isOnline: botRunning,
-          responseTime,
-          activeUsers: realActiveUsers,
-          messagesProcessed: realMessagesProcessed,
-          lastUpdate: new Date(),
-          uptime: realUptime,
-          isReal,
-          dataSource,
-        }));
+          return {
+            ...prev,
+            isOnline: botRunning,
+            responseTime,
+            activeUsers: realActiveUsers,
+            messagesProcessed: realMessagesProcessed,
+            lastUpdate: new Date(),
+            uptime: realUptime,
+            isReal,
+            dataSource,
+          };
+        });
       } catch (error) {
         console.error("Failed to check bot status:", error?.message || error);
         // Show real offline status instead of fake demo mode
