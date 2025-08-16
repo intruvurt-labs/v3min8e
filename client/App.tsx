@@ -14,7 +14,7 @@ import Grid from "./pages/Grid";
 import Terminal from "./pages/Terminal";
 import About from "./pages/About";
 import Dashboard from "./pages/Dashboard";
-import StakingEnhanced from "./pages/StakingEnhanced";
+import Staking from "./pages/Staking";
 import Whitepaper from "./pages/Whitepaper";
 import Technology from "./pages/Technology";
 import Roadmap from "./pages/Roadmap";
@@ -49,7 +49,7 @@ const App = () => (
               <Route path="/terminal" element={<Terminal />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/explorer" element={<Explorer />} />
-              <Route path="/staking" element={<StakingEnhanced />} />
+              <Route path="/staking" element={<Staking />} />
               <Route path="/whitepaper" element={<Whitepaper />} />
               <Route path="/technology" element={<Technology />} />
               <Route path="/roadmap" element={<Roadmap />} />
