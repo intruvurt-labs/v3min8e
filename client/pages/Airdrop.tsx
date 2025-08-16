@@ -106,9 +106,21 @@ export default function Airdrop() {
     const fetchStats = async () => {
       try {
         const response = await fetch("/api/airdrop/stats");
+
+        // Check if response is ok and hasn't been consumed
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        // Check if body is readable
+        if (response.bodyUsed) {
+          console.warn("Response body already consumed, skipping stats update");
+          return;
+        }
+
         const data = await response.json();
-        if (data.success) {
-          setTotalVermDetected(data.totalVermDetected || 0);
+        if (data.success && data.data) {
+          setTotalVermDetected(data.data.totalVermDetected || 0);
         }
       } catch (error) {
         console.error("Failed to fetch airdrop stats:", error);
