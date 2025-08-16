@@ -28,7 +28,6 @@ import {
   Eye,
   ArrowRight,
   Award,
-  Skull,
   Gamepad2,
 } from "lucide-react";
 import CyberGrid from "@/components/CyberGrid";
