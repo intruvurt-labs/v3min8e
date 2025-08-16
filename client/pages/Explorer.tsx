@@ -1007,7 +1007,7 @@ export default function Explorer() {
 
     return `🐭 NimRev SNIFF REPORT
 🎯 Target: $${symbol} (${network.toUpperCase()})
-🔥 Trap Probability: ${trapProbability}% ${trapProbability > 70 ? "💀" : trapProbability > 40 ? "⚠️" : "✅"}
+🔥 Trap Probability: ${trapProbability}% ${trapProbability > 70 ? "🐭" : trapProbability > 40 ? "⚠️" : "✅"}
 🧪 SEP Flags: ${sepFlags.pattern}
 🔍 Volume Analysis: ${shadowVolume.botPercentage}% Bot-injected | LP ${Math.floor(Math.random() * 40) + 30}% unlocked
 💰 Deploy Wallet: ${reverseMining > 50 ? `Linked to ${Math.floor(Math.random() * 20) + 5} rugs` : "Clean history"} | Renounced: ${Math.random() > 0.5 ? "✅" : "❌"}

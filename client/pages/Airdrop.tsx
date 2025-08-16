@@ -28,7 +28,6 @@ import {
   Eye,
   ArrowRight,
   Award,
-  Skull,
   Gamepad2,
 } from "lucide-react";
 import CyberGrid from "@/components/CyberGrid";
@@ -99,8 +98,62 @@ export default function Airdrop() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [verificationCode, setVerificationCode] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
-  const [totalVermDetected, setTotalVermDetected] = useState(2938402);
+  const [totalVermDetected, setTotalVermDetected] = useState(2938402); // Start with fallback value
   const [lastScanUpdate, setLastScanUpdate] = useState(Date.now());
+
+  // Fetch real statistics
+  useEffect(() => {
+    let isActive = true;
+    const abortController = new AbortController();
+
+    const fetchStats = async () => {
+      try {
+        const response = await fetch("/api/airdrop/stats", {
+          signal: abortController.signal,
+        });
+
+        // Check if component is still mounted and response is ok
+        if (!isActive) return; // Component unmounted
+
+        if (!response.ok) {
+          if (response.status === 429) {
+            console.warn(
+              "Rate limit reached for stats, will retry on next interval",
+            );
+            return; // Don't throw error, just skip this update
+          }
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (isActive && data.success && data.data) {
+          setTotalVermDetected(data.data.totalVermDetected || 0);
+        }
+      } catch (error) {
+        if (error.name === "AbortError") {
+          console.log("Fetch aborted");
+          return;
+        }
+        if (isActive) {
+          console.error("Failed to fetch airdrop stats:", error);
+        }
+      }
+    };
+
+    fetchStats();
+    // Update stats every 60 seconds to avoid rate limiting
+    const interval = setInterval(() => {
+      if (isActive) {
+        fetchStats();
+      }
+    }, 60000);
+
+    return () => {
+      isActive = false;
+      abortController.abort();
+      clearInterval(interval);
+    };
+  }, []);
 
   // Initialize tasks
   useEffect(() => {
@@ -246,7 +299,7 @@ export default function Airdrop() {
 
     setTasks(initialTasks);
     loadUserProgress();
-    generateLeaderboard();
+    fetchLeaderboard();
   }, []);
 
   // Update vermin count with realistic growth
@@ -281,52 +334,23 @@ export default function Airdrop() {
     localStorage.setItem("nimrev_airdrop_progress", JSON.stringify(progress));
   };
 
-  const generateLeaderboard = () => {
-    // Mock leaderboard data - in production this would come from API
-    const mockLeaderboard: LeaderboardEntry[] = [
-      {
-        rank: 1,
-        username: "VermExterminator",
-        avatar: "🏆",
-        totalEarned: 15420,
-        tasksCompleted: 28,
-        streak: 45,
-      },
-      {
-        rank: 2,
-        username: "ScanMaster_Pro",
-        avatar: "🥈",
-        totalEarned: 12750,
-        tasksCompleted: 24,
-        streak: 32,
-      },
-      {
-        rank: 3,
-        username: "CryptoHunter",
-        avatar: "🥉",
-        totalEarned: 11200,
-        tasksCompleted: 22,
-        streak: 28,
-      },
-      {
-        rank: 4,
-        username: "DataGhost_01",
-        avatar: "👻",
-        totalEarned: 9840,
-        tasksCompleted: 19,
-        streak: 25,
-      },
-      {
-        rank: 5,
-        username: "NimRev_Alpha",
-        avatar: "⚡",
-        totalEarned: 8650,
-        tasksCompleted: 17,
-        streak: 22,
-      },
-    ];
+  const fetchLeaderboard = async () => {
+    try {
+      const response = await fetch("/api/airdrop/leaderboard");
 
-    setLeaderboard(mockLeaderboard);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      if (result.success && result.data) {
+        setLeaderboard(result.data.leaderboard || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch leaderboard:", error);
+      // Fallback to empty array
+      setLeaderboard([]);
+    }
   };
 
   const startTask = async (task: AirdropTask) => {
@@ -351,8 +375,26 @@ export default function Airdrop() {
     setIsVerifying(true);
 
     try {
-      // Simulate API verification
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Real API verification
+      const response = await fetch(`/api/airdrop/verify-task`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          taskId,
+          userId: currentProfile?.id,
+          walletAddress: publicKey?.toString(),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.message || "Verification failed");
+      }
 
       // Update task status
       setTasks((prev) =>
@@ -401,7 +443,7 @@ export default function Airdrop() {
     setIsVerifying(true);
     try {
       // Call actual API to verify bot token
-      const response = await fetch("/api/verify-bot-token", {
+      const response = await fetch("/api/airdrop/verify-bot-token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -410,6 +452,10 @@ export default function Airdrop() {
           walletAddress: publicKey?.toString(),
         }),
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       const result = await response.json();
 
@@ -462,7 +508,11 @@ export default function Airdrop() {
     // Show notification
   };
 
-  if (!connected || !currentProfile) {
+  // Enhanced progressive reveal - show airdrop info even without connection
+  const showAirdropInfo = true; // Always show airdrop information
+  const requiresConnection = !connected || !currentProfile;
+
+  if (requiresConnection && !showAirdropInfo) {
     return (
       <div className="min-h-screen bg-dark-bg text-foreground relative overflow-hidden">
         <CyberGrid intensity="low" animated={true} />
@@ -495,27 +545,177 @@ export default function Airdrop() {
 
   return (
     <div className="min-h-screen bg-dark-bg text-foreground relative overflow-hidden">
+      {/* Airdrop Background */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-25"
+        style={{
+          backgroundImage: `url('https://cdn.builder.io/api/v1/image/assets%2F29ccaf1d7d264cd2bd339333fe296f0c%2F0dd1e4b8e6084b1d82de54954159ffa4?format=webp&width=1920')`,
+        }}
+      />
       <CyberGrid intensity="medium" animated={true} />
       <CyberNav />
 
       <div className="relative z-10 pt-24 pb-16 px-4">
         <div className="max-w-6xl mx-auto">
+          {/* Enhanced Connection Status Banner */}
+          {requiresConnection && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-gradient-to-r from-cyber-red/20 via-cyber-orange/20 to-cyber-purple/20 border border-cyber-red/50 rounded-xl p-8 mb-8 text-center relative overflow-hidden"
+            >
+              {/* Background decoration */}
+              <div className="absolute inset-0 opacity-5">
+                <div
+                  className="w-full h-full bg-cover bg-center"
+                  style={{
+                    backgroundImage: `url('https://cdn.builder.io/api/v1/image/assets%2F29ccaf1d7d264cd2bd339333fe296f0c%2F36a192d52edd47bca0e1f1581626cd8b?format=webp&width=800')`,
+                  }}
+                />
+              </div>
+
+              <div className="relative z-10">
+                <div className="inline-block bg-cyber-red/30 border border-cyber-red rounded-full px-4 py-2 mb-4">
+                  <span className="text-cyber-red font-bold text-sm animate-pulse">
+                    🚨 ACTION REQUIRED
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <Wallet className="w-8 h-8 text-cyber-red" />
+                  <h2 className="text-2xl font-bold text-white">
+                    {!connected
+                      ? "🎯 Connect Wallet to Claim FREE VERM"
+                      : "👤 Create Hunter Profile"}
+                  </h2>
+                </div>
+
+                <p className="text-lg text-gray-200 mb-6 max-w-2xl mx-auto">
+                  {!connected
+                    ? "🚀 Your wallet = Your vault. Connect now to access $2,500+ worth of free VERM tokens waiting for you!"
+                    : "⚡ One-click profile creation unlocks all earning opportunities. Takes 30 seconds!"}
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                  <button className="bg-gradient-to-r from-cyber-red to-cyber-orange hover:from-cyber-orange hover:to-cyber-red text-white px-10 py-4 rounded-lg font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-glow-red flex items-center gap-3">
+                    <Wallet className="w-5 h-5" />
+                    {!connected ? "Connect Wallet Now" : "Create Profile"}
+                    <ArrowRight className="w-5 h-5" />
+                  </button>
+
+                  <div className="text-sm text-gray-400">
+                    🔒 100% Secure • ⚡ Instant • 🎁 Free Signup Bonus
+                  </div>
+                </div>
+
+                <div className="mt-6 grid grid-cols-3 gap-4 max-w-md mx-auto">
+                  <div className="text-center">
+                    <div className="text-cyber-green font-bold">30 SEC</div>
+                    <div className="text-xs text-gray-400">Setup Time</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-cyber-blue font-bold">$2,500+</div>
+                    <div className="text-xs text-gray-400">Potential Value</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-cyber-orange font-bold">0 FEES</div>
+                    <div className="text-xs text-gray-400">Always Free</div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           {/* Header with live stats */}
           <div className="text-center mb-8">
             <motion.h1
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-5xl font-cyber font-bold text-cyber-green mb-4 neon-glow"
+              className="text-5xl font-cyber font-bold text-cyber-green mb-4 neon-glow flex items-center justify-center gap-4"
             >
-              VERM PROTOCOL AIRDROP
+              <img
+                src="https://cdn.builder.io/api/v1/image/assets%2F29ccaf1d7d264cd2bd339333fe296f0c%2Ff11efe56691d494d9bb91a1d21ef9fe6?format=webp&width=80"
+                alt="NimRev Logo"
+                className="w-16 h-16 rounded-full"
+              />
+              $VERM AIRDROP
+              <img
+                src="https://cdn.builder.io/api/v1/image/assets%2F29ccaf1d7d264cd2bd339333fe296f0c%2Ff11efe56691d494d9bb91a1d21ef9fe6?format=webp&width=80"
+                alt="NimRev Logo"
+                className="w-16 h-16 rounded-full"
+              />
             </motion.h1>
+            <motion.h2
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-3xl font-cyber font-bold text-cyber-orange mb-4"
+            >
+              1,000,000 VERM TOKEN GIVEAWAY
+            </motion.h2>
             <p className="text-xl text-gray-300 mb-6">
-              The Vermin are on-chain. Solana's about to get a little less
-              sanitary.
+              🚀 <strong className="text-cyber-green">EARN FREE CRYPTO</strong>{" "}
+              by protecting Web3! Complete security tasks, verify your identity,
+              and claim your share of the most valuable security tokens in DeFi.
             </p>
 
+            {/* Value Proposition Highlights */}
+            <div className="grid md:grid-cols-3 gap-4 mb-6">
+              <div className="bg-cyber-green/10 border border-cyber-green/30 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-cyber-green">$2.50</div>
+                <div className="text-sm text-gray-300">Current VERM Value</div>
+              </div>
+              <div className="bg-cyber-blue/10 border border-cyber-blue/30 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-cyber-blue">
+                  5-10 MIN
+                </div>
+                <div className="text-sm text-gray-300">Average Earn Time</div>
+              </div>
+              <div className="bg-cyber-orange/10 border border-cyber-orange/30 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-cyber-orange">
+                  NO FEES
+                </div>
+                <div className="text-sm text-gray-300">100% Free to Join</div>
+              </div>
+            </div>
+
+            {/* Countdown Timer */}
+            <div className="bg-gradient-to-r from-cyber-red/20 to-cyber-orange/20 border border-cyber-red/50 rounded-xl p-6 mb-6">
+              <div className="text-center mb-4">
+                <span className="bg-cyber-red text-white px-3 py-1 rounded-full text-sm font-bold animate-pulse">
+                  🔥 LIMITED TIME OFFER
+                </span>
+              </div>
+              <div className="flex justify-center gap-4">
+                {["55", "23", "47", "12"].map((time, index) => (
+                  <div
+                    key={index}
+                    className="bg-cyber-green/30 border border-cyber-green rounded-lg p-4 text-center backdrop-blur-sm"
+                  >
+                    <div className="text-2xl font-bold text-cyber-green animate-pulse">
+                      {time}
+                    </div>
+                    <div className="text-xs text-gray-300 font-bold">
+                      {["DAYS", "HOURS", "MINS", "SECS"][index]}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="text-center mt-4">
+                <p className="text-cyber-orange font-bold">
+                  ⚡ Pool decreases as more hunters join!
+                </p>
+              </div>
+            </div>
+
             {/* Live Stats */}
-            <div className="bg-cyber-green/10 border border-cyber-green/30 rounded-xl p-6 mb-8">
+            <div className="bg-cyber-green/10 border border-cyber-green/30 rounded-xl p-6 mb-8 relative overflow-hidden">
+              <div
+                className="absolute top-0 right-0 w-32 h-32 opacity-10 bg-cover bg-center"
+                style={{
+                  backgroundImage: `url('https://cdn.builder.io/api/v1/image/assets%2F29ccaf1d7d264cd2bd339333fe296f0c%2F03532437303f4389b84919f0164e3ce6?format=webp&width=300')`,
+                }}
+              />
               <h2 className="text-2xl font-cyber font-bold text-cyber-green mb-2">
                 🐭 Total Vermin Detected: {totalVermDetected.toLocaleString()}
               </h2>
@@ -630,6 +830,54 @@ export default function Airdrop() {
                   {tab.label}
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* Enhanced Social Proof Banner */}
+          <div className="bg-gradient-to-r from-cyber-green/10 to-cyber-blue/10 border border-cyber-green/30 rounded-xl p-6 mb-6 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-20 h-20 opacity-10">
+              <div
+                className="w-full h-full bg-cover bg-center"
+                style={{
+                  backgroundImage: `url('https://cdn.builder.io/api/v1/image/assets%2F29ccaf1d7d264cd2bd339333fe296f0c%2F36a192d52edd47bca0e1f1581626cd8b?format=webp&width=100')`,
+                }}
+              />
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-4 text-center">
+              <div className="flex flex-col items-center gap-2">
+                <div className="flex items-center gap-2 text-cyber-green">
+                  <div className="w-3 h-3 bg-cyber-green rounded-full animate-pulse"></div>
+                  <span className="font-bold text-lg">47</span>
+                </div>
+                <span className="text-sm text-gray-300">
+                  🔥 Claims this hour
+                </span>
+              </div>
+
+              <div className="flex flex-col items-center gap-2">
+                <div className="flex items-center gap-2 text-cyber-orange">
+                  <Trophy className="w-5 h-5" />
+                  <span className="font-bold text-lg">2,847</span>
+                </div>
+                <span className="text-sm text-gray-300">
+                  ⚡ Top earner (VERM)
+                </span>
+              </div>
+
+              <div className="flex flex-col items-center gap-2">
+                <div className="flex items-center gap-2 text-cyber-blue">
+                  <Users className="w-5 h-5" />
+                  <span className="font-bold text-lg">15,847</span>
+                </div>
+                <span className="text-sm text-gray-300">🚀 Total hunters</span>
+              </div>
+            </div>
+
+            <div className="mt-4 text-center">
+              <span className="bg-cyber-green/20 text-cyber-green px-3 py-1 rounded-full text-xs font-bold">
+                💰 Average earnings: 847 VERM ($2,117.50)
+              </span>
             </div>
           </div>
 
@@ -768,7 +1016,7 @@ export default function Airdrop() {
                       <div className="flex gap-2">
                         <input
                           type="text"
-                          value={`https://nimrev.xyz/airdrop?ref=${currentProfile.id}`}
+                          value={`https://nimrev.xyz/airdrop?ref=${currentProfile?.id || "guest"}`}
                           readOnly
                           className="flex-1 bg-dark-bg/50 border border-cyber-purple/30 rounded px-3 py-2 text-white text-sm"
                         />
@@ -952,31 +1200,33 @@ export default function Airdrop() {
                 ))}
 
                 {/* User's position */}
-                <div className="border border-cyber-blue/50 rounded-xl p-6 bg-cyber-blue/10">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-cyber-blue/20 border border-cyber-blue flex items-center justify-center">
-                        <span className="text-cyber-blue font-bold">
-                          #{leaderboard.length + 1}
-                        </span>
-                      </div>
-                      <div>
-                        <h4 className="text-lg font-bold text-white">
-                          {currentProfile.username}
-                        </h4>
-                        <div className="text-sm text-gray-400">
-                          Your Position
+                {currentProfile && (
+                  <div className="border border-cyber-blue/50 rounded-xl p-6 bg-cyber-blue/10">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full bg-cyber-blue/20 border border-cyber-blue flex items-center justify-center">
+                          <span className="text-cyber-blue font-bold">
+                            #{leaderboard.length + 1}
+                          </span>
+                        </div>
+                        <div>
+                          <h4 className="text-lg font-bold text-white">
+                            {currentProfile?.username || "Guest"}
+                          </h4>
+                          <div className="text-sm text-gray-400">
+                            Your Position
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-cyber-blue">
-                        {userProgress.totalEarned.toLocaleString()}
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-cyber-blue">
+                          {userProgress.totalEarned.toLocaleString()}
+                        </div>
+                        <div className="text-sm text-gray-400">VERM earned</div>
                       </div>
-                      <div className="text-sm text-gray-400">VERM earned</div>
                     </div>
                   </div>
-                </div>
+                )}
               </motion.div>
             )}
 
@@ -1122,7 +1372,7 @@ export default function Airdrop() {
                       </h4>
                       <ul className="text-sm text-gray-300 space-y-1">
                         {selectedTask.requirements.map((req, index) => (
-                          <li key={index}>• {req}</li>
+                          <li key={index}>�� {req}</li>
                         ))}
                       </ul>
                     </div>

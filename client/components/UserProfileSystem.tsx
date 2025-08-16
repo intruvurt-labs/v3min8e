@@ -15,7 +15,6 @@ import {
   Star,
   Zap,
   Target,
-  Skull,
   Bot,
   Ghost,
   Diamond,
@@ -178,7 +177,7 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
         isProfileRequired,
         createProfile,
         updateProfile,
-        setProfileRequired,
+        setProfileRequired: setIsProfileRequired,
       }}
     >
       {children}

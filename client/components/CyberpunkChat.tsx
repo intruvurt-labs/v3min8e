@@ -10,7 +10,6 @@ import {
   Eye,
   EyeOff,
   Zap,
-  Skull,
   Crown,
   Globe,
   Activity,
@@ -267,7 +266,11 @@ export default function CyberpunkChat() {
       case "scanner":
         return <Search className="w-4 h-4 text-cyber-blue" />;
       default:
-        return <Skull className="w-4 h-4 text-cyber-green" />;
+        return (
+          <div className="w-4 h-4 text-cyber-green flex items-center justify-center text-xs">
+            🐭
+          </div>
+        );
     }
   };
 
