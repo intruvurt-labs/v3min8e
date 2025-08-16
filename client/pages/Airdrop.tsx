@@ -681,6 +681,21 @@ export default function Airdrop() {
             </div>
           </div>
 
+          {/* Social Proof Banner */}
+          <div className="bg-gradient-to-r from-cyber-green/10 to-cyber-blue/10 border border-cyber-green/30 rounded-xl p-4 mb-6">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-cyber-green rounded-full animate-pulse"></div>
+                <span className="text-gray-300">🔥 <strong className="text-cyber-green">47 people</strong> claimed tokens in the last hour</span>
+              </div>
+              <div className="text-gray-400 hidden sm:block">|</div>
+              <div className="flex items-center gap-2">
+                <Trophy className="w-4 h-4 text-cyber-orange" />
+                <span className="text-gray-300">⚡ Top earner: <strong className="text-cyber-orange">2,847 VERM</strong></span>
+              </div>
+            </div>
+          </div>
+
           {/* Tab Content */}
           <AnimatePresence mode="wait">
             {activeTab === "overview" && (
