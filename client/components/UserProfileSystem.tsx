@@ -15,7 +15,6 @@ import {
   Star,
   Zap,
   Target,
-  Skull,
   Bot,
   Ghost,
   Diamond,
