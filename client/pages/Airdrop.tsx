@@ -1015,6 +1015,7 @@ export default function Airdrop() {
                 ))}
 
                 {/* User's position */}
+                {currentProfile && (
                 <div className="border border-cyber-blue/50 rounded-xl p-6 bg-cyber-blue/10">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -1040,6 +1041,7 @@ export default function Airdrop() {
                     </div>
                   </div>
                 </div>
+                )}
               </motion.div>
             )}
 
