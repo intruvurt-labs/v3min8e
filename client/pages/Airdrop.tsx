@@ -584,28 +584,69 @@ export default function Airdrop() {
 
       <div className="relative z-10 pt-24 pb-16 px-4">
         <div className="max-w-6xl mx-auto">
-          {/* Connection Status Banner */}
+          {/* Enhanced Connection Status Banner */}
           {requiresConnection && (
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-gradient-to-r from-cyber-red/20 to-cyber-orange/20 border border-cyber-red/50 rounded-xl p-6 mb-8 text-center"
+              className="bg-gradient-to-r from-cyber-red/20 via-cyber-orange/20 to-cyber-purple/20 border border-cyber-red/50 rounded-xl p-8 mb-8 text-center relative overflow-hidden"
             >
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <Wallet className="w-6 h-6 text-cyber-red" />
-                <h2 className="text-xl font-bold text-cyber-red">
-                  {!connected ? "Connect Wallet to Start" : "Create Profile to Continue"}
-                </h2>
+              {/* Background decoration */}
+              <div className="absolute inset-0 opacity-5">
+                <div
+                  className="w-full h-full bg-cover bg-center"
+                  style={{
+                    backgroundImage: `url('https://cdn.builder.io/api/v1/image/assets%2F29ccaf1d7d264cd2bd339333fe296f0c%2F36a192d52edd47bca0e1f1581626cd8b?format=webp&width=800')`
+                  }}
+                />
               </div>
-              <p className="text-gray-300 mb-4">
-                {!connected
-                  ? "Connect your Solana wallet to participate in the airdrop"
-                  : "Create your hunter profile to start earning VERM tokens"
-                }
-              </p>
-              <button className="bg-cyber-red hover:bg-cyber-red/80 text-white px-6 py-3 rounded-lg font-bold transition-colors">
-                {!connected ? "Connect Wallet" : "Create Profile"}
-              </button>
+
+              <div className="relative z-10">
+                <div className="inline-block bg-cyber-red/30 border border-cyber-red rounded-full px-4 py-2 mb-4">
+                  <span className="text-cyber-red font-bold text-sm animate-pulse">🚨 ACTION REQUIRED</span>
+                </div>
+
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <Wallet className="w-8 h-8 text-cyber-red" />
+                  <h2 className="text-2xl font-bold text-white">
+                    {!connected ? "🎯 Connect Wallet to Claim FREE VERM" : "👤 Create Hunter Profile"}
+                  </h2>
+                </div>
+
+                <p className="text-lg text-gray-200 mb-6 max-w-2xl mx-auto">
+                  {!connected
+                    ? "🚀 Your wallet = Your vault. Connect now to access $2,500+ worth of free VERM tokens waiting for you!"
+                    : "⚡ One-click profile creation unlocks all earning opportunities. Takes 30 seconds!"
+                  }
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                  <button className="bg-gradient-to-r from-cyber-red to-cyber-orange hover:from-cyber-orange hover:to-cyber-red text-white px-10 py-4 rounded-lg font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-glow-red flex items-center gap-3">
+                    <Wallet className="w-5 h-5" />
+                    {!connected ? "Connect Wallet Now" : "Create Profile"}
+                    <ArrowRight className="w-5 h-5" />
+                  </button>
+
+                  <div className="text-sm text-gray-400">
+                    🔒 100% Secure • ⚡ Instant • 🎁 Free Signup Bonus
+                  </div>
+                </div>
+
+                <div className="mt-6 grid grid-cols-3 gap-4 max-w-md mx-auto">
+                  <div className="text-center">
+                    <div className="text-cyber-green font-bold">30 SEC</div>
+                    <div className="text-xs text-gray-400">Setup Time</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-cyber-blue font-bold">$2,500+</div>
+                    <div className="text-xs text-gray-400">Potential Value</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-cyber-orange font-bold">0 FEES</div>
+                    <div className="text-xs text-gray-400">Always Free</div>
+                  </div>
+                </div>
+              </div>
             </motion.div>
           )}
 
