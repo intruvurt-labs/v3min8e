@@ -103,34 +103,49 @@ export default function Airdrop() {
 
   // Fetch real statistics
   useEffect(() => {
+    let isActive = true;
+    const abortController = new AbortController();
+
     const fetchStats = async () => {
       try {
-        const response = await fetch("/api/airdrop/stats");
+        const response = await fetch("/api/airdrop/stats", {
+          signal: abortController.signal,
+        });
 
-        // Check if response is ok and hasn't been consumed
-        if (!response.ok) {
+        // Check if component is still mounted and response is ok
+        if (!isActive || !response.ok) {
+          if (!isActive) return; // Component unmounted
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        // Check if body is readable
-        if (response.bodyUsed) {
-          console.warn("Response body already consumed, skipping stats update");
-          return;
-        }
-
         const data = await response.json();
-        if (data.success && data.data) {
+        if (isActive && data.success && data.data) {
           setTotalVermDetected(data.data.totalVermDetected || 0);
         }
       } catch (error) {
-        console.error("Failed to fetch airdrop stats:", error);
+        if (error.name === 'AbortError') {
+          console.log("Fetch aborted");
+          return;
+        }
+        if (isActive) {
+          console.error("Failed to fetch airdrop stats:", error);
+        }
       }
     };
 
     fetchStats();
     // Update stats every 30 seconds
-    const interval = setInterval(fetchStats, 30000);
-    return () => clearInterval(interval);
+    const interval = setInterval(() => {
+      if (isActive) {
+        fetchStats();
+      }
+    }, 30000);
+
+    return () => {
+      isActive = false;
+      abortController.abort();
+      clearInterval(interval);
+    };
   }, []);
 
   // Initialize tasks
