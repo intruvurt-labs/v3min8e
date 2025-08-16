@@ -98,7 +98,7 @@ export default function Airdrop() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [verificationCode, setVerificationCode] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
-  const [totalVermDetected, setTotalVermDetected] = useState(2938402);
+  const [totalVermDetected, setTotalVermDetected] = useState(0);
   const [lastScanUpdate, setLastScanUpdate] = useState(Date.now());
 
   // Initialize tasks
