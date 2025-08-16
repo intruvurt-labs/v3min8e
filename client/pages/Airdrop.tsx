@@ -134,12 +134,12 @@ export default function Airdrop() {
     };
 
     fetchStats();
-    // Update stats every 30 seconds
+    // Update stats every 60 seconds to avoid rate limiting
     const interval = setInterval(() => {
       if (isActive) {
         fetchStats();
       }
-    }, 30000);
+    }, 60000);
 
     return () => {
       isActive = false;
