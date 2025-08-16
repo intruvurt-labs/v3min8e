@@ -8,7 +8,6 @@ import {
   Brain,
   Target,
   Activity,
-  Skull,
   TrendingUp,
   TrendingDown,
   Clock,
@@ -228,7 +227,11 @@ export default function LiveAddressScanner({
       case "danger":
         return <Shield className="w-5 h-5" />;
       case "critical":
-        return <Skull className="w-5 h-5" />;
+        return (
+          <div className="w-5 h-5 text-cyber-red flex items-center justify-center">
+            🐭
+          </div>
+        );
       default:
         return <Search className="w-5 h-5" />;
     }
