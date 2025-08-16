@@ -3,13 +3,13 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-verm_staking = "StakeVERM1111111111111111111111111111111111111"
+verm_staking = "4gPquGRAh4cLqLGXKu6TdeeqTp5MA8N6KDriPaSRhc86"
 
 [programs.devnet]
-verm_staking = "StakeVERM1111111111111111111111111111111111111"
+verm_staking = "4gPquGRAh4cLqLGXKu6TdeeqTp5MA8N6KDriPaSRhc86"
 
 [programs.mainnet]
-verm_staking = "EdabwrorVWrqix5zhY9FpEBuBR1bqLRtcMvnGrnJ8ePp"
+verm_staking = "4gPquGRAh4cLqLGXKu6TdeeqTp5MA8N6KDriPaSRhc86"
 
 [registry]
 url = "https://api.apr.dev"
@@ -34,7 +34,7 @@ shutdown_wait = 2000
 upgradeable = false
 
 [[test.genesis]]
-address = "StakeVERM1111111111111111111111111111111111111"
+address = "4gPquGRAh4cLqLGXKu6TdeeqTp5MA8N6KDriPaSRhc86"
 program = "target/deploy/verm_staking.so"
 
 [test.validator]
