@@ -19,6 +19,12 @@ const botTokenLimiter = rateLimit({
   },
 });
 
+const statsLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 30, // Allow 30 requests per minute (one every 2 seconds)
+  message: { error: "Too many stats requests, please try again later." },
+});
+
 // Interface for bot token verification
 interface BotTokenVerification {
   token: string;
