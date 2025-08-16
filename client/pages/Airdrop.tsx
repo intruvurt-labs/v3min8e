@@ -627,8 +627,24 @@ export default function Airdrop() {
               1,000,000 VERM TOKEN GIVEAWAY
             </motion.h2>
             <p className="text-xl text-gray-300 mb-6">
-              🚀 Join the ultimate blockchain security airdrop! Complete tasks, verify accounts, and claim your share of VERM tokens.
+              🚀 <strong className="text-cyber-green">EARN FREE CRYPTO</strong> by protecting Web3! Complete security tasks, verify your identity, and claim your share of the most valuable security tokens in DeFi.
             </p>
+
+            {/* Value Proposition Highlights */}
+            <div className="grid md:grid-cols-3 gap-4 mb-6">
+              <div className="bg-cyber-green/10 border border-cyber-green/30 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-cyber-green">$2.50</div>
+                <div className="text-sm text-gray-300">Current VERM Value</div>
+              </div>
+              <div className="bg-cyber-blue/10 border border-cyber-blue/30 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-cyber-blue">5-10 MIN</div>
+                <div className="text-sm text-gray-300">Average Earn Time</div>
+              </div>
+              <div className="bg-cyber-orange/10 border border-cyber-orange/30 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-cyber-orange">NO FEES</div>
+                <div className="text-sm text-gray-300">100% Free to Join</div>
+              </div>
+            </div>
 
             {/* Countdown Timer */}
             <div className="flex justify-center gap-4 mb-6">
