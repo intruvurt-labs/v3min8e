@@ -101,6 +101,26 @@ export default function Airdrop() {
   const [totalVermDetected, setTotalVermDetected] = useState(0);
   const [lastScanUpdate, setLastScanUpdate] = useState(Date.now());
 
+  // Fetch real statistics
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch("/api/airdrop/stats");
+        const data = await response.json();
+        if (data.success) {
+          setTotalVermDetected(data.totalVermDetected || 0);
+        }
+      } catch (error) {
+        console.error("Failed to fetch airdrop stats:", error);
+      }
+    };
+
+    fetchStats();
+    // Update stats every 30 seconds
+    const interval = setInterval(fetchStats, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Initialize tasks
   useEffect(() => {
     const initialTasks: AirdropTask[] = [
