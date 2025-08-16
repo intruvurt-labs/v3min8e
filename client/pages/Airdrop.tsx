@@ -297,7 +297,7 @@ export default function Airdrop() {
 
     setTasks(initialTasks);
     loadUserProgress();
-    generateLeaderboard();
+    fetchLeaderboard();
   }, []);
 
   // Update vermin count with realistic growth
