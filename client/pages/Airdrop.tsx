@@ -98,7 +98,7 @@ export default function Airdrop() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [verificationCode, setVerificationCode] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
-  const [totalVermDetected, setTotalVermDetected] = useState(0);
+  const [totalVermDetected, setTotalVermDetected] = useState(2938402); // Start with fallback value
   const [lastScanUpdate, setLastScanUpdate] = useState(Date.now());
 
   // Fetch real statistics
@@ -1273,7 +1273,7 @@ export default function Airdrop() {
                       </h4>
                       <ul className="text-sm text-gray-300 space-y-1">
                         {selectedTask.requirements.map((req, index) => (
-                          <li key={index}>• {req}</li>
+                          <li key={index}>�� {req}</li>
                         ))}
                       </ul>
                     </div>
