@@ -25,6 +25,12 @@ const statsLimiter = rateLimit({
   message: { error: "Too many stats requests, please try again later." },
 });
 
+const readOnlyLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  max: 50, // Allow 50 requests per 5 minutes for read-only endpoints
+  message: { error: "Too many requests, please try again later." },
+});
+
 // Interface for bot token verification
 interface BotTokenVerification {
   token: string;
