@@ -569,7 +569,13 @@ export default function Airdrop() {
             </div>
 
             {/* Live Stats */}
-            <div className="bg-cyber-green/10 border border-cyber-green/30 rounded-xl p-6 mb-8">
+            <div className="bg-cyber-green/10 border border-cyber-green/30 rounded-xl p-6 mb-8 relative overflow-hidden">
+              <div
+                className="absolute top-0 right-0 w-32 h-32 opacity-10 bg-cover bg-center"
+                style={{
+                  backgroundImage: `url('https://cdn.builder.io/api/v1/image/assets%2F29ccaf1d7d264cd2bd339333fe296f0c%2F03532437303f4389b84919f0164e3ce6?format=webp&width=300')`
+                }}
+              />
               <h2 className="text-2xl font-cyber font-bold text-cyber-green mb-2">
                 🐭 Total Vermin Detected: {totalVermDetected.toLocaleString()}
               </h2>
