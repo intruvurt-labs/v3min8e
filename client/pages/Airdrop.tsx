@@ -350,8 +350,22 @@ export default function Airdrop() {
     setIsVerifying(true);
 
     try {
-      // Simulate API verification
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Real API verification
+      const response = await fetch(`/api/airdrop/verify-task`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          taskId,
+          userId: currentProfile?.id,
+          walletAddress: publicKey?.toString(),
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.message || "Verification failed");
+      }
 
       // Update task status
       setTasks((prev) =>
