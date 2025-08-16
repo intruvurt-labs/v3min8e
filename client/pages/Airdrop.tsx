@@ -626,9 +626,19 @@ export default function Airdrop() {
             <motion.h1
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-5xl font-cyber font-bold text-cyber-green mb-4 neon-glow"
+              className="text-5xl font-cyber font-bold text-cyber-green mb-4 neon-glow flex items-center justify-center gap-4"
             >
-              🐭 $VERM AIRDROP 🐭
+              <img
+                src="https://cdn.builder.io/api/v1/image/assets%2F29ccaf1d7d264cd2bd339333fe296f0c%2Ff11efe56691d494d9bb91a1d21ef9fe6?format=webp&width=80"
+                alt="NimRev Logo"
+                className="w-16 h-16 rounded-full"
+              />
+              $VERM AIRDROP
+              <img
+                src="https://cdn.builder.io/api/v1/image/assets%2F29ccaf1d7d264cd2bd339333fe296f0c%2Ff11efe56691d494d9bb91a1d21ef9fe6?format=webp&width=80"
+                alt="NimRev Logo"
+                className="w-16 h-16 rounded-full"
+              />
             </motion.h1>
             <motion.h2
               initial={{ opacity: 0, y: -10 }}
