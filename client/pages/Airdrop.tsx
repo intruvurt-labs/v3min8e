@@ -616,7 +616,7 @@ export default function Airdrop() {
               animate={{ opacity: 1, y: 0 }}
               className="text-5xl font-cyber font-bold text-cyber-green mb-4 neon-glow"
             >
-              💀 $VERM AIRDROP 💀
+              🐭 $VERM AIRDROP 🐭
             </motion.h1>
             <motion.h2
               initial={{ opacity: 0, y: -10 }}
