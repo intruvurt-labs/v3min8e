@@ -113,8 +113,13 @@ export default function Airdrop() {
         });
 
         // Check if component is still mounted and response is ok
-        if (!isActive || !response.ok) {
-          if (!isActive) return; // Component unmounted
+        if (!isActive) return; // Component unmounted
+
+        if (!response.ok) {
+          if (response.status === 429) {
+            console.warn("Rate limit reached for stats, will retry on next interval");
+            return; // Don't throw error, just skip this update
+          }
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
