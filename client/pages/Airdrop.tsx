@@ -465,7 +465,7 @@ export default function Airdrop() {
     setIsVerifying(true);
     try {
       // Call actual API to verify bot token
-      const response = await fetch("/api/verify-bot-token", {
+      const response = await fetch("/api/airdrop/verify-bot-token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -474,6 +474,10 @@ export default function Airdrop() {
           walletAddress: publicKey?.toString(),
         }),
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       const result = await response.json();
 
