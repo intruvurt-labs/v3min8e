@@ -462,7 +462,11 @@ export default function Airdrop() {
     // Show notification
   };
 
-  if (!connected || !currentProfile) {
+  // Enhanced progressive reveal - show airdrop info even without connection
+  const showAirdropInfo = true; // Always show airdrop information
+  const requiresConnection = !connected || !currentProfile;
+
+  if (requiresConnection && !showAirdropInfo) {
     return (
       <div className="min-h-screen bg-dark-bg text-foreground relative overflow-hidden">
         <CyberGrid intensity="low" animated={true} />
@@ -500,6 +504,31 @@ export default function Airdrop() {
 
       <div className="relative z-10 pt-24 pb-16 px-4">
         <div className="max-w-6xl mx-auto">
+          {/* Connection Status Banner */}
+          {requiresConnection && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-gradient-to-r from-cyber-red/20 to-cyber-orange/20 border border-cyber-red/50 rounded-xl p-6 mb-8 text-center"
+            >
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <Wallet className="w-6 h-6 text-cyber-red" />
+                <h2 className="text-xl font-bold text-cyber-red">
+                  {!connected ? "Connect Wallet to Start" : "Create Profile to Continue"}
+                </h2>
+              </div>
+              <p className="text-gray-300 mb-4">
+                {!connected
+                  ? "Connect your Solana wallet to participate in the airdrop"
+                  : "Create your hunter profile to start earning VERM tokens"
+                }
+              </p>
+              <button className="bg-cyber-red hover:bg-cyber-red/80 text-white px-6 py-3 rounded-lg font-bold transition-colors">
+                {!connected ? "Connect Wallet" : "Create Profile"}
+              </button>
+            </motion.div>
+          )}
+
           {/* Header with live stats */}
           <div className="text-center mb-8">
             <motion.h1
@@ -507,12 +536,31 @@ export default function Airdrop() {
               animate={{ opacity: 1, y: 0 }}
               className="text-5xl font-cyber font-bold text-cyber-green mb-4 neon-glow"
             >
-              VERM PROTOCOL AIRDROP
+              💀 $VERM AIRDROP 💀
             </motion.h1>
+            <motion.h2
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-3xl font-cyber font-bold text-cyber-orange mb-4"
+            >
+              1,000,000 VERM TOKEN GIVEAWAY
+            </motion.h2>
             <p className="text-xl text-gray-300 mb-6">
-              The Vermin are on-chain. Solana's about to get a little less
-              sanitary.
+              🚀 Join the ultimate blockchain security airdrop! Complete tasks, verify accounts, and claim your share of VERM tokens.
             </p>
+
+            {/* Countdown Timer */}
+            <div className="flex justify-center gap-4 mb-6">
+              {["55", "23", "47", "12"].map((time, index) => (
+                <div key={index} className="bg-cyber-green/20 border border-cyber-green rounded-lg p-4 text-center">
+                  <div className="text-2xl font-bold text-cyber-green">{time}</div>
+                  <div className="text-xs text-gray-400">
+                    {["DAYS", "HOURS", "MINS", "SECS"][index]}
+                  </div>
+                </div>
+              ))}
+            </div>
 
             {/* Live Stats */}
             <div className="bg-cyber-green/10 border border-cyber-green/30 rounded-xl p-6 mb-8">
