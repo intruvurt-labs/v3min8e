@@ -647,15 +647,25 @@ export default function Airdrop() {
             </div>
 
             {/* Countdown Timer */}
-            <div className="flex justify-center gap-4 mb-6">
-              {["55", "23", "47", "12"].map((time, index) => (
-                <div key={index} className="bg-cyber-green/20 border border-cyber-green rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-cyber-green">{time}</div>
-                  <div className="text-xs text-gray-400">
-                    {["DAYS", "HOURS", "MINS", "SECS"][index]}
+            <div className="bg-gradient-to-r from-cyber-red/20 to-cyber-orange/20 border border-cyber-red/50 rounded-xl p-6 mb-6">
+              <div className="text-center mb-4">
+                <span className="bg-cyber-red text-white px-3 py-1 rounded-full text-sm font-bold animate-pulse">
+                  🔥 LIMITED TIME OFFER
+                </span>
+              </div>
+              <div className="flex justify-center gap-4">
+                {["55", "23", "47", "12"].map((time, index) => (
+                  <div key={index} className="bg-cyber-green/30 border border-cyber-green rounded-lg p-4 text-center backdrop-blur-sm">
+                    <div className="text-2xl font-bold text-cyber-green animate-pulse">{time}</div>
+                    <div className="text-xs text-gray-300 font-bold">
+                      {["DAYS", "HOURS", "MINS", "SECS"][index]}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+              <div className="text-center mt-4">
+                <p className="text-cyber-orange font-bold">⚡ Pool decreases as more hunters join!</p>
+              </div>
             </div>
 
             {/* Live Stats */}
