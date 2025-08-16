@@ -545,7 +545,7 @@ export default function Airdrop() {
     <div className="min-h-screen bg-dark-bg text-foreground relative overflow-hidden">
       {/* Airdrop Background */}
       <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-10"
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-25"
         style={{
           backgroundImage: `url('https://cdn.builder.io/api/v1/image/assets%2F29ccaf1d7d264cd2bd339333fe296f0c%2F0dd1e4b8e6084b1d82de54954159ffa4?format=webp&width=1920')`
         }}
