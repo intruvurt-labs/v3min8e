@@ -332,52 +332,23 @@ export default function Airdrop() {
     localStorage.setItem("nimrev_airdrop_progress", JSON.stringify(progress));
   };
 
-  const generateLeaderboard = () => {
-    // Mock leaderboard data - in production this would come from API
-    const mockLeaderboard: LeaderboardEntry[] = [
-      {
-        rank: 1,
-        username: "VermExterminator",
-        avatar: "🏆",
-        totalEarned: 15420,
-        tasksCompleted: 28,
-        streak: 45,
-      },
-      {
-        rank: 2,
-        username: "ScanMaster_Pro",
-        avatar: "🥈",
-        totalEarned: 12750,
-        tasksCompleted: 24,
-        streak: 32,
-      },
-      {
-        rank: 3,
-        username: "CryptoHunter",
-        avatar: "🥉",
-        totalEarned: 11200,
-        tasksCompleted: 22,
-        streak: 28,
-      },
-      {
-        rank: 4,
-        username: "DataGhost_01",
-        avatar: "👻",
-        totalEarned: 9840,
-        tasksCompleted: 19,
-        streak: 25,
-      },
-      {
-        rank: 5,
-        username: "NimRev_Alpha",
-        avatar: "⚡",
-        totalEarned: 8650,
-        tasksCompleted: 17,
-        streak: 22,
-      },
-    ];
+  const fetchLeaderboard = async () => {
+    try {
+      const response = await fetch("/api/airdrop/leaderboard");
 
-    setLeaderboard(mockLeaderboard);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      if (result.success && result.data) {
+        setLeaderboard(result.data.leaderboard || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch leaderboard:", error);
+      // Fallback to empty array
+      setLeaderboard([]);
+    }
   };
 
   const startTask = async (task: AirdropTask) => {
