@@ -1025,7 +1025,7 @@ export default function Airdrop() {
                       </div>
                       <div>
                         <h4 className="text-lg font-bold text-white">
-                          {currentProfile.username}
+                          {currentProfile?.username || "Guest"}
                         </h4>
                         <div className="text-sm text-gray-400">
                           Your Position
