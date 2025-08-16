@@ -401,7 +401,7 @@ router.get(
 );
 
 // GET /api/airdrop/stats
-router.get("/stats", airdropLimiter, async (req: Request, res: Response) => {
+router.get("/stats", statsLimiter, async (req: Request, res: Response) => {
   try {
     // Get real-time stats (in production, these would come from database)
     const baseTime = Math.floor(Date.now() / 1000);
