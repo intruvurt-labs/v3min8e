@@ -1,13 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { getFirestore, doc, getDoc, setDoc, collection, query, where, onSnapshot } from 'firebase/firestore';
-import { initializeApp } from 'firebase/app';
-import { getAuth, signInWithCustomToken, signInAnonymously } from 'firebase/auth';
+import React, { useState, useEffect } from "react";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  collection,
+  query,
+  where,
+  onSnapshot,
+} from "firebase/firestore";
+import { initializeApp } from "firebase/app";
+import {
+  getAuth,
+  signInWithCustomToken,
+  signInAnonymously,
+} from "firebase/auth";
 
 // This is a placeholder for your Firebase configuration
 // In a real app, this would be imported from a config file.
-const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+const firebaseConfig =
+  typeof __firebase_config !== "undefined" ? JSON.parse(__firebase_config) : {};
+const appId = typeof __app_id !== "undefined" ? __app_id : "default-app-id";
+const initialAuthToken =
+  typeof __initial_auth_token !== "undefined" ? __initial_auth_token : null;
 
 // --- ErrorBoundary Component ---
 // This component catches JavaScript errors in its children.
@@ -25,7 +40,7 @@ class ErrorBoundary extends React.Component {
   componentDidCatch(error, errorInfo) {
     this.setState({
       error: error,
-      errorInfo: errorInfo
+      errorInfo: errorInfo,
     });
     console.error("Caught an error in ErrorBoundary:", error, errorInfo);
   }
@@ -35,9 +50,12 @@ class ErrorBoundary extends React.Component {
       return (
         <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
           <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-lg text-center">
-            <h1 className="text-3xl font-bold text-red-600 mb-4">Something went wrong.</h1>
+            <h1 className="text-3xl font-bold text-red-600 mb-4">
+              Something went wrong.
+            </h1>
             <p className="text-gray-700 mb-4">
-              An unexpected error occurred in the application. Please try refreshing the page.
+              An unexpected error occurred in the application. Please try
+              refreshing the page.
             </p>
             {this.props.showDetails && (
               <details className="text-sm text-gray-500 mt-4 text-left">
@@ -86,15 +104,20 @@ const TechTooltip = ({ children, tooltipText }) => {
 const SecurityAudit = ({ technology, issue }) => {
   return (
     <div className="bg-white p-6 rounded-2xl shadow-lg">
-      <h3 className="text-xl font-semibold text-gray-800 mb-2">Audit Finding</h3>
+      <h3 className="text-xl font-semibold text-gray-800 mb-2">
+        Audit Finding
+      </h3>
       <p className="text-gray-600">
-        A potential security vulnerability was found related to <span className="font-medium text-gray-900">{technology}</span>.
+        A potential security vulnerability was found related to{" "}
+        <span className="font-medium text-gray-900">{technology}</span>.
       </p>
       {/* This div correctly wraps the TechTooltip to avoid the DOM nesting error */}
       <div className="text-gray-600 mt-2">
         Learn more about
         <TechTooltip tooltipText={`This is a tooltip about ${technology}`}>
-          <span className="text-blue-500 hover:underline ml-1 cursor-pointer">{technology}</span>
+          <span className="text-blue-500 hover:underline ml-1 cursor-pointer">
+            {technology}
+          </span>
         </TechTooltip>
         and the specific issue: <span className="italic">{issue}</span>.
       </div>
@@ -130,12 +153,13 @@ const App = () => {
         if (user) {
           setUserId(user.uid);
         } else {
-          setUserId('anonymous-' + Math.random().toString(36).substring(2, 9));
+          setUserId("anonymous-" + Math.random().toString(36).substring(2, 9));
         }
-
       } catch (e) {
         console.error("Error initializing Firebase:", e);
-        setError("Failed to initialize the app. Please check your configuration.");
+        setError(
+          "Failed to initialize the app. Please check your configuration.",
+        );
       } finally {
         setLoading(false);
       }
@@ -145,19 +169,26 @@ const App = () => {
 
   useEffect(() => {
     if (db && userId) {
-      const q = collection(db, `/artifacts/${appId}/users/${userId}/security_audits`);
-      const unsubscribe = onSnapshot(q, (snapshot) => {
-        const audits = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setAuditData(audits);
-        setLoading(false);
-      }, (err) => {
-        console.error("Failed to fetch data:", err);
-        setError("Failed to load audit data.");
-        setLoading(false);
-      });
+      const q = collection(
+        db,
+        `/artifacts/${appId}/users/${userId}/security_audits`,
+      );
+      const unsubscribe = onSnapshot(
+        q,
+        (snapshot) => {
+          const audits = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          setAuditData(audits);
+          setLoading(false);
+        },
+        (err) => {
+          console.error("Failed to fetch data:", err);
+          setError("Failed to load audit data.");
+          setLoading(false);
+        },
+      );
 
       // Cleanup listener on unmount
       return () => unsubscribe();
@@ -184,7 +215,9 @@ const App = () => {
     <ErrorBoundary showDetails={true}>
       <div className="bg-gray-100 min-h-screen p-8 font-sans antialiased flex flex-col items-center">
         <div className="bg-white rounded-2xl p-6 shadow-md w-full max-w-3xl mb-8 text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Security Audit Dashboard</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            Security Audit Dashboard
+          </h1>
           <p className="text-gray-500">Your personal security report.</p>
           <div className="mt-4 text-sm text-gray-500">
             User ID: <span className="font-mono text-gray-700">{userId}</span>
@@ -194,7 +227,7 @@ const App = () => {
         <div className="w-full max-w-3xl">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {auditData.length > 0 ? (
-              auditData.map(audit => (
+              auditData.map((audit) => (
                 <SecurityAudit
                   key={audit.id}
                   technology={audit.technology}
@@ -207,10 +240,13 @@ const App = () => {
                 {/* Example of adding new data */}
                 <button
                   onClick={async () => {
-                    const auditsCollectionRef = collection(db, `/artifacts/${appId}/users/${userId}/security_audits`);
-                    await setDoc(doc(auditsCollectionRef, 'sample-1'), {
+                    const auditsCollectionRef = collection(
+                      db,
+                      `/artifacts/${appId}/users/${userId}/security_audits`,
+                    );
+                    await setDoc(doc(auditsCollectionRef, "sample-1"), {
                       technology: "React",
-                      issue: "Component nesting issues."
+                      issue: "Component nesting issues.",
                     });
                   }}
                   className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-xl shadow-md hover:bg-blue-700 transition-colors"

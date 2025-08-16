@@ -117,7 +117,9 @@ export default function Airdrop() {
 
         if (!response.ok) {
           if (response.status === 429) {
-            console.warn("Rate limit reached for stats, will retry on next interval");
+            console.warn(
+              "Rate limit reached for stats, will retry on next interval",
+            );
             return; // Don't throw error, just skip this update
           }
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -128,7 +130,7 @@ export default function Airdrop() {
           setTotalVermDetected(data.data.totalVermDetected || 0);
         }
       } catch (error) {
-        if (error.name === 'AbortError') {
+        if (error.name === "AbortError") {
           console.log("Fetch aborted");
           return;
         }
@@ -547,7 +549,7 @@ export default function Airdrop() {
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-25"
         style={{
-          backgroundImage: `url('https://cdn.builder.io/api/v1/image/assets%2F29ccaf1d7d264cd2bd339333fe296f0c%2F0dd1e4b8e6084b1d82de54954159ffa4?format=webp&width=1920')`
+          backgroundImage: `url('https://cdn.builder.io/api/v1/image/assets%2F29ccaf1d7d264cd2bd339333fe296f0c%2F0dd1e4b8e6084b1d82de54954159ffa4?format=webp&width=1920')`,
         }}
       />
       <CyberGrid intensity="medium" animated={true} />
@@ -567,28 +569,31 @@ export default function Airdrop() {
                 <div
                   className="w-full h-full bg-cover bg-center"
                   style={{
-                    backgroundImage: `url('https://cdn.builder.io/api/v1/image/assets%2F29ccaf1d7d264cd2bd339333fe296f0c%2F36a192d52edd47bca0e1f1581626cd8b?format=webp&width=800')`
+                    backgroundImage: `url('https://cdn.builder.io/api/v1/image/assets%2F29ccaf1d7d264cd2bd339333fe296f0c%2F36a192d52edd47bca0e1f1581626cd8b?format=webp&width=800')`,
                   }}
                 />
               </div>
 
               <div className="relative z-10">
                 <div className="inline-block bg-cyber-red/30 border border-cyber-red rounded-full px-4 py-2 mb-4">
-                  <span className="text-cyber-red font-bold text-sm animate-pulse">🚨 ACTION REQUIRED</span>
+                  <span className="text-cyber-red font-bold text-sm animate-pulse">
+                    🚨 ACTION REQUIRED
+                  </span>
                 </div>
 
                 <div className="flex items-center justify-center gap-3 mb-4">
                   <Wallet className="w-8 h-8 text-cyber-red" />
                   <h2 className="text-2xl font-bold text-white">
-                    {!connected ? "🎯 Connect Wallet to Claim FREE VERM" : "👤 Create Hunter Profile"}
+                    {!connected
+                      ? "🎯 Connect Wallet to Claim FREE VERM"
+                      : "👤 Create Hunter Profile"}
                   </h2>
                 </div>
 
                 <p className="text-lg text-gray-200 mb-6 max-w-2xl mx-auto">
                   {!connected
                     ? "🚀 Your wallet = Your vault. Connect now to access $2,500+ worth of free VERM tokens waiting for you!"
-                    : "⚡ One-click profile creation unlocks all earning opportunities. Takes 30 seconds!"
-                  }
+                    : "⚡ One-click profile creation unlocks all earning opportunities. Takes 30 seconds!"}
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -649,7 +654,9 @@ export default function Airdrop() {
               1,000,000 VERM TOKEN GIVEAWAY
             </motion.h2>
             <p className="text-xl text-gray-300 mb-6">
-              🚀 <strong className="text-cyber-green">EARN FREE CRYPTO</strong> by protecting Web3! Complete security tasks, verify your identity, and claim your share of the most valuable security tokens in DeFi.
+              🚀 <strong className="text-cyber-green">EARN FREE CRYPTO</strong>{" "}
+              by protecting Web3! Complete security tasks, verify your identity,
+              and claim your share of the most valuable security tokens in DeFi.
             </p>
 
             {/* Value Proposition Highlights */}
@@ -659,11 +666,15 @@ export default function Airdrop() {
                 <div className="text-sm text-gray-300">Current VERM Value</div>
               </div>
               <div className="bg-cyber-blue/10 border border-cyber-blue/30 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-cyber-blue">5-10 MIN</div>
+                <div className="text-2xl font-bold text-cyber-blue">
+                  5-10 MIN
+                </div>
                 <div className="text-sm text-gray-300">Average Earn Time</div>
               </div>
               <div className="bg-cyber-orange/10 border border-cyber-orange/30 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-cyber-orange">NO FEES</div>
+                <div className="text-2xl font-bold text-cyber-orange">
+                  NO FEES
+                </div>
                 <div className="text-sm text-gray-300">100% Free to Join</div>
               </div>
             </div>
@@ -677,8 +688,13 @@ export default function Airdrop() {
               </div>
               <div className="flex justify-center gap-4">
                 {["55", "23", "47", "12"].map((time, index) => (
-                  <div key={index} className="bg-cyber-green/30 border border-cyber-green rounded-lg p-4 text-center backdrop-blur-sm">
-                    <div className="text-2xl font-bold text-cyber-green animate-pulse">{time}</div>
+                  <div
+                    key={index}
+                    className="bg-cyber-green/30 border border-cyber-green rounded-lg p-4 text-center backdrop-blur-sm"
+                  >
+                    <div className="text-2xl font-bold text-cyber-green animate-pulse">
+                      {time}
+                    </div>
                     <div className="text-xs text-gray-300 font-bold">
                       {["DAYS", "HOURS", "MINS", "SECS"][index]}
                     </div>
@@ -686,7 +702,9 @@ export default function Airdrop() {
                 ))}
               </div>
               <div className="text-center mt-4">
-                <p className="text-cyber-orange font-bold">⚡ Pool decreases as more hunters join!</p>
+                <p className="text-cyber-orange font-bold">
+                  ⚡ Pool decreases as more hunters join!
+                </p>
               </div>
             </div>
 
@@ -695,7 +713,7 @@ export default function Airdrop() {
               <div
                 className="absolute top-0 right-0 w-32 h-32 opacity-10 bg-cover bg-center"
                 style={{
-                  backgroundImage: `url('https://cdn.builder.io/api/v1/image/assets%2F29ccaf1d7d264cd2bd339333fe296f0c%2F03532437303f4389b84919f0164e3ce6?format=webp&width=300')`
+                  backgroundImage: `url('https://cdn.builder.io/api/v1/image/assets%2F29ccaf1d7d264cd2bd339333fe296f0c%2F03532437303f4389b84919f0164e3ce6?format=webp&width=300')`,
                 }}
               />
               <h2 className="text-2xl font-cyber font-bold text-cyber-green mb-2">
@@ -821,7 +839,7 @@ export default function Airdrop() {
               <div
                 className="w-full h-full bg-cover bg-center"
                 style={{
-                  backgroundImage: `url('https://cdn.builder.io/api/v1/image/assets%2F29ccaf1d7d264cd2bd339333fe296f0c%2F36a192d52edd47bca0e1f1581626cd8b?format=webp&width=100')`
+                  backgroundImage: `url('https://cdn.builder.io/api/v1/image/assets%2F29ccaf1d7d264cd2bd339333fe296f0c%2F36a192d52edd47bca0e1f1581626cd8b?format=webp&width=100')`,
                 }}
               />
             </div>
@@ -832,7 +850,9 @@ export default function Airdrop() {
                   <div className="w-3 h-3 bg-cyber-green rounded-full animate-pulse"></div>
                   <span className="font-bold text-lg">47</span>
                 </div>
-                <span className="text-sm text-gray-300">🔥 Claims this hour</span>
+                <span className="text-sm text-gray-300">
+                  🔥 Claims this hour
+                </span>
               </div>
 
               <div className="flex flex-col items-center gap-2">
@@ -840,7 +860,9 @@ export default function Airdrop() {
                   <Trophy className="w-5 h-5" />
                   <span className="font-bold text-lg">2,847</span>
                 </div>
-                <span className="text-sm text-gray-300">⚡ Top earner (VERM)</span>
+                <span className="text-sm text-gray-300">
+                  ⚡ Top earner (VERM)
+                </span>
               </div>
 
               <div className="flex flex-col items-center gap-2">
@@ -1179,31 +1201,31 @@ export default function Airdrop() {
 
                 {/* User's position */}
                 {currentProfile && (
-                <div className="border border-cyber-blue/50 rounded-xl p-6 bg-cyber-blue/10">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-cyber-blue/20 border border-cyber-blue flex items-center justify-center">
-                        <span className="text-cyber-blue font-bold">
-                          #{leaderboard.length + 1}
-                        </span>
-                      </div>
-                      <div>
-                        <h4 className="text-lg font-bold text-white">
-                          {currentProfile?.username || "Guest"}
-                        </h4>
-                        <div className="text-sm text-gray-400">
-                          Your Position
+                  <div className="border border-cyber-blue/50 rounded-xl p-6 bg-cyber-blue/10">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full bg-cyber-blue/20 border border-cyber-blue flex items-center justify-center">
+                          <span className="text-cyber-blue font-bold">
+                            #{leaderboard.length + 1}
+                          </span>
+                        </div>
+                        <div>
+                          <h4 className="text-lg font-bold text-white">
+                            {currentProfile?.username || "Guest"}
+                          </h4>
+                          <div className="text-sm text-gray-400">
+                            Your Position
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-cyber-blue">
-                        {userProgress.totalEarned.toLocaleString()}
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-cyber-blue">
+                          {userProgress.totalEarned.toLocaleString()}
+                        </div>
+                        <div className="text-sm text-gray-400">VERM earned</div>
                       </div>
-                      <div className="text-sm text-gray-400">VERM earned</div>
                     </div>
                   </div>
-                </div>
                 )}
               </motion.div>
             )}

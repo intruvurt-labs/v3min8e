@@ -415,8 +415,8 @@ router.get("/stats", statsLimiter, async (req: Request, res: Response) => {
       totalVermDetected: 2938402 + (baseTime % 10000), // Incremental real-time detection
       activeHunters: 1247 + (baseTime % 100), // Dynamic active users
       totalRewards: 2400000 + (baseTime % 50000), // Growing reward pool
-      successRate: 72.4 + (Math.sin(baseTime / 1000) * 2), // Fluctuating success rate
-      averageScanTime: 12 + (Math.cos(baseTime / 500) * 3), // Variable scan times
+      successRate: 72.4 + Math.sin(baseTime / 1000) * 2, // Fluctuating success rate
+      averageScanTime: 12 + Math.cos(baseTime / 500) * 3, // Variable scan times
       threatsBlocked: 2847 + (baseTime % 200), // Increasing threats blocked
       lastUpdated: new Date().toISOString(),
     };

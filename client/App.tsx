@@ -40,36 +40,36 @@ const App = () => (
       <StatusProvider>
         <ProfileProvider>
           <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/grid" element={<Grid />} />
-              <Route path="/scanner" element={<Grid />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/terminal" element={<Terminal />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/explorer" element={<Explorer />} />
-              <Route path="/staking" element={<Staking />} />
-              <Route path="/whitepaper" element={<Whitepaper />} />
-              <Route path="/technology" element={<Technology />} />
-              <Route path="/roadmap" element={<Roadmap />} />
-              <Route path="/community" element={<Community />} />
-              <Route path="/airdrop" element={<Airdrop />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/terms" element={<Terms />} />
-              <Route path="/disclaimer" element={<Disclaimer />} />
-              <Route path="/age-restriction" element={<AgeRestriction />} />
-              <Route path="/nimrev" element={<NimRevDashboard />} />
-              <Route path="/bot-platform" element={<BotPlatform />} />
-              <Route path="/bot-dashboard" element={<BotPlatform />} />
-              <Route path="/security-audit" element={<SecurityAudit />} />
-              <Route path="/blogs" element={<Blogs />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/grid" element={<Grid />} />
+                <Route path="/scanner" element={<Grid />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/terminal" element={<Terminal />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/explorer" element={<Explorer />} />
+                <Route path="/staking" element={<Staking />} />
+                <Route path="/whitepaper" element={<Whitepaper />} />
+                <Route path="/technology" element={<Technology />} />
+                <Route path="/roadmap" element={<Roadmap />} />
+                <Route path="/community" element={<Community />} />
+                <Route path="/airdrop" element={<Airdrop />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/disclaimer" element={<Disclaimer />} />
+                <Route path="/age-restriction" element={<AgeRestriction />} />
+                <Route path="/nimrev" element={<NimRevDashboard />} />
+                <Route path="/bot-platform" element={<BotPlatform />} />
+                <Route path="/bot-dashboard" element={<BotPlatform />} />
+                <Route path="/security-audit" element={<SecurityAudit />} />
+                <Route path="/blogs" element={<Blogs />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
           </TooltipProvider>
         </ProfileProvider>
       </StatusProvider>
