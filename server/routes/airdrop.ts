@@ -438,7 +438,7 @@ router.get("/stats", statsLimiter, async (req: Request, res: Response) => {
 // GET /api/airdrop/user-progress/:userId
 router.get(
   "/user-progress/:userId",
-  airdropLimiter,
+  readOnlyLimiter,
   async (req: Request, res: Response) => {
     try {
       const { userId } = req.params;
