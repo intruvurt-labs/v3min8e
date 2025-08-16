@@ -793,18 +793,47 @@ export default function Airdrop() {
             </div>
           </div>
 
-          {/* Social Proof Banner */}
-          <div className="bg-gradient-to-r from-cyber-green/10 to-cyber-blue/10 border border-cyber-green/30 rounded-xl p-4 mb-6">
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-cyber-green rounded-full animate-pulse"></div>
-                <span className="text-gray-300">🔥 <strong className="text-cyber-green">47 people</strong> claimed tokens in the last hour</span>
+          {/* Enhanced Social Proof Banner */}
+          <div className="bg-gradient-to-r from-cyber-green/10 to-cyber-blue/10 border border-cyber-green/30 rounded-xl p-6 mb-6 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-20 h-20 opacity-10">
+              <div
+                className="w-full h-full bg-cover bg-center"
+                style={{
+                  backgroundImage: `url('https://cdn.builder.io/api/v1/image/assets%2F29ccaf1d7d264cd2bd339333fe296f0c%2F36a192d52edd47bca0e1f1581626cd8b?format=webp&width=100')`
+                }}
+              />
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-4 text-center">
+              <div className="flex flex-col items-center gap-2">
+                <div className="flex items-center gap-2 text-cyber-green">
+                  <div className="w-3 h-3 bg-cyber-green rounded-full animate-pulse"></div>
+                  <span className="font-bold text-lg">47</span>
+                </div>
+                <span className="text-sm text-gray-300">🔥 Claims this hour</span>
               </div>
-              <div className="text-gray-400 hidden sm:block">|</div>
-              <div className="flex items-center gap-2">
-                <Trophy className="w-4 h-4 text-cyber-orange" />
-                <span className="text-gray-300">⚡ Top earner: <strong className="text-cyber-orange">2,847 VERM</strong></span>
+
+              <div className="flex flex-col items-center gap-2">
+                <div className="flex items-center gap-2 text-cyber-orange">
+                  <Trophy className="w-5 h-5" />
+                  <span className="font-bold text-lg">2,847</span>
+                </div>
+                <span className="text-sm text-gray-300">⚡ Top earner (VERM)</span>
               </div>
+
+              <div className="flex flex-col items-center gap-2">
+                <div className="flex items-center gap-2 text-cyber-blue">
+                  <Users className="w-5 h-5" />
+                  <span className="font-bold text-lg">15,847</span>
+                </div>
+                <span className="text-sm text-gray-300">🚀 Total hunters</span>
+              </div>
+            </div>
+
+            <div className="mt-4 text-center">
+              <span className="bg-cyber-green/20 text-cyber-green px-3 py-1 rounded-full text-xs font-bold">
+                💰 Average earnings: 847 VERM ($2,117.50)
+              </span>
             </div>
           </div>
 
