@@ -178,7 +178,7 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
         isProfileRequired,
         createProfile,
         updateProfile,
-        setProfileRequired,
+        setProfileRequired: setIsProfileRequired,
       }}
     >
       {children}
