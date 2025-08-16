@@ -831,7 +831,7 @@ export default function Airdrop() {
                       <div className="flex gap-2">
                         <input
                           type="text"
-                          value={`https://nimrev.xyz/airdrop?ref=${currentProfile.id}`}
+                          value={`https://nimrev.xyz/airdrop?ref=${currentProfile?.id || "guest"}`}
                           readOnly
                           className="flex-1 bg-dark-bg/50 border border-cyber-purple/30 rounded px-3 py-2 text-white text-sm"
                         />
