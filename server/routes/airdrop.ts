@@ -329,7 +329,7 @@ router.post(
 // GET /api/airdrop/leaderboard
 router.get(
   "/leaderboard",
-  airdropLimiter,
+  readOnlyLimiter,
   async (req: Request, res: Response) => {
     try {
       // In production, this would fetch from database
