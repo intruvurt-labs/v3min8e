@@ -15,7 +15,7 @@
     "build": "npm run build:client && npm run build:server",
     "build:client": "vite build",
     "build:server": "vite build --config vite.config.server.ts",
-    "start": "node dist/server/node-build.mjs",
+    "start": "node index.js",
     "test": "vitest --run",
     "format.fix": "prettier --write .",
     "typecheck": "tsc"
@@ -28,7 +28,7 @@
     "cheerio": "^1.1.2",
     "crypto-js": "^4.2.0",
      "react-helmet": "^6.1.0",
-    "@types/react-helmet": "^6.1.6"
+    "@types/react-helmet": "^6.1.6",
     "discord.js": "^14.21.0",
     "dotenv": "^17.2.0",
     "ethers": "^6.15.0",
