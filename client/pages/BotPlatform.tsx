@@ -18,7 +18,7 @@ const BarChart3 = ({ className }) => <svg className={className} xmlns="http://ww
 
 // Placeholder components to make the app render
 const CleanSystemStatus = ({ status, currentTime }) => (
-  <div className="bg-dark-bg/60 backdrop-blur-xl border border-cyber-green/30 p-4 rounded-xl shadow-2xl shadow-cyber-purple/20 text-xs font-mono">
+  <div className="bg-dark-bg/80 backdrop-blur-xl border border-cyber-green/30 p-4 rounded-xl shadow-2xl shadow-cyber-purple/20 text-xs font-mono">
     <h3 className="text-white text-sm font-semibold mb-2">System Status</h3>
     <div className="flex items-center gap-2">
       <div className={`w-2 h-2 rounded-full ${status.botCore.status === 'ONLINE' ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
@@ -32,14 +32,14 @@ const CleanSystemStatus = ({ status, currentTime }) => (
 );
 
 const FeatureCard = ({ icon: Icon, title, description, status }) => (
-  <div className="group relative">
+  <div className="group relative h-full">
     <div className="absolute inset-0 bg-gradient-to-r from-cyber-purple to-cyber-blue rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
-    <div className="relative bg-dark-bg/90 backdrop-blur-xl border border-cyber-green/30 rounded-2xl p-8 h-full">
-      <div className="w-12 h-12 bg-gradient-to-r from-cyber-purple to-cyber-pink rounded-xl flex items-center justify-center mb-4">
+    <div className="relative bg-dark-bg/90 backdrop-blur-xl border border-cyber-green/30 rounded-2xl p-6 h-full flex flex-col">
+      <div className="w-12 h-12 bg-gradient-to-r from-cyber-purple to-cyber-pink rounded-xl flex items-center justify-center mb-4 flex-shrink-0">
         {Icon && <Icon className="h-6 w-6 text-white" />}
       </div>
-      <h3 className="text-xl font-semibold text-white mb-3">{title}</h3>
-      <p className="text-gray-300 text-sm">{description}</p>
+      <h3 className="text-lg font-semibold text-white mb-3">{title}</h3>
+      <p className="text-gray-300 text-sm flex-grow">{description}</p>
       <div className={`mt-4 text-xs font-mono px-2 py-1 rounded-full ${status === 'Active' ? 'bg-cyber-green/20 text-cyber-green' : 'bg-gray-500/20 text-gray-400'}`}>
         Status: {status}
       </div>
@@ -48,7 +48,7 @@ const FeatureCard = ({ icon: Icon, title, description, status }) => (
 );
 
 const CyberGrid = () => (
-    <div className="absolute inset-0 w-full h-full z-0 overflow-hidden opacity-50">
+    <div className="absolute inset-0 w-full h-full z-0 overflow-hidden opacity-30">
         <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
             <defs>
                 <pattern id="smallGrid" width="8" height="8" patternUnits="userSpaceOnUse">
@@ -114,23 +114,21 @@ export default function App() {
 
   useEffect(() => {
     // Generate random geometric shapes
-    const shapes = Array.from({ length: 8 }, (_, i) => ({
+    const shapes = Array.from({ length: 6 }, (_, i) => ({
       id: i,
       type: Math.random() > 0.5 ? "circle" : "polygon",
-      size: Math.random() * 200 + 50,
+      size: Math.random() * 150 + 30,
       x: Math.random() * 100,
       y: Math.random() * 100,
       rotation: Math.random() * 360,
       color: [
-        "rgba(255, 182, 193, 0.5)", // Light Pink
-        "rgba(173, 216, 230, 0.5)", // Light Blue
-        "rgba(144, 238, 144, 0.5)", // Light Green
-        "rgba(255, 218, 185, 0.5)", // Peach
-        "rgba(221, 160, 221, 0.5)", // Plum
-        "rgba(255, 255, 224, 0.5)", // Light Yellow
-        "rgba(175, 238, 238, 0.5)", // Pale Turquoise
-        "rgba(255, 192, 203, 0.5)", // Pink
-      ][Math.floor(Math.random() * 8)],
+        "rgba(255, 182, 193, 0.3)", // Light Pink
+        "rgba(173, 216, 230, 0.3)", // Light Blue
+        "rgba(144, 238, 144, 0.3)", // Light Green
+        "rgba(255, 218, 185, 0.3)", // Peach
+        "rgba(221, 160, 221, 0.3)", // Plum
+        "rgba(175, 238, 238, 0.3)", // Pale Turquoise
+      ][Math.floor(Math.random() * 6)],
       animationDelay: Math.random() * 5,
       animationDuration: 3 + Math.random() * 4,
     }));
@@ -180,7 +178,7 @@ export default function App() {
 
       {/* Header */}
       <header className="relative z-10 border-b border-cyber-green/30 bg-dark-bg/80 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link
@@ -188,18 +186,18 @@ export default function App() {
                 className="flex items-center gap-2 text-cyber-green hover:text-cyber-blue transition-colors duration-300"
               >
                 <ArrowLeft className="w-5 h-5" />
-                <span className="font-mono text-sm">Back to Protocol</span>
+                <span className="font-mono text-sm hidden sm:inline">Back to Protocol</span>
               </Link>
-              <div className="w-px h-6 bg-cyber-green/30"></div>
+              <div className="w-px h-6 bg-cyber-green/30 hidden sm:block"></div>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-cyber-purple/20 rounded-xl border border-cyber-purple flex items-center justify-center">
-                  <Bot className="w-5 h-5 text-cyber-purple" />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-cyber-purple/20 rounded-xl border border-cyber-purple flex items-center justify-center">
+                  <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-cyber-purple" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-cyber font-bold text-cyber-purple">
+                  <h1 className="text-lg sm:text-2xl font-cyber font-bold text-cyber-purple">
                     NimRev Bot Platform
                   </h1>
-                  <p className="text-sm text-gray-400 font-mono">
+                  <p className="text-xs sm:text-sm text-gray-400 font-mono hidden sm:block">
                     Multi-Tenant Telegram Intelligence
                   </p>
                 </div>
@@ -210,10 +208,11 @@ export default function App() {
               <a
                 href="https://t.me/nimrev_bot"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 px-4 py-2 bg-cyber-purple/20 border border-cyber-purple text-cyber-purple rounded-lg hover:bg-cyber-purple hover:text-white transition-all duration-300"
+                className="flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-cyber-purple/20 border border-cyber-purple text-cyber-purple rounded-lg hover:bg-cyber-purple hover:text-white transition-all duration-300"
               >
                 <ExternalLink className="w-4 h-4" />
-                <span className="font-mono text-sm">Open Telegram Bot</span>
+                <span className="font-mono text-sm hidden sm:inline">Now Available on Telegram</span>
+                <span className="font-mono text-sm sm:hidden">Telegram</span>
               </a>
             </div>
           </div>
@@ -242,37 +241,39 @@ export default function App() {
         </div>
       ))}
 
-        {/* Real-time Bot Status Panel - Left Side */}
-        <div className="absolute top-4 sm:top-8 left-4 sm:left-8 z-20">
-          <CleanSystemStatus
-            status={realTimeStatus}
-            currentTime={currentTime}
+      {/* Real-time Bot Status Panel - Responsive positioning */}
+      <div className="absolute top-20 sm:top-24 left-4 sm:left-8 z-20">
+        <CleanSystemStatus
+          status={realTimeStatus}
+          currentTime={currentTime}
+        />
+      </div>
+
+      {/* Video Header - Responsive positioning */}
+      <div className="absolute top-20 sm:top-24 right-4 sm:right-8 z-20">
+        <div className="relative w-[150px] h-[180px] sm:w-[200px] sm:h-[250px] rounded-2xl overflow-hidden backdrop-blur-sm bg-dark-bg/60 border border-cyber-green/50 shadow-2xl shadow-cyber-purple/20">
+          <img
+            src="https://cdn.builder.io/api/v1/image/assets%2F9a8474ab0524497c85c9ce04674c08c9%2F61d4fd3e97124c13b5aea0a252af3f27?format=webp&width=800"
+            alt="Cyber Vision"
+            className="w-full h-full object-cover mix-blend-screen opacity-90 hover:opacity-100 transition-opacity duration-500"
           />
+          <div className="absolute inset-0 bg-gradient-to-br from-cyber-green/30 via-transparent to-cyber-purple/30 mix-blend-overlay"></div>
+          <div className="absolute inset-0 border-2 border-cyber-green/60 rounded-2xl animate-pulse"></div>
         </div>
+      </div>
 
-        {/* Video Header */}
-        <div className="absolute top-8 right-8 z-20">
-          <div className="relative w-[200px] h-[250px] rounded-2xl overflow-hidden backdrop-blur-sm bg-dark-bg/60 border border-cyber-green/50 shadow-2xl shadow-cyber-purple/20">
-            <img
-              src="https://cdn.builder.io/api/v1/image/assets%2F9a8474ab0524497c85c9ce04674c08c9%2F61d4fd3e97124c13b5aea0a252af3f27?format=webp&width=800"
-              alt="Cyber Vision"
-              className="w-full h-full object-cover mix-blend-screen opacity-90 hover:opacity-100 transition-opacity duration-500"
-            />
-            <div className="absolute inset-0 bg-gradient-to-br from-cyber-green/30 via-transparent to-cyber-purple/30 mix-blend-overlay"></div>
-            <div className="absolute inset-0 border-2 border-cyber-green/60 rounded-2xl animate-pulse"></div>
-          </div>
-        </div>
-
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-4xl mx-auto text-center">
+      {/* Hero Section - Improved spacing and layout */}
+      <section className="relative z-10 pt-24 pb-16 sm:pt-32 sm:pb-24">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="max-w-5xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 rounded-full border border-cyber-purple/30 bg-cyber-purple/10 px-4 py-2 text-sm font-medium text-cyber-purple mb-6 font-mono">
               <Bot className="h-4 w-4" />
               Now Available on Telegram
             </div>
 
-            <div className="relative transform perspective-1000">
+            <div className="relative transform perspective-1000 mb-8">
               {/* Beveled 3D Glitched Title */}
-              <h1 className="relative text-7xl md:text-9xl font-black tracking-tighter mb-6 font-cyber">
+              <h1 className="relative text-5xl sm:text-7xl md:text-9xl font-black tracking-tighter mb-6 font-cyber">
                 <div className="relative inline-block">
                   {/* Multiple glitch layers */}
                   <span
@@ -297,7 +298,7 @@ export default function App() {
               </h1>
 
               {/* Subtitle with enhanced 3D Effect */}
-              <div className="relative text-4xl md:text-7xl font-bold mb-8 font-mono">
+              <div className="relative text-2xl sm:text-4xl md:text-7xl font-bold mb-8 font-mono">
                 <span
                   className={`bg-gradient-to-r from-cyber-purple via-cyber-blue to-cyber-green bg-clip-text text-transparent ${styles.gradientTitle}`}
                 >
@@ -306,7 +307,7 @@ export default function App() {
               </div>
             </div>
 
-            <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed font-mono">
+            <p className="text-lg sm:text-xl md:text-2xl text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed font-mono">
               The most sophisticated{" "}
               <span className="text-cyber-green font-semibold">
                 multi-tenant platform
@@ -318,17 +319,17 @@ export default function App() {
               with enterprise-grade features
             </p>
 
-            {/* Feature Preview Cards */}
+            {/* Feature Preview Cards - Better responsive grid */}
             <div className="relative mb-16">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
                 {/* Setup Card */}
                 <div className="group relative">
                   <div className="absolute inset-0 bg-gradient-to-r from-cyber-purple to-cyber-blue rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
-                  <div className="relative bg-dark-bg/90 backdrop-blur-xl border border-cyber-green/30 rounded-2xl p-8 h-full">
+                  <div className="relative bg-dark-bg/90 backdrop-blur-xl border border-cyber-green/30 rounded-2xl p-6 sm:p-8 h-full">
                     <div className="w-12 h-12 bg-gradient-to-r from-cyber-purple to-cyber-pink rounded-xl flex items-center justify-center mb-4">
                       <Bot className="h-6 w-6 text-white" />
                     </div>
-                    <h3 className="text-xl font-semibold text-white mb-3">
+                    <h3 className="text-lg sm:text-xl font-semibold text-white mb-3">
                       One-Command Setup
                     </h3>
                     <p className="text-gray-300 text-sm">
@@ -341,11 +342,11 @@ export default function App() {
                 {/* Multi-Tenant Card */}
                 <div className="group relative">
                   <div className="absolute inset-0 bg-gradient-to-r from-cyber-blue to-cyber-cyan rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
-                  <div className="relative bg-dark-bg/90 backdrop-blur-xl border border-cyber-blue/30 rounded-2xl p-8 h-full">
+                  <div className="relative bg-dark-bg/90 backdrop-blur-xl border border-cyber-blue/30 rounded-2xl p-6 sm:p-8 h-full">
                     <div className="w-12 h-12 bg-gradient-to-r from-cyber-blue to-cyber-cyan rounded-xl flex items-center justify-center mb-4">
                       <Users className="h-6 w-6 text-white" />
                     </div>
-                    <h3 className="text-xl font-semibold text-white mb-3">
+                    <h3 className="text-lg sm:text-xl font-semibold text-white mb-3">
                       Infinite Projects
                     </h3>
                     <p className="text-gray-300 text-sm">
@@ -356,13 +357,13 @@ export default function App() {
                 </div>
 
                 {/* Premium Card */}
-                <div className="group relative">
+                <div className="group relative sm:col-span-2 lg:col-span-1">
                   <div className="absolute inset-0 bg-gradient-to-r from-cyber-pink to-cyber-purple rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
-                  <div className="relative bg-dark-bg/90 backdrop-blur-xl border border-cyber-purple/30 rounded-2xl p-8 h-full">
+                  <div className="relative bg-dark-bg/90 backdrop-blur-xl border border-cyber-purple/30 rounded-2xl p-6 sm:p-8 h-full">
                     <div className="w-12 h-12 bg-gradient-to-r from-cyber-pink to-cyber-purple rounded-xl flex items-center justify-center mb-4">
                       <Crown className="h-6 w-6 text-white" />
                     </div>
-                    <h3 className="text-xl font-semibold text-white mb-3">
+                    <h3 className="text-lg sm:text-xl font-semibold text-white mb-3">
                       Any Token Support
                     </h3>
                     <p className="text-gray-300 text-sm">
@@ -374,22 +375,22 @@ export default function App() {
               </div>
             </div>
 
-            {/* Primary Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16">
+            {/* Primary Action Buttons - Better responsive layout */}
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center mb-16">
               <a
                 href="https://t.me/NimRev_Bot"
                 rel="noopener noreferrer"
-                className="group relative inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-cyber-purple to-cyber-blue px-12 py-6 text-lg font-semibold text-white transition-all duration-300 hover:scale-105 font-mono"
+                className="group relative inline-flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-cyber-purple to-cyber-blue px-8 sm:px-12 py-4 sm:py-6 text-base sm:text-lg font-semibold text-white transition-all duration-300 hover:scale-105 font-mono"
               >
-                <Bot className="h-6 w-6" />
+                <Bot className="h-5 w-5 sm:h-6 sm:w-6" />
                 <span>Try Demo Bot</span>
               </a>
 
               <Link
                 to="/dashboard"
-                className="group relative inline-flex items-center gap-3 rounded-2xl border border-cyber-green bg-cyber-green/10 backdrop-blur-xl px-12 py-6 text-lg font-semibold text-cyber-green transition-all duration-300 hover:scale-105 hover:bg-cyber-green hover:text-dark-bg font-mono"
+                className="group relative inline-flex items-center justify-center gap-3 rounded-2xl border border-cyber-green bg-cyber-green/10 backdrop-blur-xl px-8 sm:px-12 py-4 sm:py-6 text-base sm:text-lg font-semibold text-cyber-green transition-all duration-300 hover:scale-105 hover:bg-cyber-green hover:text-dark-bg font-mono"
               >
-                <BarChart3 className="h-6 w-6" />
+                <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6" />
                 <span>Live Dashboard</span>
               </Link>
 
@@ -397,28 +398,28 @@ export default function App() {
               <a
                 href="https://jup.ag/tokens/Auu4U7cVjm41yVnVtBCwHW2FBAKznPgLR7hQf4Esjups"
                 rel="noopener noreferrer"
-                className="group relative inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-cyber-green via-cyber-blue to-cyber-cyan px-12 py-6 text-lg font-semibold text-white transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-cyber-green/25 font-mono"
+                className="group relative inline-flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-cyber-green via-cyber-blue to-cyber-cyan px-8 sm:px-12 py-4 sm:py-6 text-base sm:text-lg font-semibold text-white transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-cyber-green/25 font-mono"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-cyber-green via-cyber-blue to-cyber-cyan rounded-2xl blur opacity-70 group-hover:opacity-100 transition duration-300"></div>
-                <DollarSign className="relative h-6 w-6" />
+                <DollarSign className="relative h-5 w-5 sm:h-6 sm:w-6" />
                 <span className="relative">Get VERM Token</span>
-                <div className="relative flex items-center gap-1 text-sm">
+                <div className="relative flex items-center gap-1 text-xs sm:text-sm">
                   <div className="w-2 h-2 bg-cyber-green rounded-full animate-pulse"></div>
                   <span>AI Signals</span>
                 </div>
               </a>
             </div>
 
-            {/* Quick Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto">
+            {/* Quick Stats - Improved responsive grid */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-5xl mx-auto">
               <div className="group relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-cyber-purple/20 to-cyber-blue/20 rounded-2xl blur opacity-50 group-hover:opacity-75 transition duration-300"></div>
-                <div className="relative bg-dark-bg/60 backdrop-blur-xl border border-cyber-green/30 rounded-2xl p-6 text-center">
-                  <Users className="h-8 w-8 text-cyber-purple mx-auto mb-3" />
-                  <div className="text-2xl font-bold text-white">
+                <div className="relative bg-dark-bg/60 backdrop-blur-xl border border-cyber-green/30 rounded-2xl p-4 sm:p-6 text-center">
+                  <Users className="h-6 w-6 sm:h-8 sm:w-8 text-cyber-purple mx-auto mb-2 sm:mb-3" />
+                  <div className="text-lg sm:text-2xl font-bold text-white">
                     {botStats.activeGroups}
                   </div>
-                  <div className="text-sm text-gray-300">Active Projects</div>
+                  <div className="text-xs sm:text-sm text-gray-300">Active Projects</div>
                   <div className="text-xs text-cyber-purple mt-1">
                     Ready to scale
                   </div>
@@ -427,12 +428,12 @@ export default function App() {
 
               <div className="group relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-cyber-blue/20 to-cyber-cyan/20 rounded-2xl blur opacity-50 group-hover:opacity-75 transition duration-300"></div>
-                <div className="relative bg-dark-bg/60 backdrop-blur-xl border border-cyber-blue/30 rounded-2xl p-6 text-center">
-                  <MessageSquare className="h-8 w-8 text-cyber-blue mx-auto mb-3" />
-                  <div className="text-2xl font-bold text-white">
+                <div className="relative bg-dark-bg/60 backdrop-blur-xl border border-cyber-blue/30 rounded-2xl p-4 sm:p-6 text-center">
+                  <MessageSquare className="h-6 w-6 sm:h-8 sm:w-8 text-cyber-blue mx-auto mb-2 sm:mb-3" />
+                  <div className="text-lg sm:text-2xl font-bold text-white">
                     {botStats.messagesProcessed}
                   </div>
-                  <div className="text-sm text-gray-300">Messages/Day</div>
+                  <div className="text-xs sm:text-sm text-gray-300">Messages/Day</div>
                   <div className="text-xs text-cyber-blue mt-1">
                     Processing live
                   </div>
@@ -441,12 +442,12 @@ export default function App() {
 
               <div className="group relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-cyber-cyan/20 to-cyber-green/20 rounded-2xl blur opacity-50 group-hover:opacity-75 transition duration-300"></div>
-                <div className="relative bg-dark-bg/60 backdrop-blur-xl border border-cyber-cyan/30 rounded-2xl p-6 text-center">
-                  <Shield className="h-8 w-8 text-cyber-cyan mx-auto mb-3" />
-                  <div className="text-2xl font-bold text-white">
+                <div className="relative bg-dark-bg/60 backdrop-blur-xl border border-cyber-cyan/30 rounded-2xl p-4 sm:p-6 text-center">
+                  <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-cyber-cyan mx-auto mb-2 sm:mb-3" />
+                  <div className="text-lg sm:text-2xl font-bold text-white">
                     {botStats.spamBlocked}
                   </div>
-                  <div className="text-sm text-gray-300">Spam Blocked</div>
+                  <div className="text-xs sm:text-sm text-gray-300">Spam Blocked</div>
                   <div className="text-xs text-cyber-cyan mt-1">
                     Protection active
                   </div>
@@ -455,12 +456,12 @@ export default function App() {
 
               <div className="group relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-cyber-green/20 to-cyber-purple/20 rounded-2xl blur opacity-50 group-hover:opacity-75 transition duration-300"></div>
-                <div className="relative bg-dark-bg/60 backdrop-blur-xl border border-cyber-green/30 rounded-2xl p-6 text-center">
-                  <TrendingUp className="h-8 w-8 text-cyber-green mx-auto mb-3" />
-                  <div className="text-2xl font-bold text-white">
+                <div className="relative bg-dark-bg/60 backdrop-blur-xl border border-cyber-green/30 rounded-2xl p-4 sm:p-6 text-center">
+                  <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-cyber-green mx-auto mb-2 sm:mb-3" />
+                  <div className="text-lg sm:text-2xl font-bold text-white">
                     {botStats.uptime}
                   </div>
-                  <div className="text-sm text-gray-300">System Status</div>
+                  <div className="text-xs sm:text-sm text-gray-300">System Status</div>
                   <div className="text-xs text-cyber-green mt-1">
                     Fully operational
                   </div>
@@ -469,20 +470,21 @@ export default function App() {
             </div>
           </div>
         </div>
+      </section>
 
-      {/* Features Grid */}
-      <section className="py-32 relative z-10">
+      {/* Features Grid - Improved spacing and layout */}
+      <section className="py-16 sm:py-24 lg:py-32 relative z-10">
         <div className="absolute inset-0 bg-gradient-to-br from-dark-bg/50 to-transparent"></div>
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="text-center mb-20">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-16 sm:mb-20">
             <div className="inline-flex items-center gap-2 rounded-full border border-cyber-purple/20 bg-cyber-purple/10 px-6 py-3 text-sm font-medium text-cyber-purple mb-8 font-mono">
               <Zap className="h-4 w-4" />
               Enterprise Features
             </div>
-            <h2 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-white via-cyber-purple to-cyber-blue bg-clip-text text-transparent mb-6 font-cyber">
+            <h2 className="text-3xl sm:text-4xl md:text-6xl font-bold bg-gradient-to-r from-white via-cyber-purple to-cyber-blue bg-clip-text text-transparent mb-6 font-cyber">
               Transform Any Project
             </h2>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed font-mono">
+            <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed font-mono">
               Professional-grade features that rival Jupiter and Orca platforms.
               <span className="block text-transparent bg-clip-text bg-gradient-to-r from-cyber-purple to-cyber-blue font-semibold mt-2">
                 Each project gets its own isolated ecosystem.
@@ -490,7 +492,7 @@ export default function App() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {mockFeatures.map((feature, index) => (
               <FeatureCard
                 key={index}
@@ -505,46 +507,46 @@ export default function App() {
           </div>
 
           {/* Additional Platform Benefits */}
-          <div className="mt-20 text-center">
-            <div className="inline-flex items-center gap-8 rounded-2xl border border-cyber-green/30 bg-dark-bg/60 backdrop-blur-xl px-12 py-8 font-mono">
+          <div className="mt-16 sm:mt-20 text-center">
+            <div className="inline-flex flex-wrap items-center justify-center gap-6 sm:gap-8 rounded-2xl border border-cyber-green/30 bg-dark-bg/60 backdrop-blur-xl px-8 sm:px-12 py-6 sm:py-8 font-mono">
               <div className="text-center">
-                <div className="text-2xl font-bold text-white">∞</div>
-                <div className="text-sm text-gray-300">Projects</div>
+                <div className="text-xl sm:text-2xl font-bold text-white">∞</div>
+                <div className="text-xs sm:text-sm text-gray-300">Projects</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-cyber-purple">100+</div>
-                <div className="text-sm text-gray-300">Tokens Supported</div>
+                <div className="text-xl sm:text-2xl font-bold text-cyber-purple">100+</div>
+                <div className="text-xs sm:text-sm text-gray-300">Tokens Supported</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-cyber-blue">24/7</div>
-                <div className="text-sm text-gray-300">Uptime</div>
+                <div className="text-xl sm:text-2xl font-bold text-cyber-blue">24/7</div>
+                <div className="text-xs sm:text-sm text-gray-300">Uptime</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-cyber-green">0.1s</div>
-                <div className="text-sm text-gray-300">Response Time</div>
+                <div className="text-xl sm:text-2xl font-bold text-cyber-green">0.1s</div>
+                <div className="text-xs sm:text-sm text-gray-300">Response Time</div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Live Configuration Demo */}
-      <section className="py-20 relative z-10 bg-gradient-to-br from-dark-bg/10 to-transparent">
-        <div className="container mx-auto px-4">
+      {/* Live Configuration Demo - Better responsive layout */}
+      <section className="py-16 sm:py-20 relative z-10 bg-gradient-to-br from-dark-bg/10 to-transparent">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 font-cyber">
+            <div className="text-center mb-8 sm:mb-12">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4 font-cyber">
                 Real-Time Configuration
               </h2>
-              <p className="text-lg text-gray-300 font-mono">
+              <p className="text-base sm:text-lg text-gray-300 font-mono">
                 Configure your bot settings instantly with our intuitive admin
                 interface.
               </p>
             </div>
 
-            <div className="rounded-xl bg-dark-bg/80 border border-cyber-green/30 p-8 backdrop-blur-xl">
+            <div className="rounded-xl bg-dark-bg/80 border border-cyber-green/30 p-6 sm:p-8 backdrop-blur-xl">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold text-white font-mono">
+                <h3 className="text-lg sm:text-xl font-semibold text-white font-mono">
                   Bot Configuration
                 </h3>
                 <div className="flex items-center gap-2 text-cyber-green">
@@ -559,23 +561,23 @@ export default function App() {
                     key={config.id}
                     className="flex items-center justify-between p-4 rounded-lg border border-cyber-green/20 hover:border-cyber-purple/30 transition-colors"
                   >
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <h4 className="font-medium text-white font-mono">
+                        <h4 className="font-medium text-white font-mono text-sm sm:text-base">
                           {config.label}
                         </h4>
                         {config.isPremium && !isPremium && (
-                          <Crown className="h-4 w-4 text-cyber-orange" />
+                          <Crown className="h-4 w-4 text-cyber-orange flex-shrink-0" />
                         )}
                       </div>
-                      <p className="text-sm text-gray-300 font-mono">
+                      <p className="text-xs sm:text-sm text-gray-300 font-mono">
                         {config.description}
                       </p>
                     </div>
                     <button
                       onClick={() => toggleConfig(config.id)}
                       disabled={config.isPremium && !isPremium}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ml-4 ${
                         config.enabled ? "bg-cyber-green" : "bg-gray-300"
                       } ${config.isPremium && !isPremium ? "opacity-50 cursor-not-allowed" : ""}`}
                       aria-label={`Toggle ${config.label}`}
@@ -617,23 +619,23 @@ export default function App() {
       </section>
 
       {/* Security & Verification */}
-      <section className="py-20 relative z-10">
-        <div className="container mx-auto px-4">
+      <section className="py-16 sm:py-20 relative z-10">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 font-cyber">
+            <div className="text-center mb-8 sm:mb-12">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4 font-cyber">
                 Uncompromising Security
               </h2>
-              <p className="text-lg text-gray-300 font-mono">
+              <p className="text-base sm:text-lg text-gray-300 font-mono">
                 Our platform is built with a focus on security and reliability.
               </p>
             </div>
-            <div className="rounded-xl bg-dark-bg/80 border border-cyber-green/30 p-8 backdrop-blur-xl">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="rounded-xl bg-dark-bg/80 border border-cyber-green/30 p-6 sm:p-8 backdrop-blur-xl">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
                 <div className="flex items-start gap-4 p-4 rounded-lg bg-dark-bg/50 border border-cyber-blue/30">
-                  <Shield className="h-8 w-8 text-cyber-blue mt-1" />
+                  <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-cyber-blue mt-1 flex-shrink-0" />
                   <div>
-                    <h3 className="text-xl font-semibold text-white font-mono">
+                    <h3 className="text-lg sm:text-xl font-semibold text-white font-mono">
                       Robust Architecture
                     </h3>
                     <p className="text-sm text-gray-300 font-mono mt-1">
@@ -642,9 +644,9 @@ export default function App() {
                   </div>
                 </div>
                 <div className="flex items-start gap-4 p-4 rounded-lg bg-dark-bg/50 border border-cyber-green/30">
-                  <TrendingUp className="h-8 w-8 text-cyber-green mt-1" />
+                  <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-cyber-green mt-1 flex-shrink-0" />
                   <div>
-                    <h3 className="text-xl font-semibold text-white font-mono">
+                    <h3 className="text-lg sm:text-xl font-semibold text-white font-mono">
                       Continuous Monitoring
                     </h3>
                     <p className="text-sm text-gray-300 font-mono mt-1">
@@ -657,15 +659,18 @@ export default function App() {
           </div>
         </div>
       </section>
-      {/* Footer */}
-      <footer className="py-12 relative z-10 bg-dark-bg/80 border-t border-cyber-green/30">
-        <div className="container mx-auto px-4 text-center text-gray-500 font-mono text-sm">
+
+      {/* Footer - Better spacing */}
+      <footer className="py-8 sm:py-12 relative z-10 bg-dark-bg/80 border-t border-cyber-green/30">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-500 font-mono text-sm">
           &copy; {new Date().getFullYear()} NimRev. All rights reserved.
         </div>
       </footer>
+
+      {/* Payment Modal */}
       {isPaymentOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-dark-bg border border-cyber-purple/30 p-8 rounded-xl max-w-sm text-center font-mono">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-dark-bg border border-cyber-purple/30 p-6 sm:p-8 rounded-xl max-w-sm w-full text-center font-mono">
             <h3 className="text-xl font-bold text-white mb-4">Upgrade to Premium</h3>
             <p className="text-gray-300 mb-6">This is a demo. In a real application, a payment modal would appear here.</p>
             <button
@@ -677,6 +682,8 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Improved CSS styles */}
       <style jsx>{`
         @keyframes fade-in {
           from {
@@ -752,7 +759,7 @@ export default function App() {
           color: #ff9900;
         }
         .geometric-shape {
-            animation: move-and-fade var(--animation-duration)s infinite ease-in-out alternate;
+            animation: move-and-fade var(--animation-duration, 5s) infinite ease-in-out alternate;
             position: absolute;
             opacity: 0;
         }
@@ -762,26 +769,13 @@ export default function App() {
                 opacity: 0;
             }
             50% {
-                opacity: 0.5;
+                opacity: 0.3;
             }
             100% {
-                transform: translate(calc(var(--x) * 1px), calc(var(--y) * 1px)) rotate(var(--rotation) * 1deg) scale(1.5);
+                transform: translate(50px, -30px) rotate(360deg) scale(1.2);
                 opacity: 0;
             }
         }
-      `}</style>
-      <style>{`
-          .geometric-shape[data-x],
-          .geometric-shape[data-y],
-          .geometric-shape[data-rotation],
-          .geometric-shape[data-animation-delay],
-          .geometric-shape[data-animation-duration] {
-              --x: attr(data-x);
-              --y: attr(data-y);
-              --rotation: attr(data-rotation);
-              --animation-delay: attr(data-animation-delay);
-              --animation-duration: attr(data-animation-duration);
-          }
       `}</style>
     </div>
   );
