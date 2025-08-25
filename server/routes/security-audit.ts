@@ -659,4 +659,60 @@ async function scanFileForViruses(filePath: string): Promise<boolean> {
   }
 }
 
+// GET route for fetching audit history/data
+router.get('/', (req, res) => {
+  try {
+    // In production, this would fetch from your database
+    // For now, returning example audit data structure
+    const mockAudits = [
+      {
+        id: 1,
+        technology: "Smart Contract Analysis",
+        issue: "Reentrancy vulnerability detected in withdraw function",
+        severity: "high",
+        timestamp: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+        status: "resolved"
+      },
+      {
+        id: 2,
+        technology: "Token Security",
+        issue: "Unusual token mint patterns observed",
+        severity: "medium",
+        timestamp: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
+        status: "investigating"
+      },
+      {
+        id: 3,
+        technology: "Liquidity Analysis",
+        issue: "Low liquidity pool detected - potential risk",
+        severity: "low",
+        timestamp: new Date(Date.now() - 10800000).toISOString(), // 3 hours ago
+        status: "monitoring"
+      },
+      {
+        id: 4,
+        technology: "Access Control",
+        issue: "Missing role-based access controls",
+        severity: "medium",
+        timestamp: new Date(Date.now() - 14400000).toISOString(), // 4 hours ago
+        status: "pending"
+      }
+    ];
+
+    res.json({
+      success: true,
+      audits: mockAudits,
+      totalCount: mockAudits.length,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error fetching audit data:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch audit data',
+      audits: []
+    });
+  }
+});
+
 export default router;
