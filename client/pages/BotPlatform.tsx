@@ -1,28 +1,217 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 
 // Placeholder for react-router-dom Link, as it's not available in this environment
-const Link = ({ to, className, children }) => <a href={to} className={className}>{children}</a>;
+const Link = ({ to, className, children }) => (
+  <a href={to} className={className}>
+    {children}
+  </a>
+);
 
 // Placeholder for Lucide React icons
-const Bot = ({ className }) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8V4H8"/><path d="M22 6c0-2.2-1.8-4-4-4H8c-2.2 0-4 1.8-4 4v8a4 4 0 0 0 4 4h4v4h8a4 4 0 0 0 4-4V6Z"/><path d="M12 16v4H8a2 2 0 0 1-2-2"/></svg>;
-const Users = ({ className }) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
-const Crown = ({ className }) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m2 4 3 12h14l3-12-6 8-4-8-4 8-6-8z"/><path d="M12 15a4 4 0 0 1 4 4v2H8v-2a4 4 0 0 1 4-4Z"/></svg>;
-const ArrowLeft = ({ className }) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>;
-const ExternalLink = ({ className }) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>;
-const MessageSquare = ({ className }) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>;
-const Shield = ({ className }) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>;
-const TrendingUp = ({ className }) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>;
-const Zap = ({ className }) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>;
-const DollarSign = ({ className }) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>;
-const BarChart3 = ({ className }) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>;
+const Bot = ({ className }) => (
+  <svg
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M12 8V4H8" />
+    <path d="M22 6c0-2.2-1.8-4-4-4H8c-2.2 0-4 1.8-4 4v8a4 4 0 0 0 4 4h4v4h8a4 4 0 0 0 4-4V6Z" />
+    <path d="M12 16v4H8a2 2 0 0 1-2-2" />
+  </svg>
+);
+const Users = ({ className }) => (
+  <svg
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+  </svg>
+);
+const Crown = ({ className }) => (
+  <svg
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="m2 4 3 12h14l3-12-6 8-4-8-4 8-6-8z" />
+    <path d="M12 15a4 4 0 0 1 4 4v2H8v-2a4 4 0 0 1 4-4Z" />
+  </svg>
+);
+const ArrowLeft = ({ className }) => (
+  <svg
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="m12 19-7-7 7-7" />
+    <path d="M19 12H5" />
+  </svg>
+);
+const ExternalLink = ({ className }) => (
+  <svg
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M15 3h6v6" />
+    <path d="M10 14 21 3" />
+    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+  </svg>
+);
+const MessageSquare = ({ className }) => (
+  <svg
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+  </svg>
+);
+const Shield = ({ className }) => (
+  <svg
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+  </svg>
+);
+const TrendingUp = ({ className }) => (
+  <svg
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+    <polyline points="16 7 22 7 22 13" />
+  </svg>
+);
+const Zap = ({ className }) => (
+  <svg
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+  </svg>
+);
+const DollarSign = ({ className }) => (
+  <svg
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <line x1="12" x2="12" y1="2" y2="22" />
+    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+  </svg>
+);
+const BarChart3 = ({ className }) => (
+  <svg
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M3 3v18h18" />
+    <path d="M18 17V9" />
+    <path d="M13 17V5" />
+    <path d="M8 17v-3" />
+  </svg>
+);
 
 // Real components with API integration
 const CleanSystemStatus = ({ status, currentTime }) => (
   <div className="bg-dark-bg/80 backdrop-blur-xl border border-cyber-green/30 p-4 rounded-xl shadow-2xl shadow-cyber-purple/20 text-xs font-mono">
     <h3 className="text-white text-sm font-semibold mb-2">System Status</h3>
     <div className="flex items-center gap-2">
-      <div className={`w-2 h-2 rounded-full ${status.botStatus === 'ONLINE' ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
-      <span className={`text-${status.botStatus === 'ONLINE' ? 'green-400' : 'red-400'}`}>{status.botStatus}</span>
+      <div
+        className={`w-2 h-2 rounded-full ${status.botStatus === "ONLINE" ? "bg-green-500 animate-pulse" : "bg-red-500"}`}
+      ></div>
+      <span
+        className={`text-${status.botStatus === "ONLINE" ? "green-400" : "red-400"}`}
+      >
+        {status.botStatus}
+      </span>
     </div>
     <div className="mt-2 text-gray-400">
       <p>Current Time: {new Date(currentTime).toLocaleTimeString()}</p>
@@ -40,7 +229,9 @@ const FeatureCard = ({ icon: Icon, title, description, status }) => (
       </div>
       <h3 className="text-lg font-semibold text-white mb-3">{title}</h3>
       <p className="text-gray-300 text-sm flex-grow">{description}</p>
-      <div className={`mt-4 text-xs font-mono px-2 py-1 rounded-full ${status === 'Active' ? 'bg-cyber-green/20 text-cyber-green' : 'bg-gray-500/20 text-gray-400'}`}>
+      <div
+        className={`mt-4 text-xs font-mono px-2 py-1 rounded-full ${status === "Active" ? "bg-cyber-green/20 text-cyber-green" : "bg-gray-500/20 text-gray-400"}`}
+      >
         Status: {status}
       </div>
     </div>
@@ -48,24 +239,40 @@ const FeatureCard = ({ icon: Icon, title, description, status }) => (
 );
 
 const CyberGrid = () => (
-    <div className="absolute inset-0 w-full h-full z-0 overflow-hidden opacity-30">
-        <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-                <pattern id="smallGrid" width="8" height="8" patternUnits="userSpaceOnUse">
-                    <path d="M 8 0 L 0 0 0 8" fill="none" stroke="#2a2a2a" strokeWidth="0.5"/>
-                </pattern>
-                <pattern id="grid" width="80" height="80" patternUnits="userSpaceOnUse">
-                    <rect width="80" height="80" fill="url(#smallGrid)"/>
-                    <path d="M 80 0 L 0 0 0 80" fill="none" stroke="#3d3d3d" strokeWidth="1"/>
-                </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#grid)" />
-        </svg>
-    </div>
+  <div className="absolute inset-0 w-full h-full z-0 overflow-hidden opacity-30">
+    <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern
+          id="smallGrid"
+          width="8"
+          height="8"
+          patternUnits="userSpaceOnUse"
+        >
+          <path
+            d="M 8 0 L 0 0 0 8"
+            fill="none"
+            stroke="#2a2a2a"
+            strokeWidth="0.5"
+          />
+        </pattern>
+        <pattern id="grid" width="80" height="80" patternUnits="userSpaceOnUse">
+          <rect width="80" height="80" fill="url(#smallGrid)" />
+          <path
+            d="M 80 0 L 0 0 0 80"
+            fill="none"
+            stroke="#3d3d3d"
+            strokeWidth="1"
+          />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#grid)" />
+    </svg>
+  </div>
 );
 
 const styles = {
-  gradientTitle: 'text-transparent bg-clip-text bg-gradient-to-r from-cyber-purple via-cyber-blue to-cyber-green',
+  gradientTitle:
+    "text-transparent bg-clip-text bg-gradient-to-r from-cyber-purple via-cyber-blue to-cyber-green",
 };
 
 export default function App() {
@@ -81,11 +288,11 @@ export default function App() {
   });
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [geometricShapes, setGeometricShapes] = useState([]);
-  const [botStats, setBotStats] = useState({ 
-    activeGroups: "...", 
-    messagesProcessed: "...", 
-    spamBlocked: "...", 
-    uptime: "..." 
+  const [botStats, setBotStats] = useState({
+    activeGroups: "...",
+    messagesProcessed: "...",
+    spamBlocked: "...",
+    uptime: "...",
   });
   const [isPremium, setIsPremium] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
@@ -97,20 +304,20 @@ export default function App() {
   // API functions
   const fetchBotStats = async () => {
     try {
-      const response = await fetch('/api/bot/stats');
+      const response = await fetch("/api/bot/stats");
       if (!response.ok) {
         throw new Error(`API error: ${response.status}`);
       }
       const data = await response.json();
-      
+
       setBotStats({
         activeGroups: data.activeGroups || "0",
         messagesProcessed: data.messagesProcessed || "0",
         spamBlocked: data.spamBlocked || "0",
         uptime: data.uptime || "0%",
       });
-      
-      setRealTimeStatus(prev => ({
+
+      setRealTimeStatus((prev) => ({
         ...prev,
         botStatus: data.botStatus || "OFFLINE",
         activeGroups: data.activeGroups || "0",
@@ -121,8 +328,8 @@ export default function App() {
         lastSync: data.lastSync || new Date().toISOString(),
       }));
     } catch (error) {
-      console.error('Failed to fetch bot stats:', error);
-      setError('Failed to load bot statistics');
+      console.error("Failed to fetch bot stats:", error);
+      setError("Failed to load bot statistics");
       // Fallback to basic values instead of demo data
       setBotStats({
         activeGroups: "3",
@@ -130,11 +337,11 @@ export default function App() {
         spamBlocked: "12",
         uptime: "95.2%",
       });
-      setRealTimeStatus(prev => ({
+      setRealTimeStatus((prev) => ({
         ...prev,
         botStatus: "ERROR",
         activeGroups: "3",
-        messagesProcessed: "156", 
+        messagesProcessed: "156",
         spamBlocked: "12",
         uptime: "95.2%",
       }));
@@ -143,13 +350,13 @@ export default function App() {
 
   const fetchBotStatus = async () => {
     try {
-      const response = await fetch('/api/bot/status');
+      const response = await fetch("/api/bot/status");
       if (!response.ok) {
         throw new Error(`API error: ${response.status}`);
       }
       const data = await response.json();
-      
-      setRealTimeStatus(prev => ({
+
+      setRealTimeStatus((prev) => ({
         ...prev,
         botStatus: data.status || "OFFLINE",
         health: data.health || 0,
@@ -157,8 +364,8 @@ export default function App() {
         activeUsers: data.activeUsers || 0,
       }));
     } catch (error) {
-      console.error('Failed to fetch bot status:', error);
-      setRealTimeStatus(prev => ({
+      console.error("Failed to fetch bot status:", error);
+      setRealTimeStatus((prev) => ({
         ...prev,
         botStatus: "ERROR",
       }));
@@ -170,38 +377,39 @@ export default function App() {
       // In a real app, this would come from an API
       // For now, using minimal real configuration options
       const realConfigs = [
-        { 
-          id: 1, 
-          label: "Anti-Spam Protection", 
-          description: "Automatically detect and block spam messages in your groups.", 
-          isPremium: false, 
-          enabled: true 
+        {
+          id: 1,
+          label: "Anti-Spam Protection",
+          description:
+            "Automatically detect and block spam messages in your groups.",
+          isPremium: false,
+          enabled: true,
         },
-        { 
-          id: 2, 
-          label: "Token Gating", 
-          description: "Restrict access based on token ownership requirements.", 
-          isPremium: true, 
-          enabled: false 
+        {
+          id: 2,
+          label: "Token Gating",
+          description: "Restrict access based on token ownership requirements.",
+          isPremium: true,
+          enabled: false,
         },
-        { 
-          id: 3, 
-          label: "Quick Buy Integration", 
-          description: "Enable one-click buy links for supported tokens.", 
-          isPremium: true, 
-          enabled: false 
+        {
+          id: 3,
+          label: "Quick Buy Integration",
+          description: "Enable one-click buy links for supported tokens.",
+          isPremium: true,
+          enabled: false,
         },
-        { 
-          id: 4, 
-          label: "Live Analytics", 
-          description: "Access real-time chat and user activity insights.", 
-          isPremium: true, 
-          enabled: false 
+        {
+          id: 4,
+          label: "Live Analytics",
+          description: "Access real-time chat and user activity insights.",
+          isPremium: true,
+          enabled: false,
         },
       ];
       setConfigs(realConfigs);
     } catch (error) {
-      console.error('Failed to load configurations:', error);
+      console.error("Failed to load configurations:", error);
       setConfigs([]);
     }
   };
@@ -210,46 +418,50 @@ export default function App() {
     try {
       // Real features based on actual platform capabilities
       const realFeatures = [
-        { 
-          icon: Bot, 
-          title: "Telegram Bot Integration", 
-          description: "Native Telegram bot with /scan, /verify, and /help commands.", 
-          status: realTimeStatus.botStatus === "ONLINE" ? "Active" : "Offline" 
+        {
+          icon: Bot,
+          title: "Telegram Bot Integration",
+          description:
+            "Native Telegram bot with /scan, /verify, and /help commands.",
+          status: realTimeStatus.botStatus === "ONLINE" ? "Active" : "Offline",
         },
-        { 
-          icon: Users, 
-          title: "Multi-Group Support", 
-          description: "Manage multiple Telegram groups with isolated settings.", 
-          status: "Active" 
+        {
+          icon: Users,
+          title: "Multi-Group Support",
+          description:
+            "Manage multiple Telegram groups with isolated settings.",
+          status: "Active",
         },
-        { 
-          icon: Crown, 
-          title: "Solana Token Support", 
-          description: "Full integration with Solana blockchain and SPL tokens.", 
-          status: "Active" 
+        {
+          icon: Crown,
+          title: "Solana Token Support",
+          description:
+            "Full integration with Solana blockchain and SPL tokens.",
+          status: "Active",
         },
-        { 
-          icon: Shield, 
-          title: "Security Scanning", 
-          description: "Real-time blockchain security analysis and threat detection.", 
-          status: "Active" 
+        {
+          icon: Shield,
+          title: "Security Scanning",
+          description:
+            "Real-time blockchain security analysis and threat detection.",
+          status: "Active",
         },
-        { 
-          icon: Zap, 
-          title: "Real-Time Processing", 
-          description: "Sub-second response times for all commands and scans.", 
-          status: realTimeStatus.botStatus === "ONLINE" ? "Active" : "Degraded" 
+        {
+          icon: Zap,
+          title: "Real-Time Processing",
+          description: "Sub-second response times for all commands and scans.",
+          status: realTimeStatus.botStatus === "ONLINE" ? "Active" : "Degraded",
         },
-        { 
-          icon: TrendingUp, 
-          title: "Live Analytics", 
-          description: "Real-time insights into community health and activity.", 
-          status: "Active" 
+        {
+          icon: TrendingUp,
+          title: "Live Analytics",
+          description: "Real-time insights into community health and activity.",
+          status: "Active",
         },
       ];
       setFeatures(realFeatures);
     } catch (error) {
-      console.error('Failed to load features:', error);
+      console.error("Failed to load features:", error);
       setFeatures([]);
     }
   };
@@ -258,14 +470,16 @@ export default function App() {
   const toggleConfig = async (id) => {
     try {
       // In a real app, this would make an API call to update the setting
-      setConfigs(configs.map(config =>
-        config.id === id ? { ...config, enabled: !config.enabled } : config
-      ));
-      
+      setConfigs(
+        configs.map((config) =>
+          config.id === id ? { ...config, enabled: !config.enabled } : config,
+        ),
+      );
+
       // Here you would typically make an API call:
       // await fetch(`/api/bot/config/${id}`, { method: 'PUT', ... });
     } catch (error) {
-      console.error('Failed to toggle configuration:', error);
+      console.error("Failed to toggle configuration:", error);
     }
   };
 
@@ -284,7 +498,7 @@ export default function App() {
       rotation: Math.random() * 360,
       color: [
         "rgba(160, 100, 255, 0.1)", // Purple
-        "rgba(0, 191, 255, 0.1)", // Blue  
+        "rgba(0, 191, 255, 0.1)", // Blue
         "rgba(0, 255, 200, 0.1)", // Green
         "rgba(255, 107, 0, 0.1)", // Orange
       ][Math.floor(Math.random() * 4)],
@@ -298,7 +512,7 @@ export default function App() {
       setLoading(true);
       await Promise.all([
         fetchBotStats(),
-        fetchBotStatus(), 
+        fetchBotStatus(),
         loadConfigurations(),
         loadFeatures(),
       ]);
@@ -352,7 +566,9 @@ export default function App() {
                 className="flex items-center gap-2 text-cyber-green hover:text-cyber-blue transition-colors duration-300"
               >
                 <ArrowLeft className="w-5 h-5" />
-                <span className="font-mono text-sm hidden sm:inline">Back to Protocol</span>
+                <span className="font-mono text-sm hidden sm:inline">
+                  Back to Protocol
+                </span>
               </Link>
               <div className="w-px h-6 bg-cyber-green/30 hidden sm:block"></div>
               <div className="flex items-center gap-3">
@@ -377,7 +593,9 @@ export default function App() {
                 className="flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-cyber-purple/20 border border-cyber-purple text-cyber-purple rounded-lg hover:bg-cyber-purple hover:text-white transition-all duration-300"
               >
                 <ExternalLink className="w-4 h-4" />
-                <span className="font-mono text-sm hidden sm:inline">Now Available on Telegram</span>
+                <span className="font-mono text-sm hidden sm:inline">
+                  Now Available on Telegram
+                </span>
                 <span className="font-mono text-sm sm:hidden">Telegram</span>
               </a>
             </div>
@@ -389,7 +607,9 @@ export default function App() {
       {error && (
         <div className="relative z-10 bg-red-900/20 border-b border-red-500/30 px-4 py-2">
           <div className="max-w-7xl mx-auto">
-            <p className="text-red-400 text-sm font-mono text-center">{error} - Using fallback data</p>
+            <p className="text-red-400 text-sm font-mono text-center">
+              {error} - Using fallback data
+            </p>
           </div>
         </div>
       )}
@@ -408,7 +628,7 @@ export default function App() {
             transform: `rotate(${shape.rotation}deg)`,
             animationDelay: `${shape.animationDelay}s`,
             animationDuration: `${shape.animationDuration}s`,
-            borderRadius: shape.type === 'circle' ? '50%' : '10%',
+            borderRadius: shape.type === "circle" ? "50%" : "10%",
             opacity: 0,
           }}
         />
@@ -416,10 +636,7 @@ export default function App() {
 
       {/* Real-time Bot Status Panel - Responsive positioning */}
       <div className="absolute top-20 sm:top-24 left-4 sm:left-8 z-20">
-        <CleanSystemStatus
-          status={realTimeStatus}
-          currentTime={currentTime}
-        />
+        <CleanSystemStatus status={realTimeStatus} currentTime={currentTime} />
       </div>
 
       {/* Video Header - Responsive positioning */}
@@ -460,7 +677,9 @@ export default function App() {
               </h1>
 
               <div className="relative text-2xl sm:text-4xl md:text-7xl font-bold mb-8 font-mono">
-                <span className={`bg-gradient-to-r from-cyber-purple via-cyber-blue to-cyber-green bg-clip-text text-transparent ${styles.gradientTitle}`}>
+                <span
+                  className={`bg-gradient-to-r from-cyber-purple via-cyber-blue to-cyber-green bg-clip-text text-transparent ${styles.gradientTitle}`}
+                >
                   Multi-Tenant Bot
                 </span>
               </div>
@@ -532,9 +751,11 @@ export default function App() {
                   <div className="text-lg sm:text-2xl font-bold text-white">
                     {botStats.activeGroups}
                   </div>
-                  <div className="text-xs sm:text-sm text-gray-300">Active Groups</div>
+                  <div className="text-xs sm:text-sm text-gray-300">
+                    Active Groups
+                  </div>
                   <div className="text-xs text-cyber-purple mt-1">
-                    {realTimeStatus.botStatus === 'ONLINE' ? 'Live' : 'Offline'}
+                    {realTimeStatus.botStatus === "ONLINE" ? "Live" : "Offline"}
                   </div>
                 </div>
               </div>
@@ -546,10 +767,10 @@ export default function App() {
                   <div className="text-lg sm:text-2xl font-bold text-white">
                     {botStats.messagesProcessed}
                   </div>
-                  <div className="text-xs sm:text-sm text-gray-300">Messages Processed</div>
-                  <div className="text-xs text-cyber-blue mt-1">
-                    Total
+                  <div className="text-xs sm:text-sm text-gray-300">
+                    Messages Processed
                   </div>
+                  <div className="text-xs text-cyber-blue mt-1">Total</div>
                 </div>
               </div>
 
@@ -560,7 +781,9 @@ export default function App() {
                   <div className="text-lg sm:text-2xl font-bold text-white">
                     {botStats.spamBlocked}
                   </div>
-                  <div className="text-xs sm:text-sm text-gray-300">Threats Blocked</div>
+                  <div className="text-xs sm:text-sm text-gray-300">
+                    Threats Blocked
+                  </div>
                   <div className="text-xs text-cyber-cyan mt-1">
                     Protection active
                   </div>
@@ -574,9 +797,13 @@ export default function App() {
                   <div className="text-lg sm:text-2xl font-bold text-white">
                     {botStats.uptime}
                   </div>
-                  <div className="text-xs sm:text-sm text-gray-300">System Uptime</div>
+                  <div className="text-xs sm:text-sm text-gray-300">
+                    System Uptime
+                  </div>
                   <div className="text-xs text-cyber-green mt-1">
-                    {realTimeStatus.botStatus === 'ONLINE' ? 'Operational' : 'Degraded'}
+                    {realTimeStatus.botStatus === "ONLINE"
+                      ? "Operational"
+                      : "Degraded"}
                   </div>
                 </div>
               </div>
@@ -621,19 +848,33 @@ export default function App() {
           <div className="mt-16 sm:mt-20 text-center">
             <div className="inline-flex flex-wrap items-center justify-center gap-6 sm:gap-8 rounded-2xl border border-cyber-green/30 bg-dark-bg/60 backdrop-blur-xl px-8 sm:px-12 py-6 sm:py-8 font-mono">
               <div className="text-center">
-                <div className="text-xl sm:text-2xl font-bold text-white">{realTimeStatus.activeGroups}</div>
-                <div className="text-xs sm:text-sm text-gray-300">Active Groups</div>
+                <div className="text-xl sm:text-2xl font-bold text-white">
+                  {realTimeStatus.activeGroups}
+                </div>
+                <div className="text-xs sm:text-sm text-gray-300">
+                  Active Groups
+                </div>
               </div>
               <div className="text-center">
-                <div className="text-xl sm:text-2xl font-bold text-cyber-purple">{realTimeStatus.activeUsers}</div>
-                <div className="text-xs sm:text-sm text-gray-300">Active Users</div>
+                <div className="text-xl sm:text-2xl font-bold text-cyber-purple">
+                  {realTimeStatus.activeUsers}
+                </div>
+                <div className="text-xs sm:text-sm text-gray-300">
+                  Active Users
+                </div>
               </div>
               <div className="text-center">
-                <div className="text-xl sm:text-2xl font-bold text-cyber-blue">{realTimeStatus.botStatus}</div>
-                <div className="text-xs sm:text-sm text-gray-300">Bot Status</div>
+                <div className="text-xl sm:text-2xl font-bold text-cyber-blue">
+                  {realTimeStatus.botStatus}
+                </div>
+                <div className="text-xs sm:text-sm text-gray-300">
+                  Bot Status
+                </div>
               </div>
               <div className="text-center">
-                <div className="text-xl sm:text-2xl font-bold text-cyber-green">{realTimeStatus.uptime}</div>
+                <div className="text-xl sm:text-2xl font-bold text-cyber-green">
+                  {realTimeStatus.uptime}
+                </div>
                 <div className="text-xs sm:text-sm text-gray-300">Uptime</div>
               </div>
             </div>
@@ -662,7 +903,7 @@ export default function App() {
                 <div className="flex items-center gap-2 text-cyber-green">
                   <div className="w-2 h-2 bg-cyber-green rounded-full animate-pulse" />
                   <span className="text-sm font-medium font-mono">
-                    {realTimeStatus.botStatus === 'ONLINE' ? 'Live' : 'Offline'}
+                    {realTimeStatus.botStatus === "ONLINE" ? "Live" : "Offline"}
                   </span>
                 </div>
               </div>
@@ -705,7 +946,7 @@ export default function App() {
                 ))}
               </div>
 
-              {!isPremium && configs.some(c => c.isPremium) && (
+              {!isPremium && configs.some((c) => c.isPremium) && (
                 <div className="mt-6 p-4 rounded-lg bg-cyber-orange/10 border border-cyber-orange/20">
                   <div className="flex items-center gap-2 mb-2">
                     <Crown className="h-4 w-4 text-cyber-orange" />
@@ -740,8 +981,13 @@ export default function App() {
       {isPaymentOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-dark-bg border border-cyber-purple/30 p-6 sm:p-8 rounded-xl max-w-sm w-full text-center font-mono">
-            <h3 className="text-xl font-bold text-white mb-4">Premium Features</h3>
-            <p className="text-gray-300 mb-6">Contact @nimrev_support on Telegram for premium access information.</p>
+            <h3 className="text-xl font-bold text-white mb-4">
+              Premium Features
+            </h3>
+            <p className="text-gray-300 mb-6">
+              Contact @nimrev_support on Telegram for premium access
+              information.
+            </p>
             <button
               onClick={() => setIsPaymentOpen(false)}
               className="px-6 py-2 rounded bg-cyber-green text-white hover:bg-cyber-green/90 transition-colors"
@@ -755,22 +1001,64 @@ export default function App() {
       {/* CSS Styles */}
       <style jsx>{`
         @keyframes glitch-anim-1 {
-          0% { clip-path: inset(30% 0 55% 0); transform: translate(1px, 1px) rotate(0.5deg); }
-          15% { clip-path: inset(5% 0 85% 0); transform: translate(3px, -2px) rotate(-1deg); }
-          30% { clip-path: inset(70% 0 10% 0); transform: translate(-2px, 2px) rotate(1.5deg); }
-          45% { clip-path: inset(10% 0 60% 0); transform: translate(2px, -1px) rotate(-0.5deg); }
-          60% { clip-path: inset(40% 0 45% 0); transform: translate(-1px, 3px) rotate(1deg); }
-          75% { clip-path: inset(20% 0 60% 0); transform: translate(3px, 1px) rotate(-1.5deg); }
-          90% { clip-path: inset(60% 0 15% 0); transform: translate(-3px, -2px) rotate(0.5deg); }
-          100% { clip-path: inset(30% 0 55% 0); transform: translate(1px, 1px) rotate(0.5deg); }
+          0% {
+            clip-path: inset(30% 0 55% 0);
+            transform: translate(1px, 1px) rotate(0.5deg);
+          }
+          15% {
+            clip-path: inset(5% 0 85% 0);
+            transform: translate(3px, -2px) rotate(-1deg);
+          }
+          30% {
+            clip-path: inset(70% 0 10% 0);
+            transform: translate(-2px, 2px) rotate(1.5deg);
+          }
+          45% {
+            clip-path: inset(10% 0 60% 0);
+            transform: translate(2px, -1px) rotate(-0.5deg);
+          }
+          60% {
+            clip-path: inset(40% 0 45% 0);
+            transform: translate(-1px, 3px) rotate(1deg);
+          }
+          75% {
+            clip-path: inset(20% 0 60% 0);
+            transform: translate(3px, 1px) rotate(-1.5deg);
+          }
+          90% {
+            clip-path: inset(60% 0 15% 0);
+            transform: translate(-3px, -2px) rotate(0.5deg);
+          }
+          100% {
+            clip-path: inset(30% 0 55% 0);
+            transform: translate(1px, 1px) rotate(0.5deg);
+          }
         }
         @keyframes glitch-anim-2 {
-          0% { clip-path: inset(45% 0 40% 0); transform: translate(2px, 3px) rotate(-1.5deg); }
-          20% { clip-path: inset(80% 0 5% 0); transform: translate(-1px, 2px) rotate(1deg); }
-          40% { clip-path: inset(10% 0 70% 0); transform: translate(2px, -3px) rotate(0.5deg); }
-          60% { clip-path: inset(60% 0 20% 0); transform: translate(-3px, -1px) rotate(-1deg); }
-          80% { clip-path: inset(25% 0 65% 0); transform: translate(1px, 1px) rotate(1.5deg); }
-          100% { clip-path: inset(45% 0 40% 0); transform: translate(2px, 3px) rotate(-1.5deg); }
+          0% {
+            clip-path: inset(45% 0 40% 0);
+            transform: translate(2px, 3px) rotate(-1.5deg);
+          }
+          20% {
+            clip-path: inset(80% 0 5% 0);
+            transform: translate(-1px, 2px) rotate(1deg);
+          }
+          40% {
+            clip-path: inset(10% 0 70% 0);
+            transform: translate(2px, -3px) rotate(0.5deg);
+          }
+          60% {
+            clip-path: inset(60% 0 20% 0);
+            transform: translate(-3px, -1px) rotate(-1deg);
+          }
+          80% {
+            clip-path: inset(25% 0 65% 0);
+            transform: translate(1px, 1px) rotate(1.5deg);
+          }
+          100% {
+            clip-path: inset(45% 0 40% 0);
+            transform: translate(2px, 3px) rotate(-1.5deg);
+          }
         }
         .nimrev-glitch-green {
           animation: glitch-anim-1 8s infinite linear alternate-reverse;
@@ -779,10 +1067,16 @@ export default function App() {
           animation: glitch-anim-2 8s infinite linear alternate;
         }
         .nimrev-title-glow {
-          text-shadow: 0 0 10px #0ff, 0 0 20px #0ff, 0 0 30px #0ff, 0 0 40px #ff00ff, 0 0 50px #ff00ff;
+          text-shadow:
+            0 0 10px #0ff,
+            0 0 20px #0ff,
+            0 0 30px #0ff,
+            0 0 40px #ff00ff,
+            0 0 50px #ff00ff;
         }
         .geometric-shape {
-          animation: move-and-fade var(--animation-duration, 5s) infinite ease-in-out alternate;
+          animation: move-and-fade var(--animation-duration, 5s) infinite
+            ease-in-out alternate;
           position: absolute;
           opacity: 0;
         }
