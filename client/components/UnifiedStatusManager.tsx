@@ -115,9 +115,14 @@ export function StatusProvider({ children }: StatusProviderProps) {
         confidence: 0,
       };
 
-      let scannerStatus = {
+      let scannerStatus: {
+        isActive: boolean;
+        status: "SCANNING" | "IDLE" | "OFFLINE" | "ERROR";
+        activeScans: number;
+        progress: number;
+      } = {
         isActive: false,
-        status: "OFFLINE" as const,
+        status: "OFFLINE",
         activeScans: 0,
         progress: 0,
       };
