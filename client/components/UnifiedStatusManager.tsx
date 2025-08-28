@@ -107,9 +107,15 @@ export function StatusProvider({ children }: StatusProviderProps) {
         checkService("/api/nimrev/status"),
       ]);
 
-      let botStatus = {
+      let botStatus: {
+        isOnline: boolean;
+        status: "ONLINE" | "OFFLINE" | "DEMO" | "ERROR";
+        responseTime: string;
+        lastPing: number | null;
+        confidence: number;
+      } = {
         isOnline: false,
-        status: "OFFLINE" as const,
+        status: "OFFLINE",
         responseTime: "error",
         lastPing: null,
         confidence: 0,
