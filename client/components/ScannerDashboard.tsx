@@ -9,7 +9,7 @@ import {
   AlertTriangle,
   CheckCircle,
 } from "lucide-react";
-import { safeFetch } from "@/utils/fetchWithFallback";
+import { fetchWithFallback } from "@/utils/fetchWithFallback";
 
 interface RecentScan {
   id: string;
