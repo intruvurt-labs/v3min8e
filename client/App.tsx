@@ -44,6 +44,7 @@ const App = () => (
           <TooltipProvider>
             <Toaster />
             <Sonner />
+            {import.meta.env.DEV && <ApiDiagnostic />}
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Index />} />
