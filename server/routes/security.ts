@@ -155,15 +155,7 @@ router.post(
     } catch (error) {
       console.error("❌ Website scan error:", error);
 
-      auditLogger.logAction({
-        userId: (req as any).user?.id,
-        action: "website_scan_failed",
-        entityType: "website",
-        entityId: req.body.url,
-        details: { error: error.message },
-        ipAddress: req.ip,
-        riskLevel: "medium",
-      });
+      console.log(`Website scan failed for ${req.body.url} by user ${(req as any).user?.id}: ${error.message}`);
 
       res.status(500).json({
         success: false,
