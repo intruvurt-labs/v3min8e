@@ -36,15 +36,7 @@ router.post(
       const userId = (req as any).user.id;
 
       // Audit log the scan request
-      auditLogger.logAction({
-        userId,
-        action: "security_scan_initiated",
-        entityType: "contract",
-        entityId: address,
-        details: { network, scanType },
-        ipAddress: req.ip,
-        userAgent: req.get("User-Agent"),
-      });
+      console.log(`Security scan initiated by user ${userId} for ${address} on ${network}`);
 
       // Check user scan quota
       const quotaCheck = await checkUserScanQuota(userId, scanType);
