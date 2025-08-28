@@ -68,6 +68,7 @@ const App = () => (
                 <Route path="/bot-dashboard" element={<BotPlatform />} />
                 <Route path="/security-audit" element={<SecurityAudit />} />
                 <Route path="/blogs" element={<Blogs />} />
+                <Route path="/chat" element={<ChatPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
