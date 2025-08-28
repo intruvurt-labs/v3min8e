@@ -168,8 +168,11 @@ export default function Technology() {
             </div>
           </div>
 
-          {/* Latest Updates */}
-          <section className="mb-16">
+          {/* Section Content Based on Active Tab */}
+          {activeSection === "overview" && (
+            <>
+              {/* Latest Updates */}
+              <section className="mb-16">
             <h2 className="text-3xl font-cyber font-bold text-cyber-orange mb-8 flex items-center">
               <span className="text-4xl mr-3">🔄</span>
               LATEST PLATFORM UPDATES
@@ -1179,8 +1182,8 @@ export default function Technology() {
             </div>
           </section>
 
-          {/* Real-time Development Updates */}
-          <section className="mb-16">
+              {/* Real-time Development Updates */}
+              <section className="mb-16">
             <h2 className="text-3xl font-cyber font-bold text-cyber-orange mb-8 flex items-center">
               <span className="text-4xl mr-3">🚀</span>
               LIVE DEVELOPMENT FEED
@@ -1250,7 +1253,239 @@ export default function Technology() {
                 ))}
               </div>
             </div>
-          </section>
+              </section>
+            </>
+          )}
+
+          {/* Detection Tech Section */}
+          {activeSection === "detection" && (
+            <section className="mb-16">
+              <h2 className="text-3xl font-cyber font-bold text-cyber-green mb-8 flex items-center">
+                <span className="text-4xl mr-3">⚡</span>
+                DETECTION TECHNOLOGIES
+              </h2>
+
+              {/* Subversive Method */}
+              <div className="mb-12 border border-cyber-purple/30 p-8 bg-cyber-purple/5 neon-border">
+                <h3 className="text-2xl font-cyber font-bold text-cyber-purple mb-6 flex items-center">
+                  <span className="text-3xl mr-3">🕵️</span>
+                  SUBVERSIVE METHOD
+                </h3>
+                <p className="text-gray-300 font-mono mb-6 leading-relaxed">
+                  Advanced detection of hidden malicious activity by analyzing concealed patterns and behaviors.
+                </p>
+                <ul className="space-y-3 text-gray-300 font-mono text-sm">
+                  <li>• Shadow Transaction Analysis</li>
+                  <li>• Stealth Wallet Clustering</li>
+                  <li>• Cross-Platform Pattern Detection</li>
+                  <li>• Anti-Detection Behavior Recognition</li>
+                </ul>
+              </div>
+
+              {/* Reverse Mining */}
+              <div className="mb-12 border border-cyber-green/30 p-8 bg-cyber-green/5 neon-border">
+                <h3 className="text-2xl font-cyber font-bold text-cyber-green mb-6 flex items-center">
+                  <span className="text-3xl mr-3">⛏️</span>
+                  REVERSE-MINING ALGORITHM
+                </h3>
+                <p className="text-gray-300 font-mono mb-6 leading-relaxed">
+                  Works backwards from suspicious outcomes to identify preparation phases.
+                </p>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="text-cyber-green font-bold mb-4">DETECTION RATES:</h4>
+                    <div className="space-y-2 text-sm text-gray-300 font-mono">
+                      <div className="flex justify-between">
+                        <span>Honeypot Setup</span>
+                        <span className="text-cyber-green">97.2%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Rug Pull Preparation</span>
+                        <span className="text-cyber-green">94.8%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Bot Farm Assembly</span>
+                        <span className="text-cyber-green">96.1%</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4 bg-cyber-green/10 border border-cyber-green/30">
+                    <p className="text-cyber-green font-bold text-sm mb-2">INSIGHT:</p>
+                    <p className="text-gray-300 font-mono text-xs">
+                      "Real-time reverse mining enables prediction at setup detection, not just before execution."
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Cross-Chain Analysis */}
+              <div className="border border-cyber-blue/30 p-8 bg-cyber-blue/5 neon-border">
+                <h3 className="text-2xl font-cyber font-bold text-cyber-blue mb-6 flex items-center">
+                  <span className="text-3xl mr-3">🌐</span>
+                  CROSS-CHAIN ANALYSIS
+                </h3>
+                <p className="text-gray-300 font-mono mb-6 leading-relaxed">
+                  Multi-blockchain correlation engine for detecting coordinated attacks across networks.
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {["Ethereum", "Base", "Arbitrum", "Optimism", "Polygon", "Solana", "Blast", "Avalanche"].map((chain, i) => (
+                    <div key={i} className="p-2 bg-cyber-blue/10 border border-cyber-blue/20 text-center">
+                      <span className="text-cyber-blue font-mono text-sm">{chain}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Integrations Section */}
+          {activeSection === "integration" && (
+            <section className="mb-16">
+              <h2 className="text-3xl font-cyber font-bold text-cyber-purple mb-8 flex items-center">
+                <span className="text-4xl mr-3">🔌</span>
+                API & INTEGRATIONS
+              </h2>
+
+              <div className="grid lg:grid-cols-2 gap-8 mb-8">
+                <div className="border border-cyber-purple/30 p-8 bg-cyber-purple/5 neon-border">
+                  <h3 className="text-xl font-cyber font-bold text-cyber-purple mb-6">WebSocket APIs</h3>
+                  <ul className="space-y-3 text-gray-300 font-mono text-sm">
+                    <li>• Real-time threat monitoring</li>
+                    <li>• Cross-platform data sync</li>
+                    <li>• Event-driven architecture</li>
+                    <li>• Live status updates</li>
+                  </ul>
+                  <div className="mt-6 p-4 bg-cyber-purple/10 border border-cyber-purple/30">
+                    <code className="text-cyber-blue font-mono text-xs">ws://localhost:8082</code>
+                    <p className="text-gray-300 text-xs mt-2">WebSocket endpoint for real-time data</p>
+                  </div>
+                </div>
+
+                <div className="border border-cyber-green/30 p-8 bg-cyber-green/5 neon-border">
+                  <h3 className="text-xl font-cyber font-bold text-cyber-green mb-6">REST APIs</h3>
+                  <ul className="space-y-3 text-gray-300 font-mono text-sm">
+                    <li>• /api/nimrev/scan - Enhanced scanning</li>
+                    <li>• /api/nimrev/live-threats - Real-time feed</li>
+                    <li>• /api/verm-price - Live price data</li>
+                    <li>• /api/nimrev/health - System monitoring</li>
+                  </ul>
+                  <div className="mt-6 p-4 bg-cyber-green/10 border border-cyber-green/30">
+                    <p className="text-cyber-green font-bold text-sm mb-2">Authentication</p>
+                    <p className="text-gray-300 text-xs">Rate limiting and security headers included</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border border-cyber-blue/30 p-8 bg-cyber-blue/5 neon-border">
+                <h3 className="text-xl font-cyber font-bold text-cyber-blue mb-6">Bot Platform Integration</h3>
+                <div className="grid md:grid-cols-3 gap-6">
+                  <div>
+                    <h4 className="text-cyber-blue font-bold mb-4">Telegram Bot</h4>
+                    <ul className="space-y-2 text-gray-300 font-mono text-sm">
+                      <li>• Multi-tenant support</li>
+                      <li>• Real-time commands</li>
+                      <li>• Performance analytics</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="text-cyber-blue font-bold mb-4">Web Dashboard</h4>
+                    <ul className="space-y-2 text-gray-300 font-mono text-sm">
+                      <li>• Live metrics display</li>
+                      <li>• Bot management UI</li>
+                      <li>• Integration status</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="text-cyber-blue font-bold mb-4">API Endpoints</h4>
+                    <ul className="space-y-2 text-gray-300 font-mono text-sm">
+                      <li>• /api/bot/metrics</li>
+                      <li>• /api/bot/analytics</li>
+                      <li>• /api/bot/command</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Community Section */}
+          {activeSection === "community" && (
+            <section className="mb-16">
+              <h2 className="text-3xl font-cyber font-bold text-cyber-purple mb-8 flex items-center">
+                <span className="text-4xl mr-3">👥</span>
+                COMMUNITY DEVELOPMENT
+              </h2>
+
+              <div className="grid lg:grid-cols-2 gap-8">
+                <div className="border border-cyber-purple/30 p-8 bg-cyber-purple/5 neon-border">
+                  <h3 className="text-xl font-cyber font-bold text-cyber-purple mb-6">VOTE ON FEATURES</h3>
+                  <div className="space-y-4">
+                    {[
+                      { name: "AI Threat Prediction", description: "Machine learning powered threat forecasting" },
+                      { name: "Mobile App Integration", description: "Native mobile app for real-time alerts" },
+                      { name: "DeFi Protocol Scanner", description: "Dedicated DeFi protocol security analysis" },
+                      { name: "Cross-Chain Bridge Monitor", description: "Real-time bridge security monitoring" },
+                    ].map((feature, index) => (
+                      <div key={index} className="border border-cyber-purple/20 p-4 bg-dark-bg/30">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <h4 className="text-cyber-purple font-mono font-bold text-sm">{feature.name}</h4>
+                            <p className="text-gray-300 text-xs">{feature.description}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleVote(feature.name, "up")}
+                              className="px-2 py-1 bg-cyber-green/20 text-cyber-green hover:bg-cyber-green/30 transition-colors text-xs"
+                            >
+                              ▲
+                            </button>
+                            <span className="text-cyber-blue font-mono text-sm min-w-8 text-center">
+                              {communityVotes[feature.name] || 0}
+                            </span>
+                            <button
+                              onClick={() => handleVote(feature.name, "down")}
+                              className="px-2 py-1 bg-cyber-orange/20 text-cyber-orange hover:bg-cyber-orange/30 transition-colors text-xs"
+                            >
+                              ▼
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border border-cyber-green/30 p-8 bg-cyber-green/5 neon-border">
+                  <h3 className="text-xl font-cyber font-bold text-cyber-green mb-6">SUBMIT FEEDBACK</h3>
+                  <div className="space-y-4">
+                    <textarea
+                      value={userFeedback}
+                      onChange={(e) => setUserFeedback(e.target.value)}
+                      placeholder="Share your ideas for improving NimRev's technology..."
+                      className="w-full h-32 px-4 py-3 bg-dark-bg border border-cyber-green/30 text-cyber-green font-mono focus:border-cyber-green focus:outline-none transition-all duration-200 resize-none"
+                    />
+                    <button
+                      onClick={submitFeedback}
+                      disabled={!userFeedback.trim()}
+                      className="px-6 py-3 bg-cyber-green/20 border-2 border-cyber-green text-cyber-green font-mono font-bold hover:bg-cyber-green hover:text-dark-bg transition-all duration-300 neon-border disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      SUBMIT FEEDBACK
+                    </button>
+                  </div>
+
+                  <div className="mt-6 p-4 bg-cyber-green/10 border border-cyber-green/30">
+                    <h4 className="text-cyber-green font-bold text-sm mb-2">COMMUNITY STATS</h4>
+                    <div className="text-xs text-gray-300 font-mono space-y-1">
+                      <div>• 1,247 community members contributing</div>
+                      <div>• 89 feature requests submitted this month</div>
+                      <div>• 23 community-suggested improvements implemented</div>
+                      <div>• 96% user satisfaction rate</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
         </div>
       </div>
 
