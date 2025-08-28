@@ -19,6 +19,11 @@ export default function Index() {
   const [terminalText, setTerminalText] = useState("");
   const [isTyping, setIsTyping] = useState(true);
 
+  // Newsletter subscription state
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [newsletterFrequency, setNewsletterFrequency] = useState("weekly");
+  const [isSubscribing, setIsSubscribing] = useState(false);
+
   // Initialize dynamic SEO
   useDynamicSEO("index", {
     features: [
