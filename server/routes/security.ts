@@ -118,15 +118,7 @@ router.post(
       }
 
       // Audit log the website scan request
-      auditLogger.logAction({
-        userId,
-        action: "website_scan_initiated",
-        entityType: "website",
-        entityId: url,
-        details: { scanType },
-        ipAddress: req.ip,
-        userAgent: req.get("User-Agent"),
-      });
+      console.log(`Website scan initiated by user ${userId} for ${url}`);
 
       // Check user scan quota
       const quotaCheck = await checkUserScanQuota(userId, scanType);
