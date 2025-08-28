@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import CyberGrid from "@/components/CyberGrid";
 import CyberNav from "@/components/CyberNav";
+import TokenMarquee from "@/components/TokenMarquee";
 
 interface ScanResult {
   address: string;
