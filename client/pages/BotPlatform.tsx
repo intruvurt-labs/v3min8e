@@ -999,7 +999,7 @@ export default function App() {
       )}
 
       {/* CSS Styles */}
-      <style jsx>{`
+      <style>{`
         @keyframes glitch-anim-1 {
           0% {
             clip-path: inset(30% 0 55% 0);
