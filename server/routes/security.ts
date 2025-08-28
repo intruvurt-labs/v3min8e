@@ -18,11 +18,7 @@ const progressTracker = new ScanProgressTracker(8083);
 const websiteScanner = new WebsiteSecurityScanner();
 
 // Rate limiting for scan endpoints
-const scanRateLimit = rateLimitMiddleware({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // limit each IP to 10 requests per windowMs
-  message: "Too many scan requests, please try again later",
-});
+const scanRateLimit = rateLimitMiddleware;
 
 /**
  * @route POST /api/security/scan
