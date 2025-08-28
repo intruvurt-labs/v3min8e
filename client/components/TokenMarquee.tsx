@@ -322,7 +322,7 @@ export default function TokenMarquee({
         <div className="w-full h-full opacity-10 bg-gradient-to-r from-transparent via-cyber-green/20 to-transparent animate-pulse"></div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes marquee-left {
           0% { transform: translateX(0); }
           100% { transform: translateX(-50%); }
