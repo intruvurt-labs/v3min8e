@@ -410,7 +410,7 @@ export default function Index() {
                     </span>
                   </div>
                   <Link
-                    to="/botplatform"
+                    to="/bot-platform"
                     className="text-cyber-purple hover:text-cyber-blue transition-colors font-mono text-xs underline"
                   >
                     View Platform →
