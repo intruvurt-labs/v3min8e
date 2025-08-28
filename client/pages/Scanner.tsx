@@ -1,4 +1,4 @@
-import { Grid } from "./Grid";
+import Grid from "./Grid";
 
 // Scanner page redirects to Grid component which handles scanning functionality
 const Scanner = () => {
