@@ -504,18 +504,18 @@ export default function About() {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <a
-                  href="/staking"
+                <Link
+                  to="/staking"
                   className="px-8 py-4 bg-cyber-green/20 border-2 border-cyber-green text-cyber-green font-mono font-bold tracking-wider hover:bg-cyber-green hover:text-dark-bg transition-all duration-300 neon-border"
                 >
                   STAKE VERM
-                </a>
-                <a
-                  href="/"
+                </Link>
+                <Link
+                  to="/"
                   className="px-8 py-4 border-2 border-cyber-blue text-cyber-blue font-mono font-bold tracking-wider hover:bg-cyber-blue/20 transition-all duration-300"
                 >
                   START SCANNING
-                </a>
+                </Link>
               </div>
 
               <div className="mt-6 text-cyber-orange font-mono text-sm">
