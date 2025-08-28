@@ -24,6 +24,9 @@ import securityAuditRoutes from "./security-audit";
 // Import airdrop routes
 import airdropRoutes from "./airdrop";
 
+// Import tokens routes
+import tokensRoutes from "./tokens";
+
 // Import NimRev routes
 import {
   getSystemStatus,
