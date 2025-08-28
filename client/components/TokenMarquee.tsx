@@ -321,26 +321,6 @@ export default function TokenMarquee({
       <div className="absolute inset-0 pointer-events-none">
         <div className="w-full h-full opacity-10 bg-gradient-to-r from-transparent via-cyber-green/20 to-transparent animate-pulse"></div>
       </div>
-
-      <style>{`
-        @keyframes marquee-left {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        @keyframes marquee-right {
-          0% { transform: translateX(-50%); }
-          100% { transform: translateX(0); }
-        }
-        .hover\\:pause-animation:hover > div {
-          animation-play-state: paused;
-        }
-        .neon-border-subtle {
-          box-shadow: 0 0 5px rgba(0, 255, 157, 0.1);
-        }
-        .neon-border-subtle:hover {
-          box-shadow: 0 0 15px rgba(0, 255, 157, 0.3);
-        }
-      `}</style>
     </div>
   );
 }
