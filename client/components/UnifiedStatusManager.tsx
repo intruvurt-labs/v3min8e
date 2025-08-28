@@ -165,16 +165,26 @@ export function StatusProvider({ children }: StatusProviderProps) {
         }
       }
 
-      // If all checks failed, assume demo mode
+      // If all checks failed, use fallback data
       if (!botStatus.isOnline && !scannerStatus.isActive && !services.network) {
         botStatus = {
           isOnline: true,
           status: "DEMO",
-          responseTime: "demo",
+          responseTime: "offline",
           lastPing: Date.now(),
-          confidence: 50,
+          confidence: 25,
         };
-        services.network = true;
+        scannerStatus = {
+          isActive: false,
+          status: "OFFLINE",
+          activeScans: 0,
+          progress: 0,
+        };
+        services = {
+          database: false,
+          network: false,
+          apis: false,
+        };
       }
 
       setStatus((prev) => ({
