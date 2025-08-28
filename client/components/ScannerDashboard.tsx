@@ -55,8 +55,8 @@ export default function ScannerDashboard({
     const fetchRecentScans = async () => {
       const result = await fetchWithFallback("/.netlify/functions/scan-history");
 
-      if (success && data?.success && data?.scans) {
-        setRecentScans(data.scans.slice(0, 8)); // Show last 8 scans
+      if (result.success && result.data?.success && result.data?.scans) {
+        setRecentScans(result.data.scans.slice(0, 8)); // Show last 8 scans
       } else {
         // Silently fallback to empty array - no console errors needed
         setRecentScans([]);
