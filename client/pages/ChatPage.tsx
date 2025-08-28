@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { CyberGrid } from "@/components/CyberGrid";
-import { CyberNav } from "@/components/CyberNav";
-import { CyberFooter } from "@/components/CyberFooter";
+import CyberGrid from "@/components/CyberGrid";
+import CyberNav from "@/components/CyberNav";
+import CyberFooter from "@/components/CyberFooter";
 
 const ChatPage = () => {
   const [messages, setMessages] = useState<Array<{ id: string; message: string; userId: string; timestamp: string }>>([]);
