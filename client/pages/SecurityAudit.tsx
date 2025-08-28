@@ -215,7 +215,7 @@ const SecurityAuditPage = () => {
   return (
     <ErrorBoundary>
       <CyberNav />
-      <div className="min-h-screen bg-dark-bg text-foreground">
+      <div className="min-h-screen bg-dark-bg text-foreground pt-16">
         {/* Cyber Grid Background */}
         <div className="absolute inset-0 w-full h-full z-0 overflow-hidden opacity-30">
           <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
