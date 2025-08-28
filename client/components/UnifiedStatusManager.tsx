@@ -5,7 +5,7 @@ import {
   useContext,
   ReactNode,
 } from "react";
-import { fallbackData } from "../utils/fetchWithFallback";
+import { fetchWithFallback, fallbackData } from "../utils/fetchWithFallback";
 
 interface SystemStatus {
   bot: {
