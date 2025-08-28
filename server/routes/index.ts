@@ -51,6 +51,7 @@ export function setupRoutes(app: Express) {
   });
   app.get("/api/demo", handleDemo);
   app.post("/api/contact", handleContactSubmission);
+  app.post("/api/newsletter/subscribe", handleNewsletterSubscription);
   app.get("/api/verm-price", handleVermPrice);
 
   // Original scanning routes
