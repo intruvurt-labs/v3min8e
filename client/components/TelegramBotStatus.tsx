@@ -32,121 +32,51 @@ export default function TelegramBotStatus({
   });
 
   useEffect(() => {
-    // Check real bot status from API with better error handling
+    // Check real bot status from API with improved error handling
     const checkBotStatus = async () => {
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-        // Try both bot status endpoints
-        const responses = await Promise.allSettled([
-          fetch("/api/bot/status", {
-            method: "GET",
-            headers: { "Content-Type": "application/json" },
-            signal: controller.signal,
-          }).finally(() => clearTimeout(timeoutId)),
-          fetch("/api/nimrev/status", {
-            method: "GET",
-            headers: { "Content-Type": "application/json" },
-            signal: controller.signal,
-          }).finally(() => clearTimeout(timeoutId)),
+        // Try both bot status endpoints with fallback
+        const [botResult, nimrevResult] = await Promise.allSettled([
+          fetchWithFallback("/api/bot/status", { timeout: 5000 }, fallbackData.botStatus),
+          fetchWithFallback("/api/nimrev/status", { timeout: 5000 }, fallbackData.nimrevStatus),
         ]);
 
         let botRunning = false;
         let responseTime = "checking...";
-        let confidence = 0;
-
-        // Check bot API response
-        if (responses[0].status === "fulfilled") {
-          const botResponse = responses[0].value;
-          if (botResponse.ok) {
-            const botData = await botResponse.json();
-            if (botData.status === "ONLINE" || botData.status === "DEMO") {
-              botRunning = true;
-              responseTime = "< 1s";
-              confidence += 50;
-            }
-          }
-        }
-
-        // Check NimRev API response
-        if (responses[1].status === "fulfilled") {
-          const nimrevResponse = responses[1].value;
-          if (nimrevResponse.ok) {
-            const nimrevData = await nimrevResponse.json();
-            if (
-              nimrevData.isRunning &&
-              nimrevData.services?.scanQueue?.isRunning
-            ) {
-              botRunning = true;
-              responseTime = "< 1s";
-              confidence += 50;
-            }
-          }
-        }
-
-        // Fallback: if both fail, assume demo mode
-        if (confidence === 0) {
-          botRunning = true; // Show as online in demo mode
-          responseTime = "demo";
-          confidence = 25;
-        }
-
-        // Parse API responses
         let realActiveUsers = 0;
         let realMessagesProcessed = 0;
-        let realUptime = "0%";
+        let realUptime = "Offline";
         let dataSource = "No Connection";
         let isReal = false;
 
-        // Extract real data from bot API
-        if (responses[0].status === "fulfilled") {
-          const botResponse = responses[0].value;
-          if (botResponse.ok) {
-            try {
-              const botData = await botResponse.json();
-              if (botData.isReal) {
-                realActiveUsers = botData.activeUsers || 0;
-                realMessagesProcessed = botData.messagesProcessed || 0;
-                realUptime = botData.uptime || `${confidence}%`;
-                dataSource = "Bot API";
-                isReal = true;
-              }
-            } catch (jsonError) {
-              console.log(
-                "Bot API response parsing failed:",
-                jsonError.message,
-              );
-            }
+        // Process bot API response
+        if (botResult.status === "fulfilled" && botResult.value.success) {
+          const botData = botResult.value.data;
+          if (botData && (botData.status === "ONLINE" || botData.status === "DEMO")) {
+            botRunning = true;
+            responseTime = botData.status === "ONLINE" ? "< 1s" : "demo";
+            realActiveUsers = botData.activeUsers || 0;
+            realMessagesProcessed = botData.messagesProcessed || 0;
+            realUptime = botData.uptime || "95%";
+            dataSource = botResult.value.isFallback ? "Fallback Data" : "Bot API";
+            isReal = !botResult.value.isFallback && botData.isReal;
           }
         }
 
-        // Extract real data from NimRev API
-        if (responses[1].status === "fulfilled") {
-          const nimrevResponse = responses[1].value;
-          if (nimrevResponse.ok) {
-            try {
-              const nimrevData = await nimrevResponse.json();
-              if (nimrevData.stats) {
-                realActiveUsers =
-                  nimrevData.stats.activeUsers || realActiveUsers;
-                realMessagesProcessed =
-                  nimrevData.stats.messagesProcessed || realMessagesProcessed;
-                realUptime = nimrevData.stats.uptime || realUptime;
-              }
-            } catch (jsonError) {
-              console.log(
-                "NimRev API response parsing failed:",
-                jsonError.message,
-              );
+        // Process NimRev API response
+        if (nimrevResult.status === "fulfilled" && nimrevResult.value.success) {
+          const nimrevData = nimrevResult.value.data;
+          if (nimrevData?.isRunning) {
+            botRunning = true;
+            responseTime = "< 1s";
+            realActiveUsers = nimrevData.stats?.activeUsers || realActiveUsers;
+            realMessagesProcessed = nimrevData.stats?.messagesProcessed || realMessagesProcessed;
+            realUptime = nimrevData.stats?.uptime || realUptime;
+            if (!isReal) {
+              dataSource = nimrevResult.value.isFallback ? "Fallback Data" : "NimRev API";
+              isReal = !nimrevResult.value.isFallback;
             }
           }
-        }
-
-        // If no real data available, show "No Data" instead of fake numbers
-        if (!botRunning || confidence === 0) {
-          realActiveUsers = 0;
-          realUptime = "Offline";
         }
 
         // Update metrics with parsed data
@@ -155,21 +85,21 @@ export default function TelegramBotStatus({
           isOnline: botRunning,
           responseTime,
           activeUsers: realActiveUsers,
-          messagesProcessed:
-            realMessagesProcessed || prev?.messagesProcessed || 0,
+          messagesProcessed: realMessagesProcessed || prev?.messagesProcessed || 0,
           lastUpdate: new Date(),
           uptime: realUptime,
           isReal,
           dataSource,
         }));
       } catch (error) {
-        console.error("Failed to check bot status:", error?.message || error);
-        // Show real offline status instead of fake demo mode
+        console.warn("Bot status check failed:", error);
+        // Use fallback data
         setMetrics((prev) => ({
           ...prev,
           isOnline: false,
           responseTime: "error",
           activeUsers: 0,
+          messagesProcessed: 0,
           uptime: "Connection Failed",
           lastUpdate: new Date(),
           isReal: false,
