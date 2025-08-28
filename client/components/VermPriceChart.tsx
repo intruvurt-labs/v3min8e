@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { fetchWithFallback, fallbackData } from "../utils/fetchWithFallback";
 
 interface PriceData {
   timestamp: number;
