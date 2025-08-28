@@ -1,96 +1,110 @@
-// Robust fetch utility to handle browser extension interference and network issues
-export interface FetchOptions extends RequestInit {
+interface FetchOptions extends RequestInit {
   timeout?: number;
   retries?: number;
   retryDelay?: number;
 }
 
-export class NetworkError extends Error {
-  constructor(
-    message: string,
-    public status?: number,
-  ) {
-    super(message);
-    this.name = "NetworkError";
-  }
+interface FallbackResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  isFallback?: boolean;
 }
 
-export async function fetchWithFallback(
+/**
+ * Enhanced fetch with timeout, retries, and fallback data
+ */
+export async function fetchWithFallback<T>(
   url: string,
   options: FetchOptions = {},
-): Promise<Response> {
+  fallbackData?: T,
+): Promise<FallbackResponse<T>> {
   const {
-    timeout = 10000,
-    retries = 2,
+    timeout = 8000,
+    retries = 1,
     retryDelay = 1000,
     ...fetchOptions
   } = options;
 
-  const fetchWithTimeout = async (
-    url: string,
-    options: RequestInit,
-    timeoutMs: number,
-  ): Promise<Response> => {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  let lastError: Error | null = null;
 
+  for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      const response = await fetch(url, {
-        ...options,
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
-      return response;
-    } catch (error) {
-      clearTimeout(timeoutId);
-      throw error;
-    }
-  };
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
 
+      const response = await fetch(url, {
+        ...fetchOptions,
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+          ...fetchOptions.headers,
+        },
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return { success: true, data };
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      
+      // Don't retry for certain errors
+      if (
+        lastError.name === 'AbortError' || 
+        lastError.message.includes('TypeError: Failed to fetch')
+      ) {
+        console.warn(`Fetch failed for ${url}: ${lastError.message}`);
+        break;
+      }
+
+      // Wait before retry (except on last attempt)
+      if (attempt < retries) {
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
+      }
+    }
+  }
+
+  console.warn(`All fetch attempts failed for ${url}. Using fallback data.`);
+  
+  if (fallbackData !== undefined) {
+    return { 
+      success: true, 
+      data: fallbackData, 
+      isFallback: true,
+      error: lastError?.message 
+    };
+  }
+
+  return { 
+    success: false, 
+    error: lastError?.message || 'Network error'
+  };
+}
+
+/**
+ * Simple retry wrapper for async functions
+ */
+export async function withRetry<T>(
+  fn: () => Promise<T>,
+  retries: number = 2,
+  delay: number = 1000,
+): Promise<T> {
   let lastError: Error;
 
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      // Add small delay between retries
-      if (attempt > 0) {
-        await new Promise((resolve) =>
-          setTimeout(resolve, retryDelay * attempt),
-        );
-      }
-
-      const response = await fetchWithTimeout(url, fetchOptions, timeout);
-
-      // Check for successful response
-      if (response.ok) {
-        return response;
-      }
-
-      // Handle HTTP errors
-      if (response.status >= 400) {
-        throw new NetworkError(
-          `HTTP ${response.status}: ${response.statusText}`,
-          response.status,
-        );
-      }
-
-      return response;
+      return await fn();
     } catch (error) {
-      lastError = error as Error;
-
-      // Don't retry on certain errors
-      if (error instanceof NetworkError && error.status && error.status < 500) {
-        throw error;
-      }
-
-      // Log the attempt
-      console.warn(
-        `Fetch attempt ${attempt + 1} failed for ${url}:`,
-        error instanceof Error ? error.message : String(error),
-      );
-
-      // If this is the last attempt, throw the error
-      if (attempt === retries) {
-        throw lastError;
+      lastError = error instanceof Error ? error : new Error(String(error));
+      
+      if (attempt < retries) {
+        await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
   }
@@ -98,86 +112,67 @@ export async function fetchWithFallback(
   throw lastError!;
 }
 
-export async function fetchJSON<T = any>(
-  url: string,
-  options: FetchOptions = {},
-): Promise<T> {
-  try {
-    const response = await fetchWithFallback(url, options);
-
-    // Check content type
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      // Don't throw error for non-JSON responses, let safeFetch handle it
-      throw new NetworkError("Response is not JSON");
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    // Don't log errors here - let safeFetch handle logging
-    throw error;
-  }
+/**
+ * Check if we're in a development environment
+ */
+export function isDevelopment(): boolean {
+  return process.env.NODE_ENV === 'development' || 
+         window.location.hostname === 'localhost' ||
+         window.location.hostname === '127.0.0.1';
 }
 
-// Utility to detect browser extension interference
-export function isBrowserExtensionActive(): boolean {
-  if (typeof window === "undefined") return false;
+/**
+ * Generate fallback data for various components
+ */
+export const fallbackData = {
+  botStatus: {
+    status: "DEMO",
+    health: 50,
+    lastPing: Date.now(),
+    recentActivity: [
+      {
+        type: "info" as const,
+        message: "Demo mode - API unavailable",
+        timestamp: Date.now(),
+      },
+    ],
+    activeUsers: 0,
+    messagesProcessed: 0,
+    uptime: "Demo Mode",
+    isReal: false,
+  },
 
-  // Check for common extension indicators
-  const extensionIndicators = [
-    () => document.querySelector('script[src*="chrome-extension"]'),
-    () => document.querySelector('script[src*="moz-extension"]'),
-    () => (window as any).chrome && (window as any).chrome.runtime,
-    () => (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__,
-    () => (window as any).__REDUX_DEVTOOLS_EXTENSION__,
-  ];
+  scannerStatus: {
+    isScanning: false,
+    activeScans: 0,
+    progress: 0,
+    currentOperation: "Demo mode - scanner offline",
+    currentScanTime: 0,
+    scansCompleted: 0,
+    threatsDetected: 0,
+    isReal: false,
+  },
 
-  return extensionIndicators.some((check) => {
-    try {
-      return check();
-    } catch {
-      return false;
-    }
-  });
-}
+  nimrevStatus: {
+    isRunning: false,
+    services: {
+      database: { isRunning: false },
+      scanQueue: { isRunning: false },
+    },
+    stats: {
+      activeUsers: 0,
+      messagesProcessed: 0,
+      uptime: "Demo Mode",
+    },
+  },
 
-// Create a safe fetch that falls back gracefully
-export async function safeFetch<T = any>(
-  url: string,
-  options: FetchOptions = {},
-  fallbackData?: T,
-): Promise<{ data: T | null; error: string | null; success: boolean }> {
-  try {
-    const data = await fetchJSON<T>(url, {
-      ...options,
-      retries: isBrowserExtensionActive() ? 1 : 2, // Fewer retries if extensions detected
-      timeout: 8000,
-    });
-
-    return {
-      data,
-      error: null,
-      success: true,
-    };
-  } catch (error) {
-    // Don't log common non-JSON errors (like 404s) to avoid console spam
-    const isCommonError =
-      error instanceof NetworkError &&
-      (error.message.includes("Response is not JSON") ||
-        error.message.includes("HTTP 404"));
-
-    if (!isCommonError) {
-      console.warn(
-        `safeFetch failed for ${url}:`,
-        error instanceof Error ? error.message : String(error),
-      );
-    }
-
-    return {
-      data: fallbackData || null,
-      error: null, // Return null error to avoid exposing internal errors to UI
-      success: false,
-    };
-  }
-}
+  vermPrice: {
+    price: 0,
+    change24h: 0,
+    volume24h: 0,
+    marketCap: 0,
+    priceHistory: [],
+    lastUpdated: Date.now(),
+    source: "Demo Mode - No Live Data",
+  },
+};
