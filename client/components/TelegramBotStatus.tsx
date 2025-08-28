@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Bot, Zap, MessageCircle, Shield, Activity } from "lucide-react";
+import { fetchWithFallback, fallbackData } from "../utils/fetchWithFallback";
 
 interface TelegramBotStatusProps {
   className?: string;
