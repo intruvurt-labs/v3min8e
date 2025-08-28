@@ -1,5 +1,4 @@
 import { Express } from "express";
-import { handlePing } from "./demo";
 import { handleDemo } from "./demo";
 import { handleContactSubmission } from "./contact";
 import { handleNewsletterSubscription } from "./newsletter";
