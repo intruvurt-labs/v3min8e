@@ -301,15 +301,15 @@ export default function CyberNav() {
               <h3 className="text-cyber-purple font-cyber font-bold text-sm tracking-wider mb-3">
                 BOT PLATFORM
               </h3>
-              <a
-                href="/bot-platform"
+              <Link
+                to="/bot-platform"
                 className="w-full px-4 py-3 bg-cyber-purple/20 border border-cyber-purple text-cyber-purple font-mono font-bold text-sm hover:bg-cyber-purple hover:text-white transition-all duration-300 rounded block text-center"
               >
                 <div className="flex items-center justify-center gap-2">
                   <Bot className="w-4 h-4" />
                   ACCESS BOT PLATFORM
                 </div>
-              </a>
+              </Link>
             </div>
 
             {/* Wallet Section */}
