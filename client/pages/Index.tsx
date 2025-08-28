@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 import { useDynamicSEO } from "@/hooks/useDynamicSEO";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import OnboardingTour, {
