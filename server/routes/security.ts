@@ -75,15 +75,7 @@ router.post(
     } catch (error) {
       console.error("❌ Security scan error:", error);
 
-      auditLogger.logAction({
-        userId: (req as any).user?.id,
-        action: "security_scan_failed",
-        entityType: "contract",
-        entityId: req.body.address,
-        details: { error: error.message },
-        ipAddress: req.ip,
-        riskLevel: "medium",
-      });
+      console.log(`Security scan failed for ${req.body.address} by user ${(req as any).user?.id}: ${error.message}`);
 
       res.status(500).json({
         success: false,
