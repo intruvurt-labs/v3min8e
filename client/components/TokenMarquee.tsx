@@ -53,8 +53,8 @@ export default function TokenMarquee({
           retries: 2
         });
 
-        if (result.success && result.data?.tokens) {
-          setTokens(result.data.tokens);
+        if (result.success && (result.data as any)?.tokens) {
+          setTokens((result.data as any).tokens);
         } else {
           // Fallback to mock data with realistic patterns
           setTokens(generateFallbackTokens());
