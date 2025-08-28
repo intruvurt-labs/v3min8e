@@ -25,132 +25,60 @@ export default function VermPriceChart() {
 
   // Fetch REAL price data from our server endpoint
   useEffect(() => {
-    const fetchRealPriceData = async (attempt = 1) => {
+    const fetchRealPriceData = async () => {
       try {
         setIsLoading(true);
         setError(null);
 
-        console.log(
-          `Attempting to fetch VERM price data... (attempt ${attempt})`,
-        );
+        console.log("Attempting to fetch VERM price data...");
 
-        // Try with a more extension-resistant fetch approach
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
-
-        const response = await fetch("/api/verm-price", {
-          headers: {
-            Accept: "application/json",
-            "Cache-Control": "no-cache",
-            "X-Requested-With": "XMLHttpRequest", // Help bypass some extension filtering
-          },
-          signal: controller.signal,
-        });
-
-        clearTimeout(timeoutId);
-
-        console.log(
-          "API response status:",
-          response.status,
-          response.statusText,
-        );
-
-        // Handle response more defensively
-        let responseText = "";
-
-        if (!response.ok) {
-          // For error responses, try to get error details
-          try {
-            responseText = await response.text();
-            const errorData = JSON.parse(responseText);
-
-            // Handle the new 503 error format
-            if (response.status === 503 && errorData.error) {
-              throw new Error(`PRICE_SERVICE_UNAVAILABLE: ${errorData.message || errorData.error}`);
+        const result = await fetchWithFallback(
+          "/api/verm-price",
+          {
+            timeout: 10000,
+            retries: 1,
+            headers: {
+              "X-Requested-With": "XMLHttpRequest",
             }
-
-            throw new Error(`HTTP ${response.status}: ${errorData.error || errorData.message || responseText}`);
-          } catch (parseError) {
-            // If JSON parsing fails, use the raw response
-            throw new Error(`HTTP ${response.status}: ${responseText || response.statusText}`);
           }
-        }
+        );
 
-        // For successful responses, read the text
-        try {
-          responseText = await response.text();
-        } catch (e) {
-          console.error("Error reading successful response:", e);
-          throw new Error("Failed to read response from price API");
-        }
-
-        if (!responseText.trim()) {
-          throw new Error("Empty response from price API");
-        }
-
-        let data;
-        try {
-          data = JSON.parse(responseText);
-        } catch (parseError) {
-          console.error("JSON parse error:", parseError);
-          throw new Error(
-            `Invalid JSON response: ${parseError instanceof Error ? parseError.message : "Unknown parse error"}`,
-          );
-        }
-
-        if (!data.success) {
-          throw new Error(data.error || "API returned unsuccessful response");
-        }
-
-        setPriceData(data.data);
-        console.log("✅ Real VERM price data loaded:", data.data.source);
-      } catch (error) {
-        let errorMessage =
-          error instanceof Error
-            ? error.message
-            : "Failed to fetch real price data";
-
-        // Only show extension blocking message if fetch actually failed
-        if (
-          errorMessage.includes("Failed to fetch") ||
-          errorMessage.includes("NetworkError")
-        ) {
-          // Check if we're in an environment where extensions might be interfering
-          const hasExtensionSignals =
-            document.querySelector('script[src*="chrome-extension"]') ||
-            document.querySelector('script[src*="fullstory"]') ||
-            window.location.protocol === "chrome-extension:" ||
-            /chrome-extension:\/\//.test(window.location.href);
-
-          if (hasExtensionSignals) {
-            errorMessage =
-              "EXTENSION_BLOCKED: Browser extensions are blocking real-time data requests. Please disable extensions or use an incognito window to view live VERM price data.";
+        if (result.success) {
+          // Check if the API response has the expected structure
+          if (result.data && result.data.success && result.data.data) {
+            setPriceData(result.data.data);
+            console.log("✅ VERM price data loaded:", result.data.data.source);
+          } else if (result.data) {
+            // Direct data format
+            setPriceData(result.data);
+            console.log("✅ VERM price data loaded (direct format)");
           } else {
-            errorMessage =
-              "NETWORK_ERROR: Unable to connect to price data servers. Please check your internet connection and try again.";
+            throw new Error("Invalid data structure received from API");
           }
-        } else if (errorMessage.includes("body stream already read")) {
-          errorMessage =
-            "RESPONSE_ERROR: Data stream was interrupted. Please refresh the page to try again.";
-        } else if (errorMessage.includes("PRICE_SERVICE_UNAVAILABLE")) {
-          errorMessage =
-            "PRICE_SERVICE_TEMPORARILY_UNAVAILABLE: VERM price data sources are currently unreachable. This is normal during maintenance periods. Data will return automatically when services are restored.";
-        }
+        } else {
+          // Handle specific error types
+          let errorMessage = result.error || "Failed to fetch price data";
 
+          if (errorMessage.includes("Failed to fetch") || errorMessage.includes("NetworkError")) {
+            // Check if we're in an environment where extensions might be interfering
+            const hasExtensionSignals =
+              document.querySelector('script[src*="chrome-extension"]') ||
+              document.querySelector('script[src*="fullstory"]') ||
+              window.location.protocol === "chrome-extension:";
+
+            if (hasExtensionSignals) {
+              errorMessage = "EXTENSION_BLOCKED: Browser extensions are blocking real-time data requests. Please disable extensions or use an incognito window to view live VERM price data.";
+            } else {
+              errorMessage = "NETWORK_ERROR: Unable to connect to price data servers. Please check your internet connection and try again.";
+            }
+          }
+
+          setError(errorMessage);
+          setPriceData(null);
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
         console.error("❌ Real price data fetch failed:", errorMessage);
-
-        // If it's an extension issue and we haven't retried yet, try once more
-        if (
-          errorMessage.includes("EXTENSION_BLOCKED") &&
-          attempt === 1 &&
-          retryCount < 1
-        ) {
-          console.log("🔄 Retrying fetch to bypass extension interference...");
-          setRetryCount(1);
-          setTimeout(() => fetchRealPriceData(2), 2000); // Retry after 2 seconds
-          return;
-        }
-
         setError(errorMessage);
         setPriceData(null);
       } finally {
@@ -163,7 +91,7 @@ export default function VermPriceChart() {
     // Update real data every 60 seconds
     const interval = setInterval(() => fetchRealPriceData(), 60000);
     return () => clearInterval(interval);
-  }, []); // Keep empty dependency array since we want this to run once
+  }, []);
 
   // Custom SVG chart rendering for real data
   const renderRealChart = () => {
