@@ -541,7 +541,7 @@ export default function Terminal() {
           <div className="text-center mb-12">
             <div className="terminal mb-8 inline-block">
               <span className="text-cyber-green font-mono text-sm">
-                Initializing VerminPort scanner... RATs deployed
+                Initializing NimRev Protocol... Access Granted
               </span>
             </div>
 
@@ -561,6 +561,16 @@ export default function Terminal() {
                 — {currentQuote.author}
               </cite>
             </div>
+          </div>
+
+          {/* Live Token Marquee - Helius + Infura Powered */}
+          <div className="mb-12">
+            <TokenMarquee
+              speed="normal"
+              direction="left"
+              pauseOnHover={true}
+              className="mb-4"
+            />
           </div>
 
           {/* Scanner Interface */}
