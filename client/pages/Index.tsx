@@ -431,7 +431,7 @@ export default function Index() {
                     </span>
                   </div>
                   <Link
-                    to="/securityaudit"
+                    to="/security-audit"
                     className="text-cyber-orange hover:text-cyber-blue transition-colors font-mono text-xs underline"
                   >
                     Get Audit →
