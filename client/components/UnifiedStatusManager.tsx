@@ -88,7 +88,6 @@ export function StatusProvider({ children }: StatusProviderProps) {
 
   const checkService = async (endpoint: string) => {
     try {
-      const { fetchWithFallback } = await import("../utils/fetchWithFallback");
       const result = await fetchWithFallback(endpoint, { timeout: 5000 });
       return result;
     } catch (error) {
