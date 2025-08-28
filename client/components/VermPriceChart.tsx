@@ -45,12 +45,13 @@ export default function VermPriceChart() {
 
         if (result.success) {
           // Check if the API response has the expected structure
-          if (result.data && result.data.success && result.data.data) {
-            setPriceData(result.data.data);
-            console.log("✅ VERM price data loaded:", result.data.data.source);
-          } else if (result.data) {
+          const responseData = result.data as any;
+          if (responseData && responseData.success && responseData.data) {
+            setPriceData(responseData.data);
+            console.log("✅ VERM price data loaded:", responseData.data.source);
+          } else if (responseData) {
             // Direct data format
-            setPriceData(result.data);
+            setPriceData(responseData);
             console.log("✅ VERM price data loaded (direct format)");
           } else {
             throw new Error("Invalid data structure received from API");
