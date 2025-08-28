@@ -85,23 +85,13 @@ export function StatusProvider({ children }: StatusProviderProps) {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const checkService = async (endpoint: string, timeout: number = 5000) => {
+  const checkService = async (endpoint: string) => {
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-      const response = await fetch(endpoint, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        signal: controller.signal,
-      }).finally(() => clearTimeout(timeoutId));
-
-      if (response.ok) {
-        const data = await response.json();
-        return { success: true, data };
-      }
-      return { success: false, data: null };
+      const { fetchWithFallback } = await import("../utils/fetchWithFallback");
+      const result = await fetchWithFallback(endpoint, { timeout: 5000 });
+      return result;
     } catch (error) {
+      console.warn(`Service check failed for ${endpoint}:`, error);
       return { success: false, data: null };
     }
   };
