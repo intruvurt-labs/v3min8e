@@ -130,14 +130,14 @@ export function StatusProvider({ children }: StatusProviderProps) {
 
       // Process bot status
       if (botCheck.status === "fulfilled" && botCheck.value.success) {
-        const botData = botCheck.value.data;
-        if (botData.status === "ONLINE" || botData.status === "DEMO") {
+        const botData = botCheck.value.data as any;
+        if (botData && (botData.status === "ONLINE" || botData.status === "DEMO")) {
           botStatus = {
             isOnline: true,
             status: botData.status,
             responseTime: "< 1s",
             lastPing: Date.now(),
-            confidence: botData.health || 85,
+            confidence: (botData.health as number) || 85,
           };
           services.network = true;
           services.apis = true;
@@ -146,19 +146,21 @@ export function StatusProvider({ children }: StatusProviderProps) {
 
       // Process scanner status
       if (scannerCheck.status === "fulfilled" && scannerCheck.value.success) {
-        const scannerData = scannerCheck.value.data;
-        scannerStatus = {
-          isActive: scannerData.isScanning || false,
-          status: scannerData.isScanning ? "SCANNING" : "IDLE",
-          activeScans: scannerData.activeScans || 0,
-          progress: scannerData.progress || 0,
-        };
+        const scannerData = scannerCheck.value.data as any;
+        if (scannerData) {
+          scannerStatus = {
+            isActive: scannerData.isScanning || false,
+            status: scannerData.isScanning ? "SCANNING" : "IDLE",
+            activeScans: scannerData.activeScans || 0,
+            progress: scannerData.progress || 0,
+          };
+        }
       }
 
       // Process NimRev status
       if (nimrevCheck.status === "fulfilled" && nimrevCheck.value.success) {
-        const nimrevData = nimrevCheck.value.data;
-        if (nimrevData.isRunning) {
+        const nimrevData = nimrevCheck.value.data as any;
+        if (nimrevData && nimrevData.isRunning) {
           services.database = nimrevData.services?.database?.isRunning || false;
           services.network = true;
         }
