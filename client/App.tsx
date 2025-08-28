@@ -32,6 +32,7 @@ import BotPlatform from "./pages/BotPlatform";
 import SecurityAudit from "./pages/SecurityAudit";
 import Blogs from "./pages/Blogs";
 import ChatPage from "./pages/ChatPage";
+import ApiDiagnostic from "./components/ApiDiagnostic";
 
 const queryClient = new QueryClient();
 
