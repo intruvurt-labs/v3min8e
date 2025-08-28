@@ -204,17 +204,28 @@ export function StatusProvider({ children }: StatusProviderProps) {
         lastUpdate: Date.now(),
       }));
     } catch (error) {
-      console.error("Status check failed:", error);
+      console.warn("Status check failed - using fallback data:", error);
 
-      // Fallback to demo mode on error
+      // Use proper fallback data on error
       setStatus((prev) => ({
         ...prev,
         bot: {
-          isOnline: true,
-          status: "DEMO",
-          responseTime: "demo",
-          lastPing: Date.now(),
-          confidence: 25,
+          isOnline: false,
+          status: "OFFLINE",
+          responseTime: "error",
+          lastPing: null,
+          confidence: 0,
+        },
+        scanner: {
+          isActive: false,
+          status: "OFFLINE",
+          activeScans: 0,
+          progress: 0,
+        },
+        services: {
+          database: false,
+          network: false,
+          apis: false,
         },
         lastUpdate: Date.now(),
       }));
