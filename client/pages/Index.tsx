@@ -581,23 +581,33 @@ export default function Index() {
             </p>
 
             <div className="max-w-md mx-auto mb-8">
-              <div className="flex gap-2">
+              <form onSubmit={handleNewsletterSubscription} className="flex gap-2">
                 <input
                   type="email"
                   placeholder="ghost@protonmail.com"
-                  className="flex-1 px-4 py-3 bg-dark-bg border border-cyber-green/30 text-cyber-green font-mono focus:border-cyber-green focus:outline-none transition-all duration-200 rounded"
+                  value={newsletterEmail}
+                  onChange={(e) => setNewsletterEmail(e.target.value)}
+                  required
+                  disabled={isSubscribing}
+                  className="flex-1 px-4 py-3 bg-dark-bg border border-cyber-green/30 text-cyber-green font-mono focus:border-cyber-green focus:outline-none transition-all duration-200 rounded disabled:opacity-50"
                 />
-                <button className="px-6 py-3 bg-cyber-green/20 border-2 border-cyber-green text-cyber-green font-mono font-bold hover:bg-cyber-green hover:text-dark-bg transition-all duration-300 neon-border rounded">
-                  SUBSCRIBE
+                <button
+                  type="submit"
+                  disabled={isSubscribing || !newsletterEmail.trim()}
+                  className="px-6 py-3 bg-cyber-green/20 border-2 border-cyber-green text-cyber-green font-mono font-bold hover:bg-cyber-green hover:text-dark-bg transition-all duration-300 neon-border rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubscribing ? "SUBSCRIBING..." : "SUBSCRIBE"}
                 </button>
-              </div>
+              </form>
               <div className="mt-4 flex justify-center gap-6 text-sm">
                 <label className="flex items-center gap-2 text-cyber-blue cursor-pointer">
                   <input
                     type="radio"
                     name="frequency"
                     value="weekly"
-                    defaultChecked
+                    checked={newsletterFrequency === "weekly"}
+                    onChange={(e) => setNewsletterFrequency(e.target.value)}
+                    disabled={isSubscribing}
                     className="text-cyber-blue"
                   />
                   📅 Weekly Updates
@@ -607,6 +617,9 @@ export default function Index() {
                     type="radio"
                     name="frequency"
                     value="biweekly"
+                    checked={newsletterFrequency === "biweekly"}
+                    onChange={(e) => setNewsletterFrequency(e.target.value)}
+                    disabled={isSubscribing}
                     className="text-cyber-orange"
                   />
                   📅 Bi-weekly Updates
@@ -644,7 +657,7 @@ export default function Index() {
                 </div>
                 <div className="text-center p-3 border border-electric-blue/20 bg-electric-blue/5 rounded">
                   <div className="text-electric-blue font-bold mb-1">
-                    🇦🇪 Dubai
+                    🇦�� Dubai
                   </div>
                   <div className="text-gray-400">Blockchain Innovation</div>
                 </div>
