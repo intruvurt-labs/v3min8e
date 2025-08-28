@@ -31,6 +31,7 @@ import NimRevDashboard from "./pages/NimRevDashboard";
 import BotPlatform from "./pages/BotPlatform";
 import SecurityAudit from "./pages/SecurityAudit";
 import Blogs from "./pages/Blogs";
+import ChatPage from "./pages/ChatPage";
 
 const queryClient = new QueryClient();
 
