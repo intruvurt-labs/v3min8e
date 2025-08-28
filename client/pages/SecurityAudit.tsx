@@ -15,7 +15,10 @@ interface ErrorBoundaryState {
   errorInfo: React.ErrorInfo | null;
 }
 
-class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+class ErrorBoundary extends React.Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null, errorInfo: null };
@@ -38,10 +41,16 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
       return (
         <div className="min-h-screen bg-dark-bg text-foreground flex items-center justify-center">
           <div className="text-center p-8">
-            <h2 className="text-2xl font-bold text-red-400 mb-4">Something went wrong</h2>
-            <p className="text-gray-300 mb-4">An error occurred while rendering this component.</p>
+            <h2 className="text-2xl font-bold text-red-400 mb-4">
+              Something went wrong
+            </h2>
+            <p className="text-gray-300 mb-4">
+              An error occurred while rendering this component.
+            </p>
             <details className="text-left bg-gray-800 p-4 rounded">
-              <summary className="cursor-pointer text-cyber-green">Error Details</summary>
+              <summary className="cursor-pointer text-cyber-green">
+                Error Details
+              </summary>
               <pre className="mt-2 text-xs text-gray-300 whitespace-pre-wrap">
                 {this.state.error && this.state.error.toString()}
                 <br />
@@ -76,7 +85,7 @@ const ToolTip = ({ children, text, position = "top" }) => {
   };
 
   return (
-    <div 
+    <div
       className="relative inline-block"
       onMouseEnter={() => setIsVisible(true)}
       onMouseLeave={() => setIsVisible(false)}
@@ -87,12 +96,17 @@ const ToolTip = ({ children, text, position = "top" }) => {
           <div className="bg-dark-bg border border-cyber-green px-3 py-2 rounded-lg shadow-lg max-w-xs">
             <p className="text-sm text-gray-300 font-mono">{text}</p>
             {/* Arrow */}
-            <div className={`absolute w-2 h-2 bg-dark-bg border-cyber-green transform rotate-45 ${
-              position === 'top' ? 'top-full left-1/2 -translate-x-1/2 -mt-1 border-b border-r' :
-              position === 'bottom' ? 'bottom-full left-1/2 -translate-x-1/2 -mb-1 border-t border-l' :
-              position === 'left' ? 'left-full top-1/2 -translate-y-1/2 -ml-1 border-t border-r' :
-              'right-full top-1/2 -translate-y-1/2 -mr-1 border-b border-l'
-            }`}></div>
+            <div
+              className={`absolute w-2 h-2 bg-dark-bg border-cyber-green transform rotate-45 ${
+                position === "top"
+                  ? "top-full left-1/2 -translate-x-1/2 -mt-1 border-b border-r"
+                  : position === "bottom"
+                    ? "bottom-full left-1/2 -translate-x-1/2 -mb-1 border-t border-l"
+                    : position === "left"
+                      ? "left-full top-1/2 -translate-y-1/2 -ml-1 border-t border-r"
+                      : "right-full top-1/2 -translate-y-1/2 -mr-1 border-b border-l"
+              }`}
+            ></div>
           </div>
         </div>
       )}
@@ -123,20 +137,22 @@ const SecurityAuditPage = () => {
   const [auditData, setAuditData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [userId] = useState("user-" + Math.random().toString(36).substring(2, 9));
+  const [userId] = useState(
+    "user-" + Math.random().toString(36).substring(2, 9),
+  );
 
   // API functions
   const fetchAuditData = async () => {
     try {
-      const response = await fetch('/api/security-audit');
+      const response = await fetch("/api/security-audit");
       if (!response.ok) {
         throw new Error(`API error: ${response.status}`);
       }
       const data = await response.json();
       setAuditData(data.audits || []);
     } catch (error) {
-      console.error('Failed to fetch audit data:', error);
-      setError('Failed to load security audit data');
+      console.error("Failed to fetch audit data:", error);
+      setError("Failed to load security audit data");
       // Fallback to example data structure
       setAuditData([
         {
@@ -148,7 +164,7 @@ const SecurityAuditPage = () => {
         },
         {
           id: 2,
-          technology: "Token Analysis", 
+          technology: "Token Analysis",
           issue: "Unusual transaction patterns observed",
           severity: "medium",
           timestamp: new Date().toISOString(),
@@ -157,9 +173,9 @@ const SecurityAuditPage = () => {
           id: 3,
           technology: "Liquidity Check",
           issue: "Low liquidity pool detected",
-          severity: "low", 
+          severity: "low",
           timestamp: new Date().toISOString(),
-        }
+        },
       ]);
     } finally {
       setLoading(false);
@@ -168,10 +184,10 @@ const SecurityAuditPage = () => {
 
   const createAuditEntry = async (auditData) => {
     try {
-      const response = await fetch('/api/security-audit', {
-        method: 'POST',
+      const response = await fetch("/api/security-audit", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           userId,
@@ -179,25 +195,25 @@ const SecurityAuditPage = () => {
           timestamp: new Date().toISOString(),
         }),
       });
-      
+
       if (!response.ok) {
         throw new Error(`API error: ${response.status}`);
       }
-      
+
       // Refresh audit data after creating new entry
       await fetchAuditData();
     } catch (error) {
-      console.error('Failed to create audit entry:', error);
-      setError('Failed to save audit data');
+      console.error("Failed to create audit entry:", error);
+      setError("Failed to save audit data");
     }
   };
 
   useEffect(() => {
     fetchAuditData();
-    
+
     // Set up periodic refresh for live data
     const interval = setInterval(fetchAuditData, 30000); // Every 30 seconds
-    
+
     return () => clearInterval(interval);
   }, []);
 
@@ -206,7 +222,9 @@ const SecurityAuditPage = () => {
       <div className="min-h-screen bg-dark-bg text-foreground flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-cyber-green border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-cyber-green font-mono">Loading Security Audit...</p>
+          <p className="text-cyber-green font-mono">
+            Loading Security Audit...
+          </p>
         </div>
       </div>
     );
@@ -220,8 +238,18 @@ const SecurityAuditPage = () => {
         <div className="absolute inset-0 w-full h-full z-0 overflow-hidden opacity-30">
           <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <pattern id="auditGrid" width="80" height="80" patternUnits="userSpaceOnUse">
-                <path d="M 80 0 L 0 0 0 80" fill="none" stroke="#2a2a2a" strokeWidth="1"/>
+              <pattern
+                id="auditGrid"
+                width="80"
+                height="80"
+                patternUnits="userSpaceOnUse"
+              >
+                <path
+                  d="M 80 0 L 0 0 0 80"
+                  fill="none"
+                  stroke="#2a2a2a"
+                  strokeWidth="1"
+                />
               </pattern>
             </defs>
             <rect width="100%" height="100%" fill="url(#auditGrid)" />
@@ -253,7 +281,9 @@ const SecurityAuditPage = () => {
           {error && (
             <div className="bg-red-900/20 border-b border-red-500/30 px-4 py-3">
               <div className="max-w-7xl mx-auto">
-                <p className="text-red-400 text-sm font-mono text-center">{error}</p>
+                <p className="text-red-400 text-sm font-mono text-center">
+                  {error}
+                </p>
               </div>
             </div>
           )}
@@ -263,30 +293,51 @@ const SecurityAuditPage = () => {
             {/* Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <div className="bg-dark-bg/60 backdrop-blur-xl border border-cyber-green/30 rounded-xl p-6">
-                <h3 className="text-cyber-green font-semibold mb-2">Total Audits</h3>
-                <p className="text-2xl font-bold text-white">{auditData.length}</p>
-                <p className="text-xs text-gray-400 font-mono mt-1">Active monitoring</p>
-              </div>
-              
-              <div className="bg-dark-bg/60 backdrop-blur-xl border border-cyber-blue/30 rounded-xl p-6">
-                <h3 className="text-cyber-blue font-semibold mb-2">High Priority</h3>
+                <h3 className="text-cyber-green font-semibold mb-2">
+                  Total Audits
+                </h3>
                 <p className="text-2xl font-bold text-white">
-                  {auditData.filter(audit => audit.severity === 'high').length}
+                  {auditData.length}
                 </p>
-                <p className="text-xs text-gray-400 font-mono mt-1">Requires attention</p>
+                <p className="text-xs text-gray-400 font-mono mt-1">
+                  Active monitoring
+                </p>
               </div>
-              
+
+              <div className="bg-dark-bg/60 backdrop-blur-xl border border-cyber-blue/30 rounded-xl p-6">
+                <h3 className="text-cyber-blue font-semibold mb-2">
+                  High Priority
+                </h3>
+                <p className="text-2xl font-bold text-white">
+                  {
+                    auditData.filter((audit) => audit.severity === "high")
+                      .length
+                  }
+                </p>
+                <p className="text-xs text-gray-400 font-mono mt-1">
+                  Requires attention
+                </p>
+              </div>
+
               <div className="bg-dark-bg/60 backdrop-blur-xl border border-cyber-purple/30 rounded-xl p-6">
-                <h3 className="text-cyber-purple font-semibold mb-2">User ID</h3>
-                <p className="text-lg font-mono text-white truncate">{userId}</p>
-                <p className="text-xs text-gray-400 font-mono mt-1">Session identifier</p>
+                <h3 className="text-cyber-purple font-semibold mb-2">
+                  User ID
+                </h3>
+                <p className="text-lg font-mono text-white truncate">
+                  {userId}
+                </p>
+                <p className="text-xs text-gray-400 font-mono mt-1">
+                  Session identifier
+                </p>
               </div>
             </div>
 
             {/* Audit Results */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-white">Security Audit Results</h2>
+                <h2 className="text-xl font-semibold text-white">
+                  Security Audit Results
+                </h2>
                 <button
                   onClick={fetchAuditData}
                   className="px-4 py-2 bg-cyber-green/20 border border-cyber-green text-cyber-green rounded-lg hover:bg-cyber-green hover:text-dark-bg transition-all duration-300 font-mono text-sm"
@@ -294,7 +345,7 @@ const SecurityAuditPage = () => {
                   Refresh Data
                 </button>
               </div>
-              
+
               {auditData.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {auditData.map((audit) => (
@@ -310,8 +361,12 @@ const SecurityAuditPage = () => {
                   <div className="w-16 h-16 border-2 border-gray-600 rounded-full flex items-center justify-center mx-auto mb-4">
                     <div className="w-8 h-8 border-2 border-cyber-green rounded-full"></div>
                   </div>
-                  <h3 className="text-gray-400 font-semibold mb-2">No Security Issues Detected</h3>
-                  <p className="text-gray-500 text-sm font-mono">Your systems are secure</p>
+                  <h3 className="text-gray-400 font-semibold mb-2">
+                    No Security Issues Detected
+                  </h3>
+                  <p className="text-gray-500 text-sm font-mono">
+                    Your systems are secure
+                  </p>
                 </div>
               )}
             </div>
@@ -319,35 +374,43 @@ const SecurityAuditPage = () => {
             {/* Quick Actions */}
             <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-dark-bg/60 backdrop-blur-xl border border-cyber-green/30 rounded-xl p-6">
-                <h3 className="text-cyber-green font-semibold mb-4">Quick Scan</h3>
+                <h3 className="text-cyber-green font-semibold mb-4">
+                  Quick Scan
+                </h3>
                 <p className="text-gray-300 text-sm mb-4 font-mono">
                   Perform an immediate security scan of your contracts
                 </p>
                 <button
-                  onClick={() => createAuditEntry({
-                    technology: "Manual Scan",
-                    issue: "User-initiated security audit",
-                    severity: "info"
-                  })}
+                  onClick={() =>
+                    createAuditEntry({
+                      technology: "Manual Scan",
+                      issue: "User-initiated security audit",
+                      severity: "info",
+                    })
+                  }
                   className="w-full px-4 py-2 bg-cyber-green text-dark-bg rounded-lg hover:bg-cyber-green/90 transition-colors font-mono"
                 >
                   Start Scan
                 </button>
               </div>
-              
+
               <div className="bg-dark-bg/60 backdrop-blur-xl border border-cyber-purple/30 rounded-xl p-6">
-                <h3 className="text-cyber-purple font-semibold mb-4">Export Report</h3>
+                <h3 className="text-cyber-purple font-semibold mb-4">
+                  Export Report
+                </h3>
                 <p className="text-gray-300 text-sm mb-4 font-mono">
                   Download a comprehensive security audit report
                 </p>
                 <button
                   onClick={() => {
                     const dataStr = JSON.stringify(auditData, null, 2);
-                    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-                    const exportFileDefaultName = `security-audit-${new Date().toISOString().split('T')[0]}.json`;
-                    const linkElement = document.createElement('a');
-                    linkElement.setAttribute('href', dataUri);
-                    linkElement.setAttribute('download', exportFileDefaultName);
+                    const dataUri =
+                      "data:application/json;charset=utf-8," +
+                      encodeURIComponent(dataStr);
+                    const exportFileDefaultName = `security-audit-${new Date().toISOString().split("T")[0]}.json`;
+                    const linkElement = document.createElement("a");
+                    linkElement.setAttribute("href", dataUri);
+                    linkElement.setAttribute("download", exportFileDefaultName);
                     linkElement.click();
                   }}
                   className="w-full px-4 py-2 bg-cyber-purple text-white rounded-lg hover:bg-cyber-purple/90 transition-colors font-mono"

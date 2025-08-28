@@ -4,7 +4,9 @@ import CyberNav from "@/components/CyberNav";
 import CyberFooter from "@/components/CyberFooter";
 
 const ChatPage = () => {
-  const [messages, setMessages] = useState<Array<{ id: string; message: string; userId: string; timestamp: string }>>([]);
+  const [messages, setMessages] = useState<
+    Array<{ id: string; message: string; userId: string; timestamp: string }>
+  >([]);
   const [newMessage, setNewMessage] = useState("");
 
   const sendMessage = (e: React.FormEvent) => {
@@ -18,7 +20,7 @@ const ChatPage = () => {
       timestamp: new Date().toISOString(),
     };
 
-    setMessages(prev => [...prev, message]);
+    setMessages((prev) => [...prev, message]);
     setNewMessage("");
   };
 

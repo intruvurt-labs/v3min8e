@@ -53,9 +53,15 @@ export default function ScannerDashboard({
   // Fetch real recent scans from API
   useEffect(() => {
     const fetchRecentScans = async () => {
-      const result = await fetchWithFallback("/.netlify/functions/scan-history");
+      const result = await fetchWithFallback(
+        "/.netlify/functions/scan-history",
+      );
 
-      if (result.success && (result.data as any)?.success && (result.data as any)?.scans) {
+      if (
+        result.success &&
+        (result.data as any)?.success &&
+        (result.data as any)?.scans
+      ) {
         setRecentScans((result.data as any).scans.slice(0, 8)); // Show last 8 scans
       } else {
         // Silently fallback to empty array - no console errors needed

@@ -32,16 +32,13 @@ export default function VermPriceChart() {
 
         console.log("Attempting to fetch VERM price data...");
 
-        const result = await fetchWithFallback(
-          "/api/verm-price",
-          {
-            timeout: 10000,
-            retries: 1,
-            headers: {
-              "X-Requested-With": "XMLHttpRequest",
-            }
-          }
-        );
+        const result = await fetchWithFallback("/api/verm-price", {
+          timeout: 10000,
+          retries: 1,
+          headers: {
+            "X-Requested-With": "XMLHttpRequest",
+          },
+        });
 
         if (result.success) {
           // Check if the API response has the expected structure
@@ -60,7 +57,10 @@ export default function VermPriceChart() {
           // Handle specific error types
           let errorMessage = result.error || "Failed to fetch price data";
 
-          if (errorMessage.includes("Failed to fetch") || errorMessage.includes("NetworkError")) {
+          if (
+            errorMessage.includes("Failed to fetch") ||
+            errorMessage.includes("NetworkError")
+          ) {
             // Check if we're in an environment where extensions might be interfering
             const hasExtensionSignals =
               document.querySelector('script[src*="chrome-extension"]') ||
@@ -68,9 +68,11 @@ export default function VermPriceChart() {
               window.location.protocol === "chrome-extension:";
 
             if (hasExtensionSignals) {
-              errorMessage = "EXTENSION_BLOCKED: Browser extensions are blocking real-time data requests. Please disable extensions or use an incognito window to view live VERM price data.";
+              errorMessage =
+                "EXTENSION_BLOCKED: Browser extensions are blocking real-time data requests. Please disable extensions or use an incognito window to view live VERM price data.";
             } else {
-              errorMessage = "NETWORK_ERROR: Unable to connect to price data servers. Please check your internet connection and try again.";
+              errorMessage =
+                "NETWORK_ERROR: Unable to connect to price data servers. Please check your internet connection and try again.";
             }
           }
 
@@ -78,7 +80,8 @@ export default function VermPriceChart() {
           setPriceData(null);
         }
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error occurred";
         console.error("❌ Real price data fetch failed:", errorMessage);
         setError(errorMessage);
         setPriceData(null);
@@ -102,11 +105,13 @@ export default function VermPriceChart() {
     const height = 200;
     const padding = 40;
 
-    const prices = priceData.priceHistory.map((d) => d.price).filter(p => p != null && !isNaN(p) && isFinite(p));
+    const prices = priceData.priceHistory
+      .map((d) => d.price)
+      .filter((p) => p != null && !isNaN(p) && isFinite(p));
 
     // Ensure we have valid prices
     if (prices.length === 0) {
-      console.warn('No valid prices found in price history');
+      console.warn("No valid prices found in price history");
       return null;
     }
 
@@ -118,34 +123,56 @@ export default function VermPriceChart() {
     const pathPoints = priceData.priceHistory
       .map((point, index) => {
         // Validate point data
-        if (!point || point.price == null || isNaN(point.price) || !isFinite(point.price)) {
+        if (
+          !point ||
+          point.price == null ||
+          isNaN(point.price) ||
+          !isFinite(point.price)
+        ) {
           return null;
         }
 
-        const x = padding + (index * (width - 2 * padding)) / (priceData.priceHistory.length - 1);
-        const y = height - padding - ((point.price - minPrice) / priceRange) * (height - 2 * padding);
+        const x =
+          padding +
+          (index * (width - 2 * padding)) / (priceData.priceHistory.length - 1);
+        const y =
+          height -
+          padding -
+          ((point.price - minPrice) / priceRange) * (height - 2 * padding);
 
         // Validate calculated coordinates
         if (isNaN(x) || isNaN(y) || !isFinite(x) || !isFinite(y)) {
-          console.warn(`Invalid coordinates for point ${index}: x=${x}, y=${y}`);
+          console.warn(
+            `Invalid coordinates for point ${index}: x=${x}, y=${y}`,
+          );
           return null;
         }
 
         return `${index === 0 ? "M" : "L"} ${x} ${y}`;
       })
-      .filter(point => point !== null)
+      .filter((point) => point !== null)
       .join(" ");
 
     // Create gradient fill area with NaN validation
     const areaPoints = priceData.priceHistory
       .map((point, index) => {
         // Validate point data
-        if (!point || point.price == null || isNaN(point.price) || !isFinite(point.price)) {
+        if (
+          !point ||
+          point.price == null ||
+          isNaN(point.price) ||
+          !isFinite(point.price)
+        ) {
           return null;
         }
 
-        const x = padding + (index * (width - 2 * padding)) / (priceData.priceHistory.length - 1);
-        const y = height - padding - ((point.price - minPrice) / priceRange) * (height - 2 * padding);
+        const x =
+          padding +
+          (index * (width - 2 * padding)) / (priceData.priceHistory.length - 1);
+        const y =
+          height -
+          padding -
+          ((point.price - minPrice) / priceRange) * (height - 2 * padding);
 
         // Validate calculated coordinates
         if (isNaN(x) || isNaN(y) || !isFinite(x) || !isFinite(y)) {
@@ -154,7 +181,7 @@ export default function VermPriceChart() {
 
         return `${x},${y}`;
       })
-      .filter(point => point !== null)
+      .filter((point) => point !== null)
       .join(" ");
 
     return (
@@ -223,36 +250,55 @@ export default function VermPriceChart() {
           />
 
           {/* Data points with NaN validation */}
-          {priceData.priceHistory.map((point, index) => {
-            // Validate point data
-            if (!point || point.price == null || isNaN(point.price) || !isFinite(point.price)) {
-              console.warn(`Skipping invalid point at index ${index}:`, point);
-              return null;
-            }
+          {priceData.priceHistory
+            .map((point, index) => {
+              // Validate point data
+              if (
+                !point ||
+                point.price == null ||
+                isNaN(point.price) ||
+                !isFinite(point.price)
+              ) {
+                console.warn(
+                  `Skipping invalid point at index ${index}:`,
+                  point,
+                );
+                return null;
+              }
 
-            const x = padding + (index * (width - 2 * padding)) / (priceData.priceHistory.length - 1);
-            const y = height - padding - ((point.price - minPrice) / priceRange) * (height - 2 * padding);
+              const x =
+                padding +
+                (index * (width - 2 * padding)) /
+                  (priceData.priceHistory.length - 1);
+              const y =
+                height -
+                padding -
+                ((point.price - minPrice) / priceRange) *
+                  (height - 2 * padding);
 
-            // Validate calculated coordinates
-            if (isNaN(x) || isNaN(y) || !isFinite(x) || !isFinite(y)) {
-              console.warn(`Skipping point with invalid coordinates at index ${index}: x=${x}, y=${y}`);
-              return null;
-            }
+              // Validate calculated coordinates
+              if (isNaN(x) || isNaN(y) || !isFinite(x) || !isFinite(y)) {
+                console.warn(
+                  `Skipping point with invalid coordinates at index ${index}: x=${x}, y=${y}`,
+                );
+                return null;
+              }
 
-            return (
-              <circle
-                key={index}
-                cx={x}
-                cy={y}
-                r="3"
-                fill="hsl(var(--cyber-green))"
-                className="hover:r-5 transition-all duration-200"
-                filter="url(#realGlow)"
-              >
-                <title>{`${new Date(point.timestamp).toLocaleTimeString()}: $${point.price.toFixed(6)}`}</title>
-              </circle>
-            );
-          }).filter(Boolean)}
+              return (
+                <circle
+                  key={index}
+                  cx={x}
+                  cy={y}
+                  r="3"
+                  fill="hsl(var(--cyber-green))"
+                  className="hover:r-5 transition-all duration-200"
+                  filter="url(#realGlow)"
+                >
+                  <title>{`${new Date(point.timestamp).toLocaleTimeString()}: $${point.price.toFixed(6)}`}</title>
+                </circle>
+              );
+            })
+            .filter(Boolean)}
 
           {/* Price labels with validation */}
           <text
@@ -262,7 +308,10 @@ export default function VermPriceChart() {
             fontSize="10"
             textAnchor="end"
           >
-            ${isNaN(maxPrice) || !isFinite(maxPrice) ? '0.000000' : maxPrice.toFixed(6)}
+            $
+            {isNaN(maxPrice) || !isFinite(maxPrice)
+              ? "0.000000"
+              : maxPrice.toFixed(6)}
           </text>
           <text
             x={padding - 5}
@@ -271,7 +320,10 @@ export default function VermPriceChart() {
             fontSize="10"
             textAnchor="end"
           >
-            ${isNaN(minPrice) || !isFinite(minPrice) ? '0.000000' : minPrice.toFixed(6)}
+            $
+            {isNaN(minPrice) || !isFinite(minPrice)
+              ? "0.000000"
+              : minPrice.toFixed(6)}
           </text>
         </svg>
       </div>
@@ -403,7 +455,10 @@ export default function VermPriceChart() {
         <div>
           <div className="text-xs text-gray-400 mb-1">Current Price</div>
           <div className="text-cyber-green font-bold">
-            ${isNaN(priceData.price) || !isFinite(priceData.price) ? '0.000000' : priceData.price.toFixed(6)}
+            $
+            {isNaN(priceData.price) || !isFinite(priceData.price)
+              ? "0.000000"
+              : priceData.price.toFixed(6)}
           </div>
         </div>
         <div>
@@ -412,13 +467,18 @@ export default function VermPriceChart() {
             className={`font-bold ${(priceData.change24h || 0) >= 0 ? "text-cyber-green" : "text-red-400"}`}
           >
             {(priceData.change24h || 0) >= 0 ? "+" : ""}
-            {isNaN(priceData.change24h) || !isFinite(priceData.change24h) ? '0.00' : priceData.change24h.toFixed(2)}%
+            {isNaN(priceData.change24h) || !isFinite(priceData.change24h)
+              ? "0.00"
+              : priceData.change24h.toFixed(2)}
+            %
           </div>
         </div>
         <div>
           <div className="text-xs text-gray-400 mb-1">24h Volume</div>
           <div className="text-cyber-blue font-bold">
-            {priceData.volume24h > 0 && !isNaN(priceData.volume24h) && isFinite(priceData.volume24h)
+            {priceData.volume24h > 0 &&
+            !isNaN(priceData.volume24h) &&
+            isFinite(priceData.volume24h)
               ? `$${priceData.volume24h.toLocaleString()}`
               : "N/A"}
           </div>

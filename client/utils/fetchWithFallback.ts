@@ -37,8 +37,8 @@ export async function fetchWithFallback<T>(
         ...fetchOptions,
         signal: controller.signal,
         headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache',
+          "Content-Type": "application/json",
+          "Cache-Control": "no-cache",
           ...fetchOptions.headers,
         },
       });
@@ -53,11 +53,11 @@ export async function fetchWithFallback<T>(
       return { success: true, data };
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
-      
+
       // Don't retry for certain errors
       if (
-        lastError.name === 'AbortError' || 
-        lastError.message.includes('TypeError: Failed to fetch')
+        lastError.name === "AbortError" ||
+        lastError.message.includes("TypeError: Failed to fetch")
       ) {
         console.warn(`Fetch failed for ${url}: ${lastError.message}`);
         break;
@@ -65,25 +65,25 @@ export async function fetchWithFallback<T>(
 
       // Wait before retry (except on last attempt)
       if (attempt < retries) {
-        await new Promise(resolve => setTimeout(resolve, retryDelay));
+        await new Promise((resolve) => setTimeout(resolve, retryDelay));
       }
     }
   }
 
   console.warn(`All fetch attempts failed for ${url}. Using fallback data.`);
-  
+
   if (fallbackData !== undefined) {
-    return { 
-      success: true, 
-      data: fallbackData, 
+    return {
+      success: true,
+      data: fallbackData,
       isFallback: true,
-      error: lastError?.message 
+      error: lastError?.message,
     };
   }
 
-  return { 
-    success: false, 
-    error: lastError?.message || 'Network error'
+  return {
+    success: false,
+    error: lastError?.message || "Network error",
   };
 }
 
@@ -102,9 +102,9 @@ export async function withRetry<T>(
       return await fn();
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
-      
+
       if (attempt < retries) {
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
   }
@@ -116,9 +116,11 @@ export async function withRetry<T>(
  * Check if we're in a development environment
  */
 export function isDevelopment(): boolean {
-  return process.env.NODE_ENV === 'development' || 
-         window.location.hostname === 'localhost' ||
-         window.location.hostname === '127.0.0.1';
+  return (
+    process.env.NODE_ENV === "development" ||
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1"
+  );
 }
 
 /**

@@ -581,7 +581,10 @@ export default function Index() {
             </p>
 
             <div className="max-w-md mx-auto mb-8">
-              <form onSubmit={handleNewsletterSubscription} className="flex gap-2">
+              <form
+                onSubmit={handleNewsletterSubscription}
+                className="flex gap-2"
+              >
                 <input
                   type="email"
                   placeholder="ghost@protonmail.com"

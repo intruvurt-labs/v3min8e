@@ -36,7 +36,9 @@ router.post(
       const userId = (req as any).user.id;
 
       // Audit log the scan request
-      console.log(`Security scan initiated by user ${userId} for ${address} on ${network}`);
+      console.log(
+        `Security scan initiated by user ${userId} for ${address} on ${network}`,
+      );
 
       // Check user scan quota
       const quotaCheck = await checkUserScanQuota(userId, scanType);
@@ -75,7 +77,9 @@ router.post(
     } catch (error) {
       console.error("❌ Security scan error:", error);
 
-      console.log(`Security scan failed for ${req.body.address} by user ${(req as any).user?.id}: ${error.message}`);
+      console.log(
+        `Security scan failed for ${req.body.address} by user ${(req as any).user?.id}: ${error.message}`,
+      );
 
       res.status(500).json({
         success: false,
@@ -155,7 +159,9 @@ router.post(
     } catch (error) {
       console.error("❌ Website scan error:", error);
 
-      console.log(`Website scan failed for ${req.body.url} by user ${(req as any).user?.id}: ${error.message}`);
+      console.log(
+        `Website scan failed for ${req.body.url} by user ${(req as any).user?.id}: ${error.message}`,
+      );
 
       res.status(500).json({
         success: false,
@@ -326,7 +332,9 @@ router.post(
         ipAddress: req.ip,
       });
 
-      console.log(`Threat reported by user ${userId} for ${address} on ${network}: ${threatType}`);
+      console.log(
+        `Threat reported by user ${userId} for ${address} on ${network}: ${threatType}`,
+      );
 
       res.json({
         success: true,

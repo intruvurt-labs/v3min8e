@@ -5,11 +5,13 @@ import { z } from "zod";
 const NewsletterSubscriptionSchema = z.object({
   email: z.string().email("Invalid email address"),
   frequency: z.enum(["weekly", "biweekly"], {
-    errorMap: () => ({ message: "Frequency must be weekly or biweekly" })
+    errorMap: () => ({ message: "Frequency must be weekly or biweekly" }),
   }),
 });
 
-export type NewsletterSubscriptionData = z.infer<typeof NewsletterSubscriptionSchema>;
+export type NewsletterSubscriptionData = z.infer<
+  typeof NewsletterSubscriptionSchema
+>;
 
 export interface NewsletterResponse {
   success: boolean;
@@ -23,7 +25,7 @@ const generateConfirmationMessage = (
   subscriptionId: string,
 ): string => {
   const frequencyText = data.frequency === "weekly" ? "Weekly" : "Bi-weekly";
-  
+
   return `
 ╔═══════════════════════════════════════════════════════════════╗
 ║                    NIMREV SECURITY INTELLIGENCE              ║
@@ -58,9 +60,10 @@ Your subscription to our security intelligence updates has been confirmed.
 │ 📊 Market Analysis: DeFi security trends and insights
 │ 🐀 Vermin Reports: Exclusive intelligence from the underground
 │
-│ Next Update: ${data.frequency === "weekly" 
-    ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString()
-    : new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toLocaleDateString()
+│ Next Update: ${
+    data.frequency === "weekly"
+      ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString()
+      : new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toLocaleDateString()
   }
 │
 └───��──────────────────────────────────────────────────────────┘
@@ -90,7 +93,10 @@ Powered by the underground
 `.trim();
 };
 
-export const handleNewsletterSubscription: RequestHandler = async (req, res) => {
+export const handleNewsletterSubscription: RequestHandler = async (
+  req,
+  res,
+) => {
   try {
     // Validate request body
     const validatedData = NewsletterSubscriptionSchema.parse(req.body);
@@ -103,7 +109,7 @@ export const handleNewsletterSubscription: RequestHandler = async (req, res) => 
     // 1. Store subscription in database
     // 2. Send to email service (Mailgun, SendGrid, etc.)
     // 3. Add to marketing automation
-    
+
     // Log the subscription
     console.log("Newsletter Subscription:", {
       subscriptionId,
@@ -116,7 +122,10 @@ export const handleNewsletterSubscription: RequestHandler = async (req, res) => 
 
     // Generate confirmation email content
     const confirmationSubject = `[NimRev] Security Intelligence Subscription Confirmed`;
-    const confirmationMessage = generateConfirmationMessage(validatedData, subscriptionId);
+    const confirmationMessage = generateConfirmationMessage(
+      validatedData,
+      subscriptionId,
+    );
 
     // Log confirmation email (in production, this would send actual email)
     console.log("Newsletter Confirmation Email:", {

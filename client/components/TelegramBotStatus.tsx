@@ -37,8 +37,16 @@ export default function TelegramBotStatus({
       try {
         // Try both bot status endpoints with fallback
         const [botResult, nimrevResult] = await Promise.allSettled([
-          fetchWithFallback("/api/bot/status", { timeout: 5000 }, fallbackData.botStatus),
-          fetchWithFallback("/api/nimrev/status", { timeout: 5000 }, fallbackData.nimrevStatus),
+          fetchWithFallback(
+            "/api/bot/status",
+            { timeout: 5000 },
+            fallbackData.botStatus,
+          ),
+          fetchWithFallback(
+            "/api/nimrev/status",
+            { timeout: 5000 },
+            fallbackData.nimrevStatus,
+          ),
         ]);
 
         let botRunning = false;
@@ -52,13 +60,18 @@ export default function TelegramBotStatus({
         // Process bot API response
         if (botResult.status === "fulfilled" && botResult.value.success) {
           const botData = botResult.value.data;
-          if (botData && (botData.status === "ONLINE" || botData.status === "DEMO")) {
+          if (
+            botData &&
+            (botData.status === "ONLINE" || botData.status === "DEMO")
+          ) {
             botRunning = true;
             responseTime = botData.status === "ONLINE" ? "< 1s" : "demo";
             realActiveUsers = botData.activeUsers || 0;
             realMessagesProcessed = botData.messagesProcessed || 0;
             realUptime = botData.uptime || "95%";
-            dataSource = botResult.value.isFallback ? "Fallback Data" : "Bot API";
+            dataSource = botResult.value.isFallback
+              ? "Fallback Data"
+              : "Bot API";
             isReal = !botResult.value.isFallback && botData.isReal;
           }
         }
@@ -70,10 +83,13 @@ export default function TelegramBotStatus({
             botRunning = true;
             responseTime = "< 1s";
             realActiveUsers = nimrevData.stats?.activeUsers || realActiveUsers;
-            realMessagesProcessed = nimrevData.stats?.messagesProcessed || realMessagesProcessed;
+            realMessagesProcessed =
+              nimrevData.stats?.messagesProcessed || realMessagesProcessed;
             realUptime = nimrevData.stats?.uptime || realUptime;
             if (!isReal) {
-              dataSource = nimrevResult.value.isFallback ? "Fallback Data" : "NimRev API";
+              dataSource = nimrevResult.value.isFallback
+                ? "Fallback Data"
+                : "NimRev API";
               isReal = !nimrevResult.value.isFallback;
             }
           }
@@ -85,7 +101,8 @@ export default function TelegramBotStatus({
           isOnline: botRunning,
           responseTime,
           activeUsers: realActiveUsers,
-          messagesProcessed: realMessagesProcessed || prev?.messagesProcessed || 0,
+          messagesProcessed:
+            realMessagesProcessed || prev?.messagesProcessed || 0,
           lastUpdate: new Date(),
           uptime: realUptime,
           isReal,

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 
 interface DiagnosticResult {
   endpoint: string;
-  status: 'pending' | 'success' | 'error';
+  status: "pending" | "success" | "error";
   response?: any;
   error?: string;
   timestamp: number;
@@ -13,11 +13,11 @@ export default function ApiDiagnostic() {
   const [isRunning, setIsRunning] = useState(false);
 
   const testEndpoints = [
-    '/api/ping',
-    '/api/bot/status',
-    '/api/bot/scanner/status',
-    '/api/nimrev/status',
-    '/api/verm-price',
+    "/api/ping",
+    "/api/bot/status",
+    "/api/bot/scanner/status",
+    "/api/nimrev/status",
+    "/api/verm-price",
   ];
 
   const runDiagnostic = async () => {
@@ -27,21 +27,21 @@ export default function ApiDiagnostic() {
     for (const endpoint of testEndpoints) {
       const result: DiagnosticResult = {
         endpoint,
-        status: 'pending',
+        status: "pending",
         timestamp: Date.now(),
       };
 
       try {
         console.log(`Testing ${endpoint}...`);
-        
+
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
 
         const response = await fetch(endpoint, {
-          method: 'GET',
+          method: "GET",
           headers: {
-            'Content-Type': 'application/json',
-            'Cache-Control': 'no-cache',
+            "Content-Type": "application/json",
+            "Cache-Control": "no-cache",
           },
           signal: controller.signal,
         });
@@ -50,14 +50,14 @@ export default function ApiDiagnostic() {
 
         if (response.ok) {
           const data = await response.json();
-          result.status = 'success';
+          result.status = "success";
           result.response = data;
         } else {
-          result.status = 'error';
+          result.status = "error";
           result.error = `HTTP ${response.status}: ${response.statusText}`;
         }
       } catch (error) {
-        result.status = 'error';
+        result.status = "error";
         result.error = error instanceof Error ? error.message : String(error);
         console.error(`Failed to test ${endpoint}:`, error);
       }
@@ -82,7 +82,7 @@ export default function ApiDiagnostic() {
           disabled={isRunning}
           className="px-3 py-1 bg-cyber-green/20 border border-cyber-green text-cyber-green text-xs font-mono rounded hover:bg-cyber-green/30 disabled:opacity-50"
         >
-          {isRunning ? 'Testing...' : 'Retest'}
+          {isRunning ? "Testing..." : "Retest"}
         </button>
       </div>
 
@@ -90,29 +90,36 @@ export default function ApiDiagnostic() {
         {results.map((result, index) => (
           <div key={index} className="border border-gray-600 rounded p-2">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-cyan-400 font-mono text-xs">{result.endpoint}</span>
-              <span className={`px-2 py-1 rounded text-xs font-mono ${
-                result.status === 'success' ? 'bg-green-600 text-white' :
-                result.status === 'error' ? 'bg-red-600 text-white' :
-                'bg-yellow-600 text-white'
-              }`}>
+              <span className="text-cyan-400 font-mono text-xs">
+                {result.endpoint}
+              </span>
+              <span
+                className={`px-2 py-1 rounded text-xs font-mono ${
+                  result.status === "success"
+                    ? "bg-green-600 text-white"
+                    : result.status === "error"
+                      ? "bg-red-600 text-white"
+                      : "bg-yellow-600 text-white"
+                }`}
+              >
                 {result.status.toUpperCase()}
               </span>
             </div>
-            
+
             {result.error && (
               <div className="text-red-400 text-xs font-mono mb-1">
                 Error: {result.error}
               </div>
             )}
-            
+
             {result.response && (
               <div className="text-gray-300 text-xs font-mono">
-                Response: {JSON.stringify(result.response, null, 2).substring(0, 200)}
-                {JSON.stringify(result.response).length > 200 && '...'}
+                Response:{" "}
+                {JSON.stringify(result.response, null, 2).substring(0, 200)}
+                {JSON.stringify(result.response).length > 200 && "..."}
               </div>
             )}
-            
+
             <div className="text-gray-500 text-xs">
               {new Date(result.timestamp).toLocaleTimeString()}
             </div>

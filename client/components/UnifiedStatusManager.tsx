@@ -142,7 +142,10 @@ export function StatusProvider({ children }: StatusProviderProps) {
       // Process bot status
       if (botCheck.status === "fulfilled" && botCheck.value.success) {
         const botData = botCheck.value.data as any;
-        if (botData && (botData.status === "ONLINE" || botData.status === "DEMO")) {
+        if (
+          botData &&
+          (botData.status === "ONLINE" || botData.status === "DEMO")
+        ) {
           botStatus = {
             isOnline: true,
             status: botData.status,

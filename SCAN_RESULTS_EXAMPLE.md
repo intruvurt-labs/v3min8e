@@ -3,13 +3,16 @@
 ## What Users See When They Run a Security Scan
 
 ### 1. **Initial Scan Interface**
+
 When users navigate to `/grid`, they see:
+
 - Multi-network selector (Solana, Ethereum, BNB, Base, Blast, XRP, etc.)
 - Address input field for wallet/contract scanning
 - Real-time WebSocket connection status indicator
 - "SUBVERSION SWEEP" activation toggle
 
 ### 2. **During Scan Progress**
+
 Users see real-time updates through the VerminAI Intelligence display:
 
 ```
@@ -23,6 +26,7 @@ Users see real-time updates through the VerminAI Intelligence display:
 ### 3. **Scan Results Display**
 
 #### **Threat Score Dashboard**
+
 Three prominent metric cards showing:
 
 ```
@@ -35,9 +39,11 @@ Three prominent metric cards showing:
 ```
 
 #### **VerminAI Intelligence Report**
+
 Displays contextual analysis based on threat level:
 
 **For LOW RISK (Score 0-40):**
+
 ```
 ✅ NIMREV SECURITY REPORT ✅
 
@@ -52,6 +58,7 @@ No major red flags detected in current analysis.
 ```
 
 **For MEDIUM RISK (Score 41-70):**
+
 ```
 ⚠️ NIMREV SECURITY REPORT ⚠️
 
@@ -66,6 +73,7 @@ Recommend additional research and limited exposure.
 ```
 
 **For HIGH RISK (Score 71-100):**
+
 ```
 🚨 NIMREV SECURITY ALERT 🚨
 
@@ -82,6 +90,7 @@ Findings:
 ```
 
 #### **Transparency Ledger Section**
+
 Every scan includes immutable verification:
 
 ```
@@ -95,6 +104,7 @@ Every scan includes immutable verification:
 ```
 
 #### **Subversive Analysis Details**
+
 Technical breakdown for advanced users:
 
 ```
@@ -108,6 +118,7 @@ Pattern Matches: [standard_erc20, verified_contract]
 ```
 
 ### 4. **Live Threat Feed (Sidebar)**
+
 Real-time security alerts from across the network:
 
 ```
@@ -131,14 +142,16 @@ Real-time security alerts from across the network:
 ### 5. **Interactive Elements**
 
 #### **Real-time Connection Status**
+
 ```
 🟢 Real-time: CONNECTED    (Green pulsing dot)
-🟡 Real-time: CONNECTING...  (Yellow spinning dot)  
+🟡 Real-time: CONNECTING...  (Yellow spinning dot)
 🔴 Real-time: CONNECTION FAILED  (Red pulsing dot)
 🔘 Real-time: DISCONNECTED  (Gray dot)
 ```
 
 #### **SUBVERSION SWEEP Toggle**
+
 ```
 🟢 SUBVERSION SWEEP: ACTIVE    [PAUSE]
 🔘 SUBVERSION SWEEP: OFFLINE   [ACTIVATE]
@@ -147,18 +160,21 @@ Real-time security alerts from across the network:
 ### 6. **User Experience Features**
 
 #### **Responsive Design**
+
 - Mobile-optimized interface
 - Touch-friendly controls
 - Swipe gestures for navigation
 - Collapsible panels for small screens
 
 #### **Accessibility**
+
 - High contrast cyberpunk color scheme
 - Screen reader compatible
 - Keyboard navigation support
 - Focus indicators for all interactive elements
 
 #### **Animation & Feedback**
+
 - Pulsing dots for active status
 - Smooth transitions between states
 - Loading animations during scans
@@ -166,6 +182,7 @@ Real-time security alerts from across the network:
 - Neon glow effects on hover
 
 ### 7. **Error Handling**
+
 When scans fail, users see clear error messages:
 
 ```
@@ -176,6 +193,7 @@ When scans fail, users see clear error messages:
 ```
 
 ### 8. **Toast Notifications**
+
 Real-time feedback appears in bottom-right corner:
 
 ```
@@ -190,6 +208,7 @@ Real-time feedback appears in bottom-right corner:
 ## Technical Implementation Notes
 
 ### **Data Flow:**
+
 1. User enters address and selects network
 2. Frontend validates input and starts scan
 3. WebSocket connection established for real-time updates
@@ -199,6 +218,7 @@ Real-time feedback appears in bottom-right corner:
 7. Results displayed with contextual intelligence report
 
 ### **Security Features:**
+
 - All scans are cryptographically signed
 - Results stored on IPFS for immutability
 - No sensitive data stored client-side
@@ -206,6 +226,7 @@ Real-time feedback appears in bottom-right corner:
 - Input validation prevents injection attacks
 
 ### **Performance:**
+
 - Typical scan time: 15-30 seconds
 - Real-time progress updates
 - Graceful fallback to polling if WebSocket fails
