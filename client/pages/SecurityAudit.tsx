@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import CyberNav from "@/components/CyberNav";
 
 // --- ErrorBoundary Component ---
 // This component catches JavaScript errors in its children.
