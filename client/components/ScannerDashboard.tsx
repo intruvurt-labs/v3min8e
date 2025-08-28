@@ -53,11 +53,7 @@ export default function ScannerDashboard({
   // Fetch real recent scans from API
   useEffect(() => {
     const fetchRecentScans = async () => {
-      const { data, error, success } = await safeFetch(
-        "/.netlify/functions/scan-history",
-        {},
-        null,
-      );
+      const result = await fetchWithFallback("/.netlify/functions/scan-history");
 
       if (success && data?.success && data?.scans) {
         setRecentScans(data.scans.slice(0, 8)); // Show last 8 scans
