@@ -326,14 +326,7 @@ router.post(
         ipAddress: req.ip,
       });
 
-      auditLogger.logAction({
-        userId,
-        action: "threat_reported",
-        entityType: "threat_report",
-        entityId: threatId,
-        details: { address, network, threatType },
-        ipAddress: req.ip,
-      });
+      console.log(`Threat reported by user ${userId} for ${address} on ${network}: ${threatType}`);
 
       res.json({
         success: true,
