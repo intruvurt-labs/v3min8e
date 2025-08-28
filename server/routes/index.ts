@@ -94,4 +94,7 @@ export function setupRoutes(app: Express) {
 
   // Airdrop routes
   app.use("/api/airdrop", airdropRoutes);
+
+  // Tokens routes
+  app.use("/api/tokens", tokensRoutes);
 }
