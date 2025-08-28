@@ -185,13 +185,13 @@ export default function CyberNav() {
           {/* Status Panel */}
           <div className="flex items-center space-x-4">
             {/* Bot Platform Link */}
-            <a
-              href="/bot-platform"
+            <Link
+              to="/bot-platform"
               className="hidden sm:flex items-center px-3 py-1.5 bg-gradient-to-r from-cyber-purple to-cyber-orange hover:from-cyber-orange hover:to-cyber-purple text-white font-bold text-xs rounded transition-all duration-300 group border border-cyber-purple/50"
             >
               <Bot className="w-3 h-3 mr-1.5" />
               <span className="group-hover:animate-pulse">BOT PLATFORM</span>
-            </a>
+            </Link>
 
             {/* Wallet Connection */}
             {!walletConnected ? (
