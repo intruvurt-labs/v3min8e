@@ -4,6 +4,7 @@ import { body, validationResult } from "express-validator";
 import { twitterAuthService } from '../services/TwitterAuthService';
 import { telegramAuthService } from '../services/TelegramAuthService';
 import { airdropStorageService } from '../services/AirdropStorageService';
+import { blockchainVerificationService } from '../services/BlockchainVerificationService';
 
 const router = Router();
 
@@ -322,8 +323,34 @@ router.post(
           break;
 
         case "first_scan":
-          // In production, this would check scan history
-          verificationResult = { success: true, reward: 100 };
+          // Check if wallet has any scan activity
+          if (walletAddress) {
+            try {
+              const hasScanActivity = await blockchainVerificationService.verifyScanActivity(
+                walletAddress,
+                1
+              );
+
+              if (hasScanActivity) {
+                verificationResult = { success: true, reward: 100 };
+              } else {
+                return res.status(400).json({
+                  success: false,
+                  error: "No scan activity found",
+                  message: "Please complete at least one address scan using our protocol"
+                });
+              }
+            } catch (error) {
+              console.error('Scan verification error:', error);
+              verificationResult = { success: false, reward: 0 };
+            }
+          } else {
+            return res.status(400).json({
+              success: false,
+              error: "Wallet address required",
+              message: "Please connect your wallet to verify scan activity"
+            });
+          }
           break;
 
         case "daily_scan_streak":
@@ -335,15 +362,18 @@ router.post(
           // Check Solana blockchain for VERM staking
           if (walletAddress) {
             try {
-              // TODO: Implement real blockchain verification
-              // For now, require proof of stake amount
-              if (proof && proof.stakeAmount >= 100) {
+              const stakingVerification = await blockchainVerificationService.verifyStaking(
+                walletAddress,
+                100
+              );
+
+              if (stakingVerification.isStaking) {
                 verificationResult = { success: true, reward: 300 };
               } else {
                 return res.status(400).json({
                   success: false,
-                  error: "Insufficient stake amount",
-                  message: "Please stake at least 100 VERM tokens"
+                  error: "Staking verification failed",
+                  message: stakingVerification.error || "Please stake at least 100 VERM tokens"
                 });
               }
             } catch (error) {
@@ -365,13 +395,89 @@ router.post(
           break;
 
         case "premium_trade":
-          // In production, this would check trading history
-          verificationResult = { success: true, reward: 400 };
+          // Check blockchain for trading activity
+          if (walletAddress) {
+            try {
+              const tradingVerification = await blockchainVerificationService.verifyTrading(
+                walletAddress,
+                30 // Check last 30 days
+              );
+
+              if (tradingVerification.hasTraded && tradingVerification.recentTrades > 0) {
+                verificationResult = { success: true, reward: 400 };
+              } else {
+                return res.status(400).json({
+                  success: false,
+                  error: "No trading activity found",
+                  message: "Please complete at least one trade using our P2P trading system"
+                });
+              }
+            } catch (error) {
+              console.error('Trading verification error:', error);
+              verificationResult = { success: false, reward: 0 };
+            }
+          } else {
+            return res.status(400).json({
+              success: false,
+              error: "Wallet address required",
+              message: "Please connect your wallet to verify trading activity"
+            });
+          }
           break;
 
         case "legendary_hunter":
-          // In production, this would check all requirements
-          verificationResult = { success: true, reward: 2000 };
+          // Check all requirements for legendary status
+          if (walletAddress) {
+            try {
+              // Get user progress to check completed tasks
+              const userProgress = await airdropStorageService.getUserProgress(userId);
+              if (!userProgress) {
+                return res.status(400).json({
+                  success: false,
+                  error: "User progress not found",
+                  message: "Please complete other tasks first"
+                });
+              }
+
+              // Check requirements: all tasks completed, 1000+ total earned, bot verified
+              const requiredTasks = 7; // All other tasks except legendary
+              const requiredEarnings = 1000;
+
+              if (userProgress.tasksCompleted >= requiredTasks &&
+                  userProgress.totalEarned >= requiredEarnings &&
+                  userProgress.botTokenVerified) {
+
+                // Additional check: verify wallet has significant activity
+                const walletVerification = await blockchainVerificationService.verifyWallet(walletAddress);
+                const stakingVerification = await blockchainVerificationService.verifyStaking(walletAddress, 500);
+
+                if (walletVerification.transactionCount >= 50 && stakingVerification.isStaking) {
+                  verificationResult = { success: true, reward: 2000 };
+                } else {
+                  return res.status(400).json({
+                    success: false,
+                    error: "Insufficient wallet activity",
+                    message: "Legendary status requires significant on-chain activity and staking"
+                  });
+                }
+              } else {
+                return res.status(400).json({
+                  success: false,
+                  error: "Requirements not met",
+                  message: `Complete all tasks (${userProgress.tasksCompleted}/${requiredTasks}), earn ${requiredEarnings}+ VERM (${userProgress.totalEarned}), and verify bot token`
+                });
+              }
+            } catch (error) {
+              console.error('Legendary verification error:', error);
+              verificationResult = { success: false, reward: 0 };
+            }
+          } else {
+            return res.status(400).json({
+              success: false,
+              error: "Wallet address required",
+              message: "Please connect your wallet for legendary verification"
+            });
+          }
           break;
 
         default:
