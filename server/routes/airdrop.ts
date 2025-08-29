@@ -157,8 +157,8 @@ router.post(
         });
       }
 
-      // Store verification result (in production, this would go to a database)
-      const verificationRecord = {
+      // Store verification result using storage service
+      await airdropStorageService.saveBotVerification({
         userId,
         walletAddress,
         botToken: token.substring(0, 10) + "..." + token.slice(-4), // Store only partial token for security
@@ -169,8 +169,8 @@ router.post(
         },
         verifiedAt: new Date().toISOString(),
         ipAddress: req.ip,
-        userAgent: req.get("User-Agent"),
-      };
+        isActive: true
+      });
 
       // Log successful verification
       console.log("Bot token verified successfully:", {
