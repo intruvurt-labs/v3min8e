@@ -720,4 +720,63 @@ router.get(
   },
 );
 
+// GET /api/airdrop/wallet-stats/:walletAddress
+router.get(
+  "/wallet-stats/:walletAddress",
+  readOnlyLimiter,
+  async (req: Request, res: Response) => {
+    try {
+      const { walletAddress } = req.params;
+
+      if (!walletAddress) {
+        return res.status(400).json({
+          success: false,
+          error: "Wallet address is required",
+        });
+      }
+
+      // Basic wallet address validation
+      if (!walletAddress.match(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/)) {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid Solana wallet address format",
+        });
+      }
+
+      // Get blockchain verification
+      const walletVerification = await blockchainVerificationService.verifyWallet(walletAddress);
+      const stakingVerification = await blockchainVerificationService.verifyStaking(walletAddress, 0);
+
+      // Find user by wallet address
+      const userProgress = await airdropStorageService.getUserProgress(walletAddress) ||
+                          await airdropStorageService.createUserProgress(walletAddress, walletAddress);
+
+      // Calculate stats
+      const stats = {
+        totalEarned: userProgress.totalEarned,
+        pendingRewards: 0, // TODO: Calculate pending rewards
+        completedTasks: userProgress.tasksCompleted,
+        walletBalance: walletVerification.balance,
+        vermBalance: stakingVerification.stakeAmount,
+        transactionCount: walletVerification.transactionCount,
+        walletAge: walletVerification.age,
+        isVerified: walletVerification.isValid && walletVerification.transactionCount > 0,
+      };
+
+      res.json({
+        success: true,
+        data: stats,
+      });
+
+    } catch (error) {
+      console.error("Wallet stats fetch error:", error);
+      res.status(500).json({
+        success: false,
+        error: "Internal server error",
+        message: "Unable to fetch wallet statistics",
+      });
+    }
+  },
+);
+
 export default router;
