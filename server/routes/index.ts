@@ -24,6 +24,9 @@ import securityAuditRoutes from "./security-audit";
 // Import airdrop routes
 import airdropRoutes from "./airdrop";
 
+// Import auth routes
+import authRoutes from "./auth";
+
 // Import tokens routes
 import tokensRoutes from "./tokens";
 
@@ -94,6 +97,9 @@ export function setupRoutes(app: Express) {
 
   // Airdrop routes
   app.use("/api/airdrop", airdropRoutes);
+
+  // Auth routes
+  app.use("/api/auth", authRoutes);
 
   // Tokens routes
   app.use("/api/tokens", tokensRoutes);
