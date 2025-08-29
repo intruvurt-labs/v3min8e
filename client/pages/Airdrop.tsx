@@ -33,6 +33,8 @@ import {
 import CyberGrid from "@/components/CyberGrid";
 import CyberNav from "@/components/CyberNav";
 import CyberFooter from "@/components/CyberFooter";
+import AirdropWalletConnection from "@/components/AirdropWalletConnection";
+import SocialAuthVerification from "@/components/SocialAuthVerification";
 import { useWallet } from "@/hooks/useWallet";
 import { useProfile } from "@/components/UserProfileSystem";
 
@@ -368,14 +370,14 @@ export default function Airdrop() {
     }
   };
 
-  const completeTask = async (taskId: string) => {
+  const completeTask = async (taskId: string, verificationData?: any) => {
     const task = tasks.find((t) => t.id === taskId);
     if (!task) return;
 
     setIsVerifying(true);
 
     try {
-      // Real API verification
+      // Real API verification with proof data
       const response = await fetch(`/api/airdrop/verify-task`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -383,6 +385,7 @@ export default function Airdrop() {
           taskId,
           userId: currentProfile?.id,
           walletAddress: publicKey?.toString(),
+          proof: verificationData,
         }),
       });
 
@@ -557,74 +560,21 @@ export default function Airdrop() {
 
       <div className="relative z-10 pt-24 pb-16 px-4">
         <div className="max-w-6xl mx-auto">
-          {/* Enhanced Connection Status Banner */}
-          {requiresConnection && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-gradient-to-r from-cyber-red/20 via-cyber-orange/20 to-cyber-purple/20 border border-cyber-red/50 rounded-xl p-8 mb-8 text-center relative overflow-hidden"
-            >
-              {/* Background decoration */}
-              <div className="absolute inset-0 opacity-5">
-                <div
-                  className="w-full h-full bg-cover bg-center"
-                  style={{
-                    backgroundImage: `url('https://cdn.builder.io/api/v1/image/assets%2F29ccaf1d7d264cd2bd339333fe296f0c%2F36a192d52edd47bca0e1f1581626cd8b?format=webp&width=800')`,
-                  }}
-                />
-              </div>
-
-              <div className="relative z-10">
-                <div className="inline-block bg-cyber-red/30 border border-cyber-red rounded-full px-4 py-2 mb-4">
-                  <span className="text-cyber-red font-bold text-sm animate-pulse">
-                    🚨 ACTION REQUIRED
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-center gap-3 mb-4">
-                  <Wallet className="w-8 h-8 text-cyber-red" />
-                  <h2 className="text-2xl font-bold text-white">
-                    {!connected
-                      ? "🎯 Connect Wallet to Claim FREE VERM"
-                      : "👤 Create Hunter Profile"}
-                  </h2>
-                </div>
-
-                <p className="text-lg text-gray-200 mb-6 max-w-2xl mx-auto">
-                  {!connected
-                    ? "🚀 Your wallet = Your vault. Connect now to access $2,500+ worth of free VERM tokens waiting for you!"
-                    : "⚡ One-click profile creation unlocks all earning opportunities. Takes 30 seconds!"}
-                </p>
-
-                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                  <button className="bg-gradient-to-r from-cyber-red to-cyber-orange hover:from-cyber-orange hover:to-cyber-red text-white px-10 py-4 rounded-lg font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-glow-red flex items-center gap-3">
-                    <Wallet className="w-5 h-5" />
-                    {!connected ? "Connect Wallet Now" : "Create Profile"}
-                    <ArrowRight className="w-5 h-5" />
-                  </button>
-
-                  <div className="text-sm text-gray-400">
-                    🔒 100% Secure • ⚡ Instant • 🎁 Free Signup Bonus
-                  </div>
-                </div>
-
-                <div className="mt-6 grid grid-cols-3 gap-4 max-w-md mx-auto">
-                  <div className="text-center">
-                    <div className="text-cyber-green font-bold">30 SEC</div>
-                    <div className="text-xs text-gray-400">Setup Time</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-cyber-blue font-bold">$2,500+</div>
-                    <div className="text-xs text-gray-400">Potential Value</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-cyber-orange font-bold">0 FEES</div>
-                    <div className="text-xs text-gray-400">Always Free</div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
+          {/* Enhanced Wallet Connection */}
+          <div className="mb-8">
+            <AirdropWalletConnection
+              onWalletConnected={(publicKey) => {
+                console.log('Wallet connected:', publicKey);
+                // Refresh user progress when wallet connects
+                loadUserProgress();
+              }}
+              onWalletDisconnected={() => {
+                console.log('Wallet disconnected');
+              }}
+              requiredForTasks={true}
+              showRewards={true}
+            />
+          </div>
 
           {/* Header with live stats */}
           <div className="text-center mb-8">
@@ -1034,27 +984,43 @@ export default function Airdrop() {
             )}
 
             {activeTab === "tasks" && (
-              <motion.div
-                key="tasks"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                className="space-y-4"
-              >
-                {tasks.map((task) => (
+            <motion.div
+              key="tasks"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              className="space-y-4"
+            >
+              {/* Task Requirements Notice */}
+              {!connected && (
+                <div className="bg-cyber-orange/20 border border-cyber-orange/50 rounded-xl p-6 text-center mb-6">
+                  <Wallet className="w-12 h-12 text-cyber-orange mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-cyber-orange mb-2">
+                    Wallet Required for Task Verification
+                  </h3>
+                  <p className="text-gray-300">
+                    Connect your Solana wallet above to participate in tasks and earn VERM rewards.
+                  </p>
+                </div>
+              )}
+
+              {tasks.map((task) => (
                   <motion.div
                     key={task.id}
                     whileHover={{ scale: 1.02 }}
-                    className={`border rounded-xl p-6 cursor-pointer transition-all duration-300 ${
-                      task.status === "locked"
-                        ? "border-gray-500/30 bg-gray-500/10 opacity-50"
-                        : `border-cyber-green/30 bg-dark-bg/60 hover:border-cyber-green/50`
-                    }`}
-                    onClick={() =>
-                      task.status !== "locked" &&
-                      task.status !== "completed" &&
-                      startTask(task)
+                    className={`border rounded-xl p-6 transition-all duration-300 ${
+                    task.status === "locked"
+                      ? "border-gray-500/30 bg-gray-500/10 opacity-50"
+                      : task.status === "completed"
+                        ? "border-cyber-green/50 bg-cyber-green/10"
+                        : `border-cyber-green/30 bg-dark-bg/60 hover:border-cyber-green/50 ${connected ? 'cursor-pointer' : 'cursor-not-allowed opacity-75'}`
+                  }`}
+                  onClick={() => {
+                    if (!connected) return;
+                    if (task.status !== "locked" && task.status !== "completed") {
+                      startTask(task);
                     }
+                  }}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-4 flex-1">
@@ -1386,23 +1352,43 @@ export default function Airdrop() {
                       Cancel
                     </button>
 
-                    <button
-                      onClick={() => completeTask(selectedTask.id)}
-                      disabled={isVerifying}
-                      className="flex-1 px-4 py-2 bg-gradient-to-r from-cyber-green to-cyber-blue text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
-                    >
-                      {isVerifying ? (
-                        <>
-                          <RefreshCw className="w-4 h-4 animate-spin" />
-                          Verifying...
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle className="w-4 h-4" />
-                          Complete Task
-                        </>
-                      )}
-                    </button>
+                    {/* Social Auth Integration */}
+                    {(selectedTask.id === 'follow_twitter' || selectedTask.id === 'join_telegram') && (
+                      <div className="mb-4">
+                        <SocialAuthVerification
+                          userId={currentProfile?.id || 'guest'}
+                          taskId={selectedTask.id}
+                          platform={selectedTask.id === 'follow_twitter' ? 'twitter' : 'telegram'}
+                          onVerificationComplete={(success, data) => {
+                            if (success) {
+                              completeTask(selectedTask.id, data);
+                            }
+                          }}
+                          onVerificationStart={() => setIsVerifying(true)}
+                        />
+                      </div>
+                    )}
+
+                    {/* Default completion button for non-social tasks */}
+                    {selectedTask.id !== 'follow_twitter' && selectedTask.id !== 'join_telegram' && (
+                      <button
+                        onClick={() => completeTask(selectedTask.id)}
+                        disabled={isVerifying}
+                        className="flex-1 px-4 py-2 bg-gradient-to-r from-cyber-green to-cyber-blue text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+                      >
+                        {isVerifying ? (
+                          <>
+                            <RefreshCw className="w-4 h-4 animate-spin" />
+                            Verifying...
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle className="w-4 h-4" />
+                            Complete Task
+                          </>
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
