@@ -15,8 +15,14 @@ export class NimRevTelegramBot {
   private scanQueue: ScanQueue;
   private commands: Map<string, BotCommand> = new Map();
   private compactChats: Set<number> = new Set();
-  private groupSettingsCache: Map<number, { captchaEnabled: boolean; welcomeMessage: string | null }> = new Map();
-  private pendingCaptchas: Map<string, { chatId: number; userId: number; answer: number }> = new Map();
+  private groupSettingsCache: Map<
+    number,
+    { captchaEnabled: boolean; welcomeMessage: string | null }
+  > = new Map();
+  private pendingCaptchas: Map<
+    string,
+    { chatId: number; userId: number; answer: number }
+  > = new Map();
 
   constructor(scanQueue: ScanQueue) {
     const token = getEnv("TELEGRAM_BOT_TOKEN");
@@ -31,7 +37,7 @@ export class NimRevTelegramBot {
       token.includes("PLACEHOLDER") ||
       token.length < 30 || // Telegram tokens are typically 46+ chars
       !token.includes(":") ||
-      (process.env.ENABLE_BOT === "false");
+      process.env.ENABLE_BOT === "false";
 
     if (isDevelopmentToken) {
       console.log(
@@ -181,7 +187,10 @@ export class NimRevTelegramBot {
           scope: { type: "all_private_chats" },
         } as any);
       } catch (e) {
-        console.warn("⚠️ setMyCommands all_private_chats failed:", (e as any)?.message || e);
+        console.warn(
+          "⚠️ setMyCommands all_private_chats failed:",
+          (e as any)?.message || e,
+        );
       }
 
       try {
@@ -189,7 +198,10 @@ export class NimRevTelegramBot {
           scope: { type: "all_group_chats" },
         } as any);
       } catch (e) {
-        console.warn("⚠️ setMyCommands all_group_chats failed:", (e as any)?.message || e);
+        console.warn(
+          "⚠️ setMyCommands all_group_chats failed:",
+          (e as any)?.message || e,
+        );
       }
 
       try {
@@ -197,7 +209,10 @@ export class NimRevTelegramBot {
           scope: { type: "all_chat_administrators" },
         } as any);
       } catch (e) {
-        console.warn("⚠️ setMyCommands all_chat_administrators failed:", (e as any)?.message || e);
+        console.warn(
+          "⚠️ setMyCommands all_chat_administrators failed:",
+          (e as any)?.message || e,
+        );
       }
     }
   }
@@ -246,19 +261,38 @@ export class NimRevTelegramBot {
             if (selected === session.answer) {
               await this.unmuteUser(chatId, userId);
               this.pendingCaptchas.delete(key);
-              await this.bot.answerCallbackQuery(query.id, { text: "✅ Verified" });
+              await this.bot.answerCallbackQuery(query.id, {
+                text: "✅ Verified",
+              });
               try {
-                await supabase.from("captcha_verifications").insert({ chat_id: chatId, user_id: userId, status: "passed" });
+                await supabase
+                  .from("captcha_verifications")
+                  .insert({
+                    chat_id: chatId,
+                    user_id: userId,
+                    status: "passed",
+                  });
               } catch {}
               const settings = await this.getGroupSettings(chatId);
               if (settings.welcomeMessage) {
-                await this.sendMessage(chatId, settings.welcomeMessage.replace(/\{user\}/g, `[${query.from.first_name}](tg://user?id=${userId})`), { parse_mode: "Markdown" });
+                await this.sendMessage(
+                  chatId,
+                  settings.welcomeMessage.replace(
+                    /\{user\}/g,
+                    `[${query.from.first_name}](tg://user?id=${userId})`,
+                  ),
+                  { parse_mode: "Markdown" },
+                );
               }
             } else {
-              await this.bot.answerCallbackQuery(query.id, { text: "❌ Try again" });
+              await this.bot.answerCallbackQuery(query.id, {
+                text: "❌ Try again",
+              });
             }
           } else {
-            await this.bot.answerCallbackQuery(query.id, { text: "Session expired" });
+            await this.bot.answerCallbackQuery(query.id, {
+              text: "Session expired",
+            });
           }
           return;
         }
@@ -272,7 +306,11 @@ export class NimRevTelegramBot {
     // Handle new chat members (group setup + captcha)
     this.bot.on("new_chat_members", async (msg) => {
       const newMembers = msg.new_chat_members || [];
-      if (newMembers.some((m) => m.username === (this.bot as any).options?.username)) {
+      if (
+        newMembers.some(
+          (m) => m.username === (this.bot as any).options?.username,
+        )
+      ) {
         await this.handleBotAddedToGroup(msg);
       }
 
@@ -283,7 +321,14 @@ export class NimRevTelegramBot {
           const settings = await this.getGroupSettings(chatId);
           if (!settings.captchaEnabled) {
             if (settings.welcomeMessage) {
-              await this.sendMessage(chatId, settings.welcomeMessage.replace(/\{user\}/g, `[${member.first_name}](tg://user?id=${member.id})`), { parse_mode: "Markdown" });
+              await this.sendMessage(
+                chatId,
+                settings.welcomeMessage.replace(
+                  /\{user\}/g,
+                  `[${member.first_name}](tg://user?id=${member.id})`,
+                ),
+                { parse_mode: "Markdown" },
+              );
             }
             continue;
           }
@@ -297,13 +342,24 @@ export class NimRevTelegramBot {
           this.pendingCaptchas.set(key, { chatId, userId: member.id, answer });
 
           const opts = new Set<number>([answer]);
-          while (opts.size < 4) opts.add(answer + Math.floor(Math.random() * 5) - 2);
-          const buttons = Array.from(opts).sort(() => Math.random() - 0.5).map((n) => [{ text: `${n}`, callback_data: `captcha_${chatId}_${member.id}_${n}` }]);
+          while (opts.size < 4)
+            opts.add(answer + Math.floor(Math.random() * 5) - 2);
+          const buttons = Array.from(opts)
+            .sort(() => Math.random() - 0.5)
+            .map((n) => [
+              {
+                text: `${n}`,
+                callback_data: `captcha_${chatId}_${member.id}_${n}`,
+              },
+            ]);
 
           await this.sendMessage(
             chatId,
             `👋 Welcome, [${member.first_name}](tg://user?id=${member.id})\n\nPlease solve to speak: ${a} + ${b} = ?`,
-            { parse_mode: "Markdown", reply_markup: { inline_keyboard: buttons } },
+            {
+              parse_mode: "Markdown",
+              reply_markup: { inline_keyboard: buttons },
+            },
           );
         } catch (e) {
           console.error("Failed to handle new member captcha:", e);
@@ -908,15 +964,30 @@ Last update: ${new Date().toLocaleTimeString()}
     const keyboard = {
       inline_keyboard: [
         [
-          { text: "🚨 High Risk Only", callback_data: `alerts_high_${msg.chat.id}` },
-          { text: "⚠️ Medium + High", callback_data: `alerts_medium_${msg.chat.id}` },
+          {
+            text: "🚨 High Risk Only",
+            callback_data: `alerts_high_${msg.chat.id}`,
+          },
+          {
+            text: "⚠️ Medium + High",
+            callback_data: `alerts_medium_${msg.chat.id}`,
+          },
         ],
         [
-          { text: "📊 All Threats", callback_data: `alerts_all_${msg.chat.id}` },
-          { text: "🔕 Disable Alerts", callback_data: `alerts_disable_${msg.chat.id}` },
+          {
+            text: "📊 All Threats",
+            callback_data: `alerts_all_${msg.chat.id}`,
+          },
+          {
+            text: "🔕 Disable Alerts",
+            callback_data: `alerts_disable_${msg.chat.id}`,
+          },
         ],
         [
-          { text: "⏰ Set Cooldown", callback_data: `alerts_cooldown_${msg.chat.id}` },
+          {
+            text: "⏰ Set Cooldown",
+            callback_data: `alerts_cooldown_${msg.chat.id}`,
+          },
         ],
       ],
     };
@@ -949,43 +1020,70 @@ Last update: ${new Date().toLocaleTimeString()}
     try {
       const adminChat = process.env.NIMREV_ADMIN_CHAT_ID;
       if (adminChat) {
-        await this.sendMessage(parseInt(adminChat), `📣 New report from ${msg.from?.username || msg.from?.id}\nChat: ${chatId}\n\n${text}`);
+        await this.sendMessage(
+          parseInt(adminChat),
+          `📣 New report from ${msg.from?.username || msg.from?.id}\nChat: ${chatId}\n\n${text}`,
+        );
       }
     } catch {}
-    await this.sendMessage(chatId, "✅ Thanks! Your report was submitted to admins.");
+    await this.sendMessage(
+      chatId,
+      "✅ Thanks! Your report was submitted to admins.",
+    );
   }
 
   private async handleCaptchaCommand(msg: TelegramBot.Message, args: string[]) {
     if (msg.chat.type === "private") {
-      await this.sendMessage(msg.chat.id, "⚠️ Use this in a group to enable/disable join captcha.");
+      await this.sendMessage(
+        msg.chat.id,
+        "⚠️ Use this in a group to enable/disable join captcha.",
+      );
       return;
     }
     const chatId = msg.chat.id;
     const opt = (args[0] || "").toLowerCase();
     if (opt !== "on" && opt !== "off") {
       const settings = await this.getGroupSettings(chatId);
-      await this.sendMessage(chatId, `ℹ️ Captcha is currently ${settings.captchaEnabled ? "ON" : "OFF"}. Use /captcha on or /captcha off.`);
+      await this.sendMessage(
+        chatId,
+        `ℹ️ Captcha is currently ${settings.captchaEnabled ? "ON" : "OFF"}. Use /captcha on or /captcha off.`,
+      );
       return;
     }
     const member = await this.bot.getChatMember(chatId, msg.from!.id);
     if (!["creator", "administrator"].includes(member.status)) {
-      await this.sendMessage(chatId, "❌ Only admins can change captcha settings.");
+      await this.sendMessage(
+        chatId,
+        "❌ Only admins can change captcha settings.",
+      );
       return;
     }
     const enable = opt === "on";
     await this.setGroupSettings(chatId, { captchaEnabled: enable });
-    await this.sendMessage(chatId, enable ? "✅ Captcha enabled for new members." : "✅ Captcha disabled.");
+    await this.sendMessage(
+      chatId,
+      enable ? "✅ Captcha enabled for new members." : "✅ Captcha disabled.",
+    );
   }
 
-  private async handleWelcomeMsgCommand(msg: TelegramBot.Message, args: string[]) {
+  private async handleWelcomeMsgCommand(
+    msg: TelegramBot.Message,
+    args: string[],
+  ) {
     const chatId = msg.chat.id;
     if (msg.chat.type === "private") {
-      await this.sendMessage(chatId, "⚠️ Use this in a group: /welcomemsg Welcome {user}!");
+      await this.sendMessage(
+        chatId,
+        "⚠️ Use this in a group: /welcomemsg Welcome {user}!",
+      );
       return;
     }
     const member = await this.bot.getChatMember(chatId, msg.from!.id);
     if (!["creator", "administrator"].includes(member.status)) {
-      await this.sendMessage(chatId, "❌ Only admins can set the welcome message.");
+      await this.sendMessage(
+        chatId,
+        "❌ Only admins can set the welcome message.",
+      );
       return;
     }
     const text = args.join(" ").trim();
@@ -1015,13 +1113,24 @@ Last update: ${new Date().toLocaleTimeString()}
     }
     const urlMatch = payload.match(/https?:\/\/\S+/);
     const url = urlMatch ? urlMatch[0] : undefined;
-    const keyboard = url ? { inline_keyboard: [[{ text: "⚡ Join Now", url }]] } : undefined;
-    await this.sendMessage(chatId, `🚀 **RAID ACTIVE**\n\n${payload}`, { parse_mode: "Markdown", reply_markup: keyboard });
+    const keyboard = url
+      ? { inline_keyboard: [[{ text: "⚡ Join Now", url }]] }
+      : undefined;
+    await this.sendMessage(chatId, `🚀 **RAID ACTIVE**\n\n${payload}`, {
+      parse_mode: "Markdown",
+      reply_markup: keyboard,
+    });
   }
 
-  private async getGroupSettings(chatId: number): Promise<{ captchaEnabled: boolean; welcomeMessage: string | null }> {
-    if (this.groupSettingsCache.has(chatId)) return this.groupSettingsCache.get(chatId)!;
-    let settings = { captchaEnabled: false, welcomeMessage: null as string | null };
+  private async getGroupSettings(
+    chatId: number,
+  ): Promise<{ captchaEnabled: boolean; welcomeMessage: string | null }> {
+    if (this.groupSettingsCache.has(chatId))
+      return this.groupSettingsCache.get(chatId)!;
+    let settings = {
+      captchaEnabled: false,
+      welcomeMessage: null as string | null,
+    };
     try {
       const { data } = await supabase
         .from("group_settings")
@@ -1037,16 +1146,22 @@ Last update: ${new Date().toLocaleTimeString()}
     return settings;
   }
 
-  private async setGroupSettings(chatId: number, update: Partial<{ captchaEnabled: boolean; welcomeMessage: string | null }>) {
+  private async setGroupSettings(
+    chatId: number,
+    update: Partial<{ captchaEnabled: boolean; welcomeMessage: string | null }>,
+  ) {
     const current = await this.getGroupSettings(chatId);
     const next = { ...current, ...update };
     try {
-      await supabase.from("group_settings").upsert({
-        chat_id: chatId,
-        captcha_enabled: next.captchaEnabled,
-        welcome_message: next.welcomeMessage,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: "chat_id" as any });
+      await supabase.from("group_settings").upsert(
+        {
+          chat_id: chatId,
+          captcha_enabled: next.captchaEnabled,
+          welcome_message: next.welcomeMessage,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "chat_id" as any },
+      );
     } catch (e) {
       console.warn("Failed to persist group settings:", (e as any).message);
     }
@@ -1070,7 +1185,10 @@ Last update: ${new Date().toLocaleTimeString()}
         can_pin_messages: false,
       } as any);
     } catch (e) {
-      console.warn("Failed to mute user (bot likely lacks admin rights):", (e as any).message);
+      console.warn(
+        "Failed to mute user (bot likely lacks admin rights):",
+        (e as any).message,
+      );
     }
   }
 
