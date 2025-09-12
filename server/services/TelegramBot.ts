@@ -1460,10 +1460,25 @@ Last update: ${new Date().toLocaleTimeString()}
   }
 
   private getSolanaConnections(): Connection[] {
-    const poolEnv = (process.env.SOLANA_RPC_POOL || "").split(",").map((s) => s.trim()).filter(Boolean);
-    const helius = (getEnv("HELIUS_RPC_URL") as unknown as string) || "";
+    const poolEnv = (process.env.SOLANA_RPC_POOL || "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
     const network = (getEnv("SOLANA_NETWORK") as unknown as string) || "mainnet-beta";
-    const urls = poolEnv.length > 0 ? poolEnv : [helius || clusterApiUrl(network as any)];
+    const helius = (getEnv("HELIUS_RPC_URL") as unknown as string) || "";
+    const hasHeliusKey = !!process.env.HELIUS_API_KEY || /api-key=/i.test(helius);
+
+    const fallback = clusterApiUrl(network as any);
+
+    const baseUrls = poolEnv.length > 0
+      ? poolEnv
+      : hasHeliusKey && helius
+        ? [helius]
+        : [fallback];
+
+    // Always append a public fallback as last resort
+    const urls = Array.from(new Set([...baseUrls, fallback]));
     return urls.map((u) => new Connection(u, "confirmed"));
   }
 
