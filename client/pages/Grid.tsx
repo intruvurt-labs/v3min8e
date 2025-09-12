@@ -23,6 +23,7 @@ import {
   logWebSocketDebugInfo,
 } from "@/utils/webSocketDebug";
 import quickWebSocketCheck from "@/utils/quickWebSocketCheck";
+import { fetchWithFallback } from "@/utils/fetchWithFallback";
 
 // Core ethos and threat scoring types
 interface ThreatScore {
@@ -176,25 +177,22 @@ export default function Grid() {
 
     const fetchRealThreats = async () => {
       try {
-        // Try to fetch real threat data from backend
-        const response = await fetch("/api/security/threats/live", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-          },
-        });
+        // Try to fetch real threat data from backend (public)
+        const result = await fetchWithFallback(
+          "/api/security/threats/live",
+          { timeout: 12000, retries: 1 },
+        );
 
-        if (response.ok) {
-          const threatData = await response.json();
-          if (threatData.success && threatData.threats?.length > 0) {
-            setRealTimeThreats((prev) => [
-              ...threatData.threats.slice(0, 3),
-              ...prev.slice(0, 2),
-            ]);
-            return;
-          }
+        if (result.success && (result.data as any)?.threats?.length > 0) {
+          const threats = (result.data as any).threats;
+          setRealTimeThreats((prev) => [
+            ...threats.slice(0, 3),
+            ...prev.slice(0, 2),
+          ]);
+          return;
         }
       } catch (error) {
-        console.warn("Failed to fetch real threat data, using simulated feed");
+        // Silent fallback
       }
 
       // Fallback to enhanced realistic simulation
@@ -253,11 +251,12 @@ export default function Grid() {
         }
       }
 
+      const net = networks[Math.floor(Math.random() * networks.length)];
       const newThreat = {
         id: `threat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         type: selectedThreat.type,
-        address: generateRealisticAddress(),
-        network: networks[Math.floor(Math.random() * networks.length)],
+        address: generateRealisticAddress(net),
+        network: net,
         severity: selectedThreat.severity,
         message: selectedThreat.message,
         timestamp: new Date().toISOString(),
@@ -279,44 +278,36 @@ export default function Grid() {
     };
   }, [subversionSweepActive]);
 
-  // Generate realistic blockchain addresses
-  const generateRealisticAddress = () => {
-    const addressFormats = [
-      // Ethereum-style (0x + 40 hex chars)
-      () =>
-        "0x" +
-        Array.from(
-          { length: 40 },
-          () => "0123456789abcdef"[Math.floor(Math.random() * 16)],
-        ).join(""),
-      // Solana-style (Base58, 32-44 chars)
-      () => {
-        const chars =
-          "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-        const length = 32 + Math.floor(Math.random() * 12);
-        return Array.from(
-          { length },
-          () => chars[Math.floor(Math.random() * chars.length)],
-        ).join("");
-      },
-      // Bitcoin-style (Base58, starts with 1 or 3)
-      () => {
-        const prefix = Math.random() > 0.5 ? "1" : "3";
-        const chars =
-          "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-        const length = 25 + Math.floor(Math.random() * 10);
-        return (
-          prefix +
-          Array.from(
-            { length },
-            () => chars[Math.floor(Math.random() * chars.length)],
-          ).join("")
-        );
-      },
-    ];
+  // Generate realistic blockchain addresses by network
+  const generateRealisticAddress = (network: string) => {
+    const hex = () =>
+      "0x" + Array.from({ length: 40 }, () => "0123456789abcdef"[Math.floor(Math.random() * 16)]).join("");
+    const base58 = (len: number) => {
+      const chars = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+      return Array.from({ length: len }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+    };
+    const bech32 = () => {
+      const charset = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
+      const body = Array.from({ length: 52 }, () => charset[Math.floor(Math.random() * charset.length)]).join("");
+      return `addr1${body}`;
+    };
 
-    const formatIndex = Math.floor(Math.random() * addressFormats.length);
-    return addressFormats[formatIndex]();
+    switch (network) {
+      case "solana":
+        return base58(32 + Math.floor(Math.random() * 12));
+      case "ethereum":
+      case "bnb":
+      case "polygon":
+      case "arbitrum":
+      case "avalanche":
+      case "base":
+      case "optimism":
+        return hex();
+      case "cardano":
+        return bech32();
+      default:
+        return hex();
+    }
   };
 
   // Real-time WebSocket connection for progress tracking
