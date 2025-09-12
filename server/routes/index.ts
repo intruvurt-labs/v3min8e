@@ -18,7 +18,8 @@ import botRoutes from "./bot";
 // Import payment routes
 import paymentRoutes from "./payment";
 
-// Import security audit routes
+// Import security routes and security audit routes
+import securityRoutes from "./security";
 import securityAuditRoutes from "./security-audit";
 
 // Import airdrop routes
