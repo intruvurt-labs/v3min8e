@@ -120,6 +120,11 @@ export class NimRevTelegramBot {
         description: "Configure alert settings",
         handler: this.handleAlerts.bind(this),
       },
+      {
+        command: "compact",
+        description: "Toggle compact output (on/off)",
+        handler: this.handleCompact.bind(this),
+      },
     ];
 
     for (const cmd of commands) {
