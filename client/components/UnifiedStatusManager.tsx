@@ -86,13 +86,12 @@ export function StatusProvider({ children }: StatusProviderProps) {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const checkService = async (endpoint: string) => {
+  const checkService = async (endpoint: string, fallback?: any) => {
     try {
-      const result = await fetchWithFallback(endpoint, { timeout: 5000 });
+      const result = await fetchWithFallback(endpoint, { timeout: 12000, retries: 1 }, fallback);
       return result;
     } catch (error) {
-      console.warn(`Service check failed for ${endpoint}:`, error);
-      return { success: false, data: null };
+      return { success: false, data: fallback, isFallback: true } as any;
     }
   };
 
