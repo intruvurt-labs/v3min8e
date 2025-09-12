@@ -44,7 +44,7 @@ export default function AirdropWalletConnection({
   // Handle wallet connection changes
   useEffect(() => {
     if (connected && publicKey) {
-      const publicKeyStr = publicKey.toBase58();
+      const publicKeyStr = publicKey;
       onWalletConnected?.(publicKeyStr);
       loadWalletStats(publicKeyStr);
       verifyWallet(publicKeyStr);
