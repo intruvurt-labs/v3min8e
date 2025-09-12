@@ -101,9 +101,9 @@ export function StatusProvider({ children }: StatusProviderProps) {
     try {
       // Check multiple endpoints in parallel
       const [botCheck, scannerCheck, nimrevCheck] = await Promise.allSettled([
-        checkService("/api/bot/status"),
-        checkService("/api/bot/scanner/status"),
-        checkService("/api/nimrev/status"),
+        checkService("/api/bot/status", fallbackData.botStatus),
+        checkService("/api/bot/scanner/status", fallbackData.scannerStatus),
+        checkService("/api/nimrev/status", fallbackData.nimrevStatus),
       ]);
 
       let botStatus: {
