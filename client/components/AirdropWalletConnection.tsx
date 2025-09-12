@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useWallet } from '@solana/wallet-adapter-react';
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { useWallet } from '@/hooks/useWallet';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Wallet, 
-  CheckCircle, 
-  AlertCircle, 
-  Copy, 
+import {
+  Wallet,
+  CheckCircle,
+  AlertCircle,
+  Copy,
   ExternalLink,
   Shield,
   Star,
