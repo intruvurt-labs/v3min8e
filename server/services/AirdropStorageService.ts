@@ -1,5 +1,5 @@
-import { promises as fs } from 'fs';
-import path from 'path';
+import { promises as fs } from "fs";
+import path from "path";
 
 // Types for airdrop data structures
 export interface StoredUserProgress {
@@ -55,10 +55,10 @@ export interface StoredBotVerification {
 export interface StoredSocialVerification {
   id: string;
   userId: string;
-  platform: 'twitter' | 'telegram';
+  platform: "twitter" | "telegram";
   platformUserId: string;
   platformUsername: string;
-  verificationType: 'follow' | 'membership' | 'engagement';
+  verificationType: "follow" | "membership" | "engagement";
   verificationData: any;
   verifiedAt: string;
   isValid: boolean;
@@ -100,7 +100,7 @@ export class AirdropStorageService {
   private initialized = false;
 
   constructor() {
-    this.dataDir = path.join(process.cwd(), 'data', 'airdrop');
+    this.dataDir = path.join(process.cwd(), "data", "airdrop");
   }
 
   /**
@@ -111,16 +111,16 @@ export class AirdropStorageService {
 
     try {
       await fs.mkdir(this.dataDir, { recursive: true });
-      await fs.mkdir(path.join(this.dataDir, 'users'), { recursive: true });
-      await fs.mkdir(path.join(this.dataDir, 'tasks'), { recursive: true });
-      await fs.mkdir(path.join(this.dataDir, 'bots'), { recursive: true });
-      await fs.mkdir(path.join(this.dataDir, 'social'), { recursive: true });
-      await fs.mkdir(path.join(this.dataDir, 'referrals'), { recursive: true });
-      
+      await fs.mkdir(path.join(this.dataDir, "users"), { recursive: true });
+      await fs.mkdir(path.join(this.dataDir, "tasks"), { recursive: true });
+      await fs.mkdir(path.join(this.dataDir, "bots"), { recursive: true });
+      await fs.mkdir(path.join(this.dataDir, "social"), { recursive: true });
+      await fs.mkdir(path.join(this.dataDir, "referrals"), { recursive: true });
+
       this.initialized = true;
-      console.log('Airdrop storage service initialized');
+      console.log("Airdrop storage service initialized");
     } catch (error) {
-      console.error('Failed to initialize airdrop storage:', error);
+      console.error("Failed to initialize airdrop storage:", error);
       throw error;
     }
   }
@@ -130,10 +130,10 @@ export class AirdropStorageService {
    */
   private async readJsonFile<T>(filePath: string): Promise<T | null> {
     try {
-      const data = await fs.readFile(filePath, 'utf-8');
+      const data = await fs.readFile(filePath, "utf-8");
       return JSON.parse(data);
     } catch (error) {
-      if ((error as any).code === 'ENOENT') {
+      if ((error as any).code === "ENOENT") {
         return null; // File doesn't exist
       }
       throw error;
@@ -159,18 +159,26 @@ export class AirdropStorageService {
   // User Progress Methods
   async getUserProgress(userId: string): Promise<StoredUserProgress | null> {
     await this.initialize();
-    const filePath = path.join(this.dataDir, 'users', `${userId}.json`);
+    const filePath = path.join(this.dataDir, "users", `${userId}.json`);
     return this.readJsonFile<StoredUserProgress>(filePath);
   }
 
   async saveUserProgress(progress: StoredUserProgress): Promise<void> {
     await this.initialize();
     progress.updatedAt = new Date().toISOString();
-    const filePath = path.join(this.dataDir, 'users', `${progress.userId}.json`);
+    const filePath = path.join(
+      this.dataDir,
+      "users",
+      `${progress.userId}.json`,
+    );
     await this.writeJsonFile(filePath, progress);
   }
 
-  async createUserProgress(userId: string, walletAddress?: string, referredBy?: string): Promise<StoredUserProgress> {
+  async createUserProgress(
+    userId: string,
+    walletAddress?: string,
+    referredBy?: string,
+  ): Promise<StoredUserProgress> {
     const now = new Date().toISOString();
     const progress: StoredUserProgress = {
       userId,
@@ -179,7 +187,7 @@ export class AirdropStorageService {
       tasksCompleted: 0,
       currentStreak: 0,
       multiplierActive: false,
-      rank: 'Ghost Recruit',
+      rank: "Ghost Recruit",
       nextMilestone: 100,
       referralCount: 0,
       botTokenVerified: false,
@@ -189,7 +197,7 @@ export class AirdropStorageService {
       updatedAt: now,
       referredBy,
       premiumFeatures: false,
-      totalReferralEarnings: 0
+      totalReferralEarnings: 0,
     };
 
     await this.saveUserProgress(progress);
@@ -197,33 +205,51 @@ export class AirdropStorageService {
   }
 
   // Task Completion Methods
-  async saveTaskCompletion(completion: Omit<StoredTaskCompletion, 'id'>): Promise<StoredTaskCompletion> {
+  async saveTaskCompletion(
+    completion: Omit<StoredTaskCompletion, "id">,
+  ): Promise<StoredTaskCompletion> {
     await this.initialize();
     const taskCompletion: StoredTaskCompletion = {
       id: this.generateId(),
-      ...completion
+      ...completion,
     };
 
-    const filePath = path.join(this.dataDir, 'tasks', `${taskCompletion.id}.json`);
+    const filePath = path.join(
+      this.dataDir,
+      "tasks",
+      `${taskCompletion.id}.json`,
+    );
     await this.writeJsonFile(filePath, taskCompletion);
 
     // Ensure and update user progress
     let userProgress = await this.getUserProgress(completion.userId);
     if (!userProgress) {
-      userProgress = await this.createUserProgress(completion.userId, completion.walletAddress);
+      userProgress = await this.createUserProgress(
+        completion.userId,
+        completion.walletAddress,
+      );
     }
-    userProgress.totalEarned += completion.reward * (completion.multiplier || 1);
+    userProgress.totalEarned +=
+      completion.reward * (completion.multiplier || 1);
     userProgress.tasksCompleted += 1;
     if (!userProgress.completedTasks.includes(completion.taskId)) {
       userProgress.completedTasks.push(completion.taskId);
     }
 
     // Update streaks for scan-related tasks
-    if (completion.taskId.includes('scan')) {
+    if (completion.taskId.includes("scan")) {
       const now = new Date();
-      const last = userProgress.streakLastUpdated ? new Date(userProgress.streakLastUpdated) : null;
+      const last = userProgress.streakLastUpdated
+        ? new Date(userProgress.streakLastUpdated)
+        : null;
       const isSameDay = last && now.toDateString() === last.toDateString();
-      const isYesterday = last && new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1).toDateString() === last.toDateString();
+      const isYesterday =
+        last &&
+        new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() - 1,
+        ).toDateString() === last.toDateString();
       if (!last) {
         userProgress.currentStreak = 1;
       } else if (isSameDay) {
@@ -240,25 +266,29 @@ export class AirdropStorageService {
 
     // Update rank
     userProgress.rank = this.calculateRank(userProgress.totalEarned);
-    userProgress.nextMilestone = this.calculateNextMilestone(userProgress.totalEarned);
+    userProgress.nextMilestone = this.calculateNextMilestone(
+      userProgress.totalEarned,
+    );
 
     await this.saveUserProgress(userProgress);
 
     return taskCompletion;
   }
 
-  async getUserTaskCompletions(userId: string): Promise<StoredTaskCompletion[]> {
+  async getUserTaskCompletions(
+    userId: string,
+  ): Promise<StoredTaskCompletion[]> {
     await this.initialize();
-    const tasksDir = path.join(this.dataDir, 'tasks');
-    
+    const tasksDir = path.join(this.dataDir, "tasks");
+
     try {
       const files = await fs.readdir(tasksDir);
       const completions: StoredTaskCompletion[] = [];
 
       for (const file of files) {
-        if (file.endsWith('.json')) {
+        if (file.endsWith(".json")) {
           const completion = await this.readJsonFile<StoredTaskCompletion>(
-            path.join(tasksDir, file)
+            path.join(tasksDir, file),
           );
           if (completion && completion.userId === userId) {
             completions.push(completion);
@@ -266,29 +296,36 @@ export class AirdropStorageService {
         }
       }
 
-      return completions.sort((a, b) => 
-        new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime()
+      return completions.sort(
+        (a, b) =>
+          new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime(),
       );
     } catch (error) {
-      console.error('Failed to get user task completions:', error);
+      console.error("Failed to get user task completions:", error);
       return [];
     }
   }
 
   async isTaskCompleted(userId: string, taskId: string): Promise<boolean> {
     const completions = await this.getUserTaskCompletions(userId);
-    return completions.some(completion => completion.taskId === taskId);
+    return completions.some((completion) => completion.taskId === taskId);
   }
 
   // Bot Verification Methods
-  async saveBotVerification(verification: Omit<StoredBotVerification, 'id'>): Promise<StoredBotVerification> {
+  async saveBotVerification(
+    verification: Omit<StoredBotVerification, "id">,
+  ): Promise<StoredBotVerification> {
     await this.initialize();
     const botVerification: StoredBotVerification = {
       id: this.generateId(),
-      ...verification
+      ...verification,
     };
 
-    const filePath = path.join(this.dataDir, 'bots', `${botVerification.id}.json`);
+    const filePath = path.join(
+      this.dataDir,
+      "bots",
+      `${botVerification.id}.json`,
+    );
     await this.writeJsonFile(filePath, botVerification);
 
     // Update user progress
@@ -303,18 +340,20 @@ export class AirdropStorageService {
     return botVerification;
   }
 
-  async getUserBotVerifications(userId: string): Promise<StoredBotVerification[]> {
+  async getUserBotVerifications(
+    userId: string,
+  ): Promise<StoredBotVerification[]> {
     await this.initialize();
-    const botsDir = path.join(this.dataDir, 'bots');
-    
+    const botsDir = path.join(this.dataDir, "bots");
+
     try {
       const files = await fs.readdir(botsDir);
       const verifications: StoredBotVerification[] = [];
 
       for (const file of files) {
-        if (file.endsWith('.json')) {
+        if (file.endsWith(".json")) {
           const verification = await this.readJsonFile<StoredBotVerification>(
-            path.join(botsDir, file)
+            path.join(botsDir, file),
           );
           if (verification && verification.userId === userId) {
             verifications.push(verification);
@@ -324,38 +363,47 @@ export class AirdropStorageService {
 
       return verifications;
     } catch (error) {
-      console.error('Failed to get user bot verifications:', error);
+      console.error("Failed to get user bot verifications:", error);
       return [];
     }
   }
 
   // Social Verification Methods
-  async saveSocialVerification(verification: Omit<StoredSocialVerification, 'id'>): Promise<StoredSocialVerification> {
+  async saveSocialVerification(
+    verification: Omit<StoredSocialVerification, "id">,
+  ): Promise<StoredSocialVerification> {
     await this.initialize();
     const socialVerification: StoredSocialVerification = {
       id: this.generateId(),
-      ...verification
+      ...verification,
     };
 
-    const filePath = path.join(this.dataDir, 'social', `${socialVerification.id}.json`);
+    const filePath = path.join(
+      this.dataDir,
+      "social",
+      `${socialVerification.id}.json`,
+    );
     await this.writeJsonFile(filePath, socialVerification);
 
     return socialVerification;
   }
 
-  async getUserSocialVerifications(userId: string): Promise<StoredSocialVerification[]> {
+  async getUserSocialVerifications(
+    userId: string,
+  ): Promise<StoredSocialVerification[]> {
     await this.initialize();
-    const socialDir = path.join(this.dataDir, 'social');
-    
+    const socialDir = path.join(this.dataDir, "social");
+
     try {
       const files = await fs.readdir(socialDir);
       const verifications: StoredSocialVerification[] = [];
 
       for (const file of files) {
-        if (file.endsWith('.json')) {
-          const verification = await this.readJsonFile<StoredSocialVerification>(
-            path.join(socialDir, file)
-          );
+        if (file.endsWith(".json")) {
+          const verification =
+            await this.readJsonFile<StoredSocialVerification>(
+              path.join(socialDir, file),
+            );
           if (verification && verification.userId === userId) {
             verifications.push(verification);
           }
@@ -364,20 +412,26 @@ export class AirdropStorageService {
 
       return verifications;
     } catch (error) {
-      console.error('Failed to get user social verifications:', error);
+      console.error("Failed to get user social verifications:", error);
       return [];
     }
   }
 
   // Referral Methods
-  async saveReferral(referral: Omit<StoredReferral, 'id'>): Promise<StoredReferral> {
+  async saveReferral(
+    referral: Omit<StoredReferral, "id">,
+  ): Promise<StoredReferral> {
     await this.initialize();
     const referralRecord: StoredReferral = {
       id: this.generateId(),
-      ...referral
+      ...referral,
     };
 
-    const filePath = path.join(this.dataDir, 'referrals', `${referralRecord.id}.json`);
+    const filePath = path.join(
+      this.dataDir,
+      "referrals",
+      `${referralRecord.id}.json`,
+    );
     await this.writeJsonFile(filePath, referralRecord);
 
     // Update referrer progress
@@ -393,16 +447,16 @@ export class AirdropStorageService {
 
   async getUserReferrals(userId: string): Promise<StoredReferral[]> {
     await this.initialize();
-    const referralsDir = path.join(this.dataDir, 'referrals');
-    
+    const referralsDir = path.join(this.dataDir, "referrals");
+
     try {
       const files = await fs.readdir(referralsDir);
       const referrals: StoredReferral[] = [];
 
       for (const file of files) {
-        if (file.endsWith('.json')) {
+        if (file.endsWith(".json")) {
           const referral = await this.readJsonFile<StoredReferral>(
-            path.join(referralsDir, file)
+            path.join(referralsDir, file),
           );
           if (referral && referral.referrerId === userId) {
             referrals.push(referral);
@@ -412,7 +466,7 @@ export class AirdropStorageService {
 
       return referrals;
     } catch (error) {
-      console.error('Failed to get user referrals:', error);
+      console.error("Failed to get user referrals:", error);
       return [];
     }
   }
@@ -420,16 +474,16 @@ export class AirdropStorageService {
   // Leaderboard Methods
   async getLeaderboard(limit: number = 10): Promise<LeaderboardData[]> {
     await this.initialize();
-    const usersDir = path.join(this.dataDir, 'users');
-    
+    const usersDir = path.join(this.dataDir, "users");
+
     try {
       const files = await fs.readdir(usersDir);
       const users: StoredUserProgress[] = [];
 
       for (const file of files) {
-        if (file.endsWith('.json')) {
+        if (file.endsWith(".json")) {
           const user = await this.readJsonFile<StoredUserProgress>(
-            path.join(usersDir, file)
+            path.join(usersDir, file),
           );
           if (user) {
             users.push(user);
@@ -449,10 +503,10 @@ export class AirdropStorageService {
         totalEarned: user.totalEarned,
         tasksCompleted: user.tasksCompleted,
         streak: user.currentStreak,
-        lastActive: user.lastActive
+        lastActive: user.lastActive,
       }));
     } catch (error) {
-      console.error('Failed to generate leaderboard:', error);
+      console.error("Failed to generate leaderboard:", error);
       return [];
     }
   }
@@ -460,8 +514,8 @@ export class AirdropStorageService {
   // Statistics Methods
   async getStats(): Promise<AirdropStats> {
     await this.initialize();
-    const usersDir = path.join(this.dataDir, 'users');
-    
+    const usersDir = path.join(this.dataDir, "users");
+
     try {
       const files = await fs.readdir(usersDir);
       let totalParticipants = 0;
@@ -473,16 +527,16 @@ export class AirdropStorageService {
       const today = new Date().toDateString();
 
       for (const file of files) {
-        if (file.endsWith('.json')) {
+        if (file.endsWith(".json")) {
           const user = await this.readJsonFile<StoredUserProgress>(
-            path.join(usersDir, file)
+            path.join(usersDir, file),
           );
           if (user) {
             totalParticipants++;
             totalRewardsDistributed += user.totalEarned;
             totalTasksCompleted += user.tasksCompleted;
             topEarner = Math.max(topEarner, user.totalEarned);
-            
+
             if (new Date(user.lastActive).toDateString() === today) {
               activeToday++;
             }
@@ -490,7 +544,8 @@ export class AirdropStorageService {
         }
       }
 
-      const averageEarnings = totalParticipants > 0 ? totalRewardsDistributed / totalParticipants : 0;
+      const averageEarnings =
+        totalParticipants > 0 ? totalRewardsDistributed / totalParticipants : 0;
 
       return {
         totalParticipants,
@@ -499,10 +554,10 @@ export class AirdropStorageService {
         averageEarnings: Math.round(averageEarnings),
         topEarner,
         activeToday,
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
       };
     } catch (error) {
-      console.error('Failed to generate stats:', error);
+      console.error("Failed to generate stats:", error);
       return {
         totalParticipants: 0,
         totalRewardsDistributed: 0,
@@ -510,7 +565,7 @@ export class AirdropStorageService {
         averageEarnings: 0,
         topEarner: 0,
         activeToday: 0,
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
       };
     }
   }
@@ -528,15 +583,19 @@ export class AirdropStorageService {
 
   private calculateNextMilestone(totalEarned: number): number {
     const milestones = [100, 500, 1000, 2000, 5000, 10000, 20000];
-    return milestones.find(milestone => milestone > totalEarned) || 50000;
+    return milestones.find((milestone) => milestone > totalEarned) || 50000;
   }
 
   private getAvatarForRank(rank: number): string {
     switch (rank) {
-      case 1: return "🏆";
-      case 2: return "🥈";
-      case 3: return "🥉";
-      default: return "👻";
+      case 1:
+        return "🏆";
+      case 2:
+        return "🥈";
+      case 3:
+        return "🥉";
+      default:
+        return "👻";
     }
   }
 
@@ -544,9 +603,9 @@ export class AirdropStorageService {
   async cleanup(): Promise<void> {
     try {
       // Clean up old temporary files, expired verifications, etc.
-      console.log('Airdrop storage cleanup completed');
+      console.log("Airdrop storage cleanup completed");
     } catch (error) {
-      console.error('Failed to cleanup airdrop storage:', error);
+      console.error("Failed to cleanup airdrop storage:", error);
     }
   }
 }

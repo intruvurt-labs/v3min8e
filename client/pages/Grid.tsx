@@ -178,10 +178,10 @@ export default function Grid() {
     const fetchRealThreats = async () => {
       try {
         // Try to fetch real threat data from backend (public)
-        const result = await fetchWithFallback(
-          "/api/security/threats/live",
-          { timeout: 12000, retries: 1 },
-        );
+        const result = await fetchWithFallback("/api/security/threats/live", {
+          timeout: 12000,
+          retries: 1,
+        });
 
         if (result.success && (result.data as any)?.threats?.length > 0) {
           const threats = (result.data as any).threats;
@@ -281,14 +281,25 @@ export default function Grid() {
   // Generate realistic blockchain addresses by network
   const generateRealisticAddress = (network: string) => {
     const hex = () =>
-      "0x" + Array.from({ length: 40 }, () => "0123456789abcdef"[Math.floor(Math.random() * 16)]).join("");
+      "0x" +
+      Array.from(
+        { length: 40 },
+        () => "0123456789abcdef"[Math.floor(Math.random() * 16)],
+      ).join("");
     const base58 = (len: number) => {
-      const chars = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-      return Array.from({ length: len }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+      const chars =
+        "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+      return Array.from(
+        { length: len },
+        () => chars[Math.floor(Math.random() * chars.length)],
+      ).join("");
     };
     const bech32 = () => {
       const charset = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
-      const body = Array.from({ length: 52 }, () => charset[Math.floor(Math.random() * charset.length)]).join("");
+      const body = Array.from(
+        { length: 52 },
+        () => charset[Math.floor(Math.random() * charset.length)],
+      ).join("");
       return `addr1${body}`;
     };
 

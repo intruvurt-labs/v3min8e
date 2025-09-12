@@ -1,10 +1,10 @@
 import { Request, Response, Router } from "express";
 import { rateLimit } from "express-rate-limit";
 import { body, validationResult } from "express-validator";
-import { twitterAuthService } from '../services/TwitterAuthService';
-import { telegramAuthService } from '../services/TelegramAuthService';
-import { airdropStorageService } from '../services/AirdropStorageService';
-import { blockchainVerificationService } from '../services/BlockchainVerificationService';
+import { twitterAuthService } from "../services/TwitterAuthService";
+import { telegramAuthService } from "../services/TelegramAuthService";
+import { airdropStorageService } from "../services/AirdropStorageService";
+import { blockchainVerificationService } from "../services/BlockchainVerificationService";
 
 const router = Router();
 
@@ -170,7 +170,7 @@ router.post(
         },
         verifiedAt: new Date().toISOString(),
         ipAddress: req.ip,
-        isActive: true
+        isActive: true,
       });
 
       // Log successful verification
@@ -251,27 +251,28 @@ router.post(
               return res.status(400).json({
                 success: false,
                 error: "Twitter authentication required",
-                message: "Please complete Twitter OAuth to verify follow status"
+                message:
+                  "Please complete Twitter OAuth to verify follow status",
               });
             }
 
             const followVerification = await twitterAuthService.verifyFollowing(
               proof.accessToken,
               proof.accessSecret,
-              'nimrevxyz'
+              "nimrevxyz",
             );
 
             if (followVerification.isFollowing) {
               // Save social verification
               await airdropStorageService.saveSocialVerification({
                 userId,
-                platform: 'twitter',
-                platformUserId: followVerification.userData?.id || '',
-                platformUsername: followVerification.userData?.username || '',
-                verificationType: 'follow',
+                platform: "twitter",
+                platformUserId: followVerification.userData?.id || "",
+                platformUsername: followVerification.userData?.username || "",
+                verificationType: "follow",
                 verificationData: followVerification,
                 verifiedAt: new Date().toISOString(),
-                isValid: true
+                isValid: true,
               });
 
               verificationResult = { success: true, reward: 50 };
@@ -279,7 +280,7 @@ router.post(
               verificationResult = { success: false, reward: 0 };
             }
           } catch (error) {
-            console.error('Twitter verification error:', error);
+            console.error("Twitter verification error:", error);
             verificationResult = { success: false, reward: 0 };
           }
           break;
@@ -291,25 +292,28 @@ router.post(
               return res.status(400).json({
                 success: false,
                 error: "Telegram user ID required",
-                message: "Please provide your Telegram user ID for verification"
+                message:
+                  "Please provide your Telegram user ID for verification",
               });
             }
 
-            const membershipVerification = await telegramAuthService.verifyGroupMembership(
-              parseInt(proof.telegramUserId)
-            );
+            const membershipVerification =
+              await telegramAuthService.verifyGroupMembership(
+                parseInt(proof.telegramUserId),
+              );
 
             if (membershipVerification.isMember) {
               // Save social verification
               await airdropStorageService.saveSocialVerification({
                 userId,
-                platform: 'telegram',
+                platform: "telegram",
                 platformUserId: proof.telegramUserId,
-                platformUsername: membershipVerification.userData?.username || '',
-                verificationType: 'membership',
+                platformUsername:
+                  membershipVerification.userData?.username || "",
+                verificationType: "membership",
                 verificationData: membershipVerification,
                 verifiedAt: new Date().toISOString(),
-                isValid: true
+                isValid: true,
               });
 
               verificationResult = { success: true, reward: 50 };
@@ -317,7 +321,7 @@ router.post(
               verificationResult = { success: false, reward: 0 };
             }
           } catch (error) {
-            console.error('Telegram verification error:', error);
+            console.error("Telegram verification error:", error);
             verificationResult = { success: false, reward: 0 };
           }
           break;
@@ -326,10 +330,11 @@ router.post(
           // Check if wallet has any scan activity
           if (walletAddress) {
             try {
-              const hasScanActivity = await blockchainVerificationService.verifyScanActivity(
-                walletAddress,
-                1
-              );
+              const hasScanActivity =
+                await blockchainVerificationService.verifyScanActivity(
+                  walletAddress,
+                  1,
+                );
 
               if (hasScanActivity) {
                 verificationResult = { success: true, reward: 100 };
@@ -337,18 +342,19 @@ router.post(
                 return res.status(400).json({
                   success: false,
                   error: "No scan activity found",
-                  message: "Please complete at least one address scan using our protocol"
+                  message:
+                    "Please complete at least one address scan using our protocol",
                 });
               }
             } catch (error) {
-              console.error('Scan verification error:', error);
+              console.error("Scan verification error:", error);
               verificationResult = { success: false, reward: 0 };
             }
           } else {
             return res.status(400).json({
               success: false,
               error: "Wallet address required",
-              message: "Please connect your wallet to verify scan activity"
+              message: "Please connect your wallet to verify scan activity",
             });
           }
           break;
@@ -356,7 +362,8 @@ router.post(
         case "daily_scan_streak":
           try {
             // Require user to have at least one verified scan per day for last 7 days
-            const completions = await airdropStorageService.getUserTaskCompletions(userId);
+            const completions =
+              await airdropStorageService.getUserTaskCompletions(userId);
             const now = new Date();
             let ok = true;
             for (let i = 0; i < 7; i++) {
@@ -365,20 +372,27 @@ router.post(
               const dayStr = day.toISOString().slice(0, 10);
               const hasScan = completions.some((c) => {
                 const cDay = new Date(c.completedAt).toISOString().slice(0, 10);
-                return cDay === dayStr && (c.taskId === "first_scan" || c.taskId.includes("scan"));
+                return (
+                  cDay === dayStr &&
+                  (c.taskId === "first_scan" || c.taskId.includes("scan"))
+                );
               });
-              if (!hasScan) { ok = false; break; }
+              if (!hasScan) {
+                ok = false;
+                break;
+              }
             }
             if (!ok) {
               return res.status(400).json({
                 success: false,
                 error: "Streak requirement not met",
-                message: "Perform at least one verified scan each day for 7 consecutive days",
+                message:
+                  "Perform at least one verified scan each day for 7 consecutive days",
               });
             }
             verificationResult = { success: true, reward: 500 };
           } catch (e) {
-            console.error('Streak verification error:', e);
+            console.error("Streak verification error:", e);
             verificationResult = { success: false, reward: 0 };
           }
           break;
@@ -387,10 +401,11 @@ router.post(
           // Check Solana blockchain for VERM staking
           if (walletAddress) {
             try {
-              const stakingVerification = await blockchainVerificationService.verifyStaking(
-                walletAddress,
-                100
-              );
+              const stakingVerification =
+                await blockchainVerificationService.verifyStaking(
+                  walletAddress,
+                  100,
+                );
 
               if (stakingVerification.isStaking) {
                 verificationResult = { success: true, reward: 300 };
@@ -398,18 +413,20 @@ router.post(
                 return res.status(400).json({
                   success: false,
                   error: "Staking verification failed",
-                  message: stakingVerification.error || "Please stake at least 100 VERM tokens"
+                  message:
+                    stakingVerification.error ||
+                    "Please stake at least 100 VERM tokens",
                 });
               }
             } catch (error) {
-              console.error('Staking verification error:', error);
+              console.error("Staking verification error:", error);
               verificationResult = { success: false, reward: 0 };
             }
           } else {
             return res.status(400).json({
               success: false,
               error: "Wallet address required",
-              message: "Please connect your wallet to verify staking"
+              message: "Please connect your wallet to verify staking",
             });
           }
           break;
@@ -423,29 +440,34 @@ router.post(
           // Check blockchain for trading activity
           if (walletAddress) {
             try {
-              const tradingVerification = await blockchainVerificationService.verifyTrading(
-                walletAddress,
-                30 // Check last 30 days
-              );
+              const tradingVerification =
+                await blockchainVerificationService.verifyTrading(
+                  walletAddress,
+                  30, // Check last 30 days
+                );
 
-              if (tradingVerification.hasTraded && tradingVerification.recentTrades > 0) {
+              if (
+                tradingVerification.hasTraded &&
+                tradingVerification.recentTrades > 0
+              ) {
                 verificationResult = { success: true, reward: 400 };
               } else {
                 return res.status(400).json({
                   success: false,
                   error: "No trading activity found",
-                  message: "Please complete at least one trade using our P2P trading system"
+                  message:
+                    "Please complete at least one trade using our P2P trading system",
                 });
               }
             } catch (error) {
-              console.error('Trading verification error:', error);
+              console.error("Trading verification error:", error);
               verificationResult = { success: false, reward: 0 };
             }
           } else {
             return res.status(400).json({
               success: false,
               error: "Wallet address required",
-              message: "Please connect your wallet to verify trading activity"
+              message: "Please connect your wallet to verify trading activity",
             });
           }
           break;
@@ -455,12 +477,13 @@ router.post(
           if (walletAddress) {
             try {
               // Get user progress to check completed tasks
-              const userProgress = await airdropStorageService.getUserProgress(userId);
+              const userProgress =
+                await airdropStorageService.getUserProgress(userId);
               if (!userProgress) {
                 return res.status(400).json({
                   success: false,
                   error: "User progress not found",
-                  message: "Please complete other tasks first"
+                  message: "Please complete other tasks first",
                 });
               }
 
@@ -468,39 +491,51 @@ router.post(
               const requiredTasks = 7; // All other tasks except legendary
               const requiredEarnings = 1000;
 
-              if (userProgress.tasksCompleted >= requiredTasks &&
-                  userProgress.totalEarned >= requiredEarnings &&
-                  userProgress.botTokenVerified) {
-
+              if (
+                userProgress.tasksCompleted >= requiredTasks &&
+                userProgress.totalEarned >= requiredEarnings &&
+                userProgress.botTokenVerified
+              ) {
                 // Additional check: verify wallet has significant activity
-                const walletVerification = await blockchainVerificationService.verifyWallet(walletAddress);
-                const stakingVerification = await blockchainVerificationService.verifyStaking(walletAddress, 500);
+                const walletVerification =
+                  await blockchainVerificationService.verifyWallet(
+                    walletAddress,
+                  );
+                const stakingVerification =
+                  await blockchainVerificationService.verifyStaking(
+                    walletAddress,
+                    500,
+                  );
 
-                if (walletVerification.transactionCount >= 50 && stakingVerification.isStaking) {
+                if (
+                  walletVerification.transactionCount >= 50 &&
+                  stakingVerification.isStaking
+                ) {
                   verificationResult = { success: true, reward: 2000 };
                 } else {
                   return res.status(400).json({
                     success: false,
                     error: "Insufficient wallet activity",
-                    message: "Legendary status requires significant on-chain activity and staking"
+                    message:
+                      "Legendary status requires significant on-chain activity and staking",
                   });
                 }
               } else {
                 return res.status(400).json({
                   success: false,
                   error: "Requirements not met",
-                  message: `Complete all tasks (${userProgress.tasksCompleted}/${requiredTasks}), earn ${requiredEarnings}+ VERM (${userProgress.totalEarned}), and verify bot token`
+                  message: `Complete all tasks (${userProgress.tasksCompleted}/${requiredTasks}), earn ${requiredEarnings}+ VERM (${userProgress.totalEarned}), and verify bot token`,
                 });
               }
             } catch (error) {
-              console.error('Legendary verification error:', error);
+              console.error("Legendary verification error:", error);
               verificationResult = { success: false, reward: 0 };
             }
           } else {
             return res.status(400).json({
               success: false,
               error: "Wallet address required",
-              message: "Please connect your wallet for legendary verification"
+              message: "Please connect your wallet for legendary verification",
             });
           }
           break;
@@ -515,12 +550,15 @@ router.post(
 
       if (verificationResult.success) {
         // Check if task already completed
-        const alreadyCompleted = await airdropStorageService.isTaskCompleted(userId, taskId);
+        const alreadyCompleted = await airdropStorageService.isTaskCompleted(
+          userId,
+          taskId,
+        );
         if (alreadyCompleted) {
           return res.status(400).json({
             success: false,
             error: "Task already completed",
-            message: "You have already completed this task"
+            message: "You have already completed this task",
           });
         }
 
@@ -530,11 +568,11 @@ router.post(
           taskId,
           walletAddress,
           reward: verificationResult.reward,
-          verificationMethod: 'api',
+          verificationMethod: "api",
           verificationData: proof,
           completedAt: new Date().toISOString(),
           ipAddress: req.ip,
-          userAgent: req.get('User-Agent')
+          userAgent: req.get("User-Agent"),
         });
 
         // Log successful task completion
@@ -582,58 +620,67 @@ router.get(
       const leaderboard = await airdropStorageService.getLeaderboard(10);
 
       // Fallback to mock data if no real data available
-      const mockLeaderboard = leaderboard.length > 0 ? leaderboard : [
-        {
-          rank: 1,
-          userId: "user_1",
-          username: "VermExterminator",
-          avatar: "🏆",
-          totalEarned: 15420,
-          tasksCompleted: 28,
-          streak: 45,
-          lastActive: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 min ago
-        },
-        {
-          rank: 2,
-          userId: "user_2",
-          username: "ScanMaster_Pro",
-          avatar: "🥈",
-          totalEarned: 12750,
-          tasksCompleted: 24,
-          streak: 32,
-          lastActive: new Date(Date.now() - 1000 * 60 * 60).toISOString(), // 1 hour ago
-        },
-        {
-          rank: 3,
-          userId: "user_3",
-          username: "CryptoHunter",
-          avatar: "🥉",
-          totalEarned: 11200,
-          tasksCompleted: 22,
-          streak: 28,
-          lastActive: new Date(Date.now() - 1000 * 60 * 120).toISOString(), // 2 hours ago
-        },
-        {
-          rank: 4,
-          userId: "user_4",
-          username: "DataGhost_01",
-          avatar: "👻",
-          totalEarned: 9840,
-          tasksCompleted: 19,
-          streak: 25,
-          lastActive: new Date(Date.now() - 1000 * 60 * 180).toISOString(), // 3 hours ago
-        },
-        {
-          rank: 5,
-          userId: "user_5",
-          username: "NimRev_Alpha",
-          avatar: "⚡",
-          totalEarned: 8650,
-          tasksCompleted: 17,
-          streak: 22,
-          lastActive: new Date(Date.now() - 1000 * 60 * 240).toISOString(), // 4 hours ago
-        },
-      ];
+      const mockLeaderboard =
+        leaderboard.length > 0
+          ? leaderboard
+          : [
+              {
+                rank: 1,
+                userId: "user_1",
+                username: "VermExterminator",
+                avatar: "🏆",
+                totalEarned: 15420,
+                tasksCompleted: 28,
+                streak: 45,
+                lastActive: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 min ago
+              },
+              {
+                rank: 2,
+                userId: "user_2",
+                username: "ScanMaster_Pro",
+                avatar: "🥈",
+                totalEarned: 12750,
+                tasksCompleted: 24,
+                streak: 32,
+                lastActive: new Date(Date.now() - 1000 * 60 * 60).toISOString(), // 1 hour ago
+              },
+              {
+                rank: 3,
+                userId: "user_3",
+                username: "CryptoHunter",
+                avatar: "🥉",
+                totalEarned: 11200,
+                tasksCompleted: 22,
+                streak: 28,
+                lastActive: new Date(
+                  Date.now() - 1000 * 60 * 120,
+                ).toISOString(), // 2 hours ago
+              },
+              {
+                rank: 4,
+                userId: "user_4",
+                username: "DataGhost_01",
+                avatar: "👻",
+                totalEarned: 9840,
+                tasksCompleted: 19,
+                streak: 25,
+                lastActive: new Date(
+                  Date.now() - 1000 * 60 * 180,
+                ).toISOString(), // 3 hours ago
+              },
+              {
+                rank: 5,
+                userId: "user_5",
+                username: "NimRev_Alpha",
+                avatar: "⚡",
+                totalEarned: 8650,
+                tasksCompleted: 17,
+                streak: 22,
+                lastActive: new Date(
+                  Date.now() - 1000 * 60 * 240,
+                ).toISOString(), // 4 hours ago
+              },
+            ];
 
       // Get real stats
       const stats = await airdropStorageService.getStats();
@@ -668,8 +715,9 @@ router.get("/stats", statsLimiter, async (req: Request, res: Response) => {
     const baseTime = Math.floor(Date.now() / 1000);
     const stats = {
       totalVermDetected: 2938402 + (baseTime % 10000), // Incremental real-time detection
-      activeHunters: realStats.activeToday || (1247 + (baseTime % 100)), // Real active users or fallback
-      totalRewards: realStats.totalRewardsDistributed || (2400000 + (baseTime % 50000)), // Real rewards or fallback
+      activeHunters: realStats.activeToday || 1247 + (baseTime % 100), // Real active users or fallback
+      totalRewards:
+        realStats.totalRewardsDistributed || 2400000 + (baseTime % 50000), // Real rewards or fallback
       successRate: 72.4 + Math.sin(baseTime / 1000) * 2, // Fluctuating success rate
       averageScanTime: 12 + Math.cos(baseTime / 500) * 3, // Variable scan times
       threatsBlocked: 2847 + (baseTime % 200), // Increasing threats blocked
@@ -769,12 +817,18 @@ router.get(
       }
 
       // Get blockchain verification
-      const walletVerification = await blockchainVerificationService.verifyWallet(walletAddress);
-      const stakingVerification = await blockchainVerificationService.verifyStaking(walletAddress, 0);
+      const walletVerification =
+        await blockchainVerificationService.verifyWallet(walletAddress);
+      const stakingVerification =
+        await blockchainVerificationService.verifyStaking(walletAddress, 0);
 
       // Find user by wallet address
-      const userProgress = await airdropStorageService.getUserProgress(walletAddress) ||
-                          await airdropStorageService.createUserProgress(walletAddress, walletAddress);
+      const userProgress =
+        (await airdropStorageService.getUserProgress(walletAddress)) ||
+        (await airdropStorageService.createUserProgress(
+          walletAddress,
+          walletAddress,
+        ));
 
       // Calculate stats
       const stats = {
@@ -785,14 +839,14 @@ router.get(
         vermBalance: stakingVerification.stakeAmount,
         transactionCount: walletVerification.transactionCount,
         walletAge: walletVerification.age,
-        isVerified: walletVerification.isValid && walletVerification.transactionCount > 0,
+        isVerified:
+          walletVerification.isValid && walletVerification.transactionCount > 0,
       };
 
       res.json({
         success: true,
         data: stats,
       });
-
     } catch (error) {
       console.error("Wallet stats fetch error:", error);
       res.status(500).json({
