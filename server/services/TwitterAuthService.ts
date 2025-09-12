@@ -112,6 +112,9 @@ export class TwitterAuthService {
   ): Promise<FollowVerificationResult> {
     try {
       // Create authenticated client for the user
+      if (!this.config.clientId || !this.config.clientSecret) {
+        throw new Error('Twitter API credentials not configured');
+      }
       const userClient = new TwitterApi({
         appKey: this.config.clientId,
         appSecret: this.config.clientSecret,
