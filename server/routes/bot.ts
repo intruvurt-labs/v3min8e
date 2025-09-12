@@ -8,36 +8,42 @@ router.get("/stats", async (req, res) => {
   try {
     // Check if actual bot services are running
     let botStatus = "OFFLINE";
-    let activeGroups = "0";
-    let messagesProcessed = "0";
-    let spamBlocked = "0";
     let uptime = "0%";
 
     try {
-      // In a real implementation, these would come from your actual bot metrics
-      // For now, we'll return actual status based on system health
-      const systemRunning = process.env.NODE_ENV === "development";
+      const m = botMetricsService.toJSON();
+      botStatus = "ONLINE";
+      const uptimeHours = (m.uptimeMs / 3600000).toFixed(1);
+      uptime = `${uptimeHours}h`;
 
-      if (systemRunning) {
-        botStatus = "ONLINE";
-        activeGroups = "3"; // Real count from your bot
-        messagesProcessed = "156"; // Real count from your bot
-        spamBlocked = "12"; // Real count from your bot
-        uptime = "95.2%"; // Real uptime calculation
-      }
+      const stats = {
+        activeGroups: String(m.activeChats),
+        messagesProcessed: String(m.messagesProcessed),
+        spamBlocked: "0", // integrate when available
+        uptime,
+        botStatus,
+        lastSync: new Date().toISOString(),
+        activeUsers: m.activeChats,
+        isReal: true,
+      };
+
+      res.header("Access-Control-Allow-Origin", "*");
+      res.header("Access-Control-Allow-Methods", "GET");
+      res.header("Access-Control-Allow-Headers", "Content-Type");
+      return res.json(stats);
     } catch (error) {
       console.error("Failed to get real bot stats:", error);
     }
 
     const stats = {
-      activeGroups,
-      messagesProcessed,
-      spamBlocked,
+      activeGroups: "0",
+      messagesProcessed: "0",
+      spamBlocked: "0",
       uptime,
       botStatus,
       lastSync: new Date().toISOString(),
-      activeUsers: botStatus === "ONLINE" ? 8 : 0, // Real active user count
-      isReal: true, // Flag to indicate this is real data
+      activeUsers: 0,
+      isReal: false,
     };
 
     // Add CORS headers for better compatibility
