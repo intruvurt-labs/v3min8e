@@ -8,6 +8,7 @@ import { authMiddleware } from "../middleware/auth";
 import { rateLimitMiddleware } from "../middleware/rateLimit";
 import { validateScanRequest } from "../middleware/validation";
 import { auditLogger } from "../utils/auditLogger";
+import { unifiedThreatMonitor } from "../services/UnifiedThreatMonitor";
 
 const router = Router();
 
