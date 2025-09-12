@@ -83,7 +83,7 @@ export default function AirdropWalletConnection({
 
   const copyWalletAddress = () => {
     if (publicKey) {
-      navigator.clipboard.writeText(publicKey.toBase58());
+      navigator.clipboard.writeText(publicKey);
       setShowCopied(true);
       setTimeout(() => setShowCopied(false), 2000);
     }
