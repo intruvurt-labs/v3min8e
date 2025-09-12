@@ -765,6 +765,34 @@ Last update: ${new Date().toLocaleTimeString()}
     }
   }
 
+  private async handleCompact(msg: TelegramBot.Message, args: string[]) {
+    const chatId = msg.chat.id;
+
+    let turnOn: boolean | null = null;
+    if (args.length > 0) {
+      const opt = args[0].toLowerCase();
+      if (opt === "on") turnOn = true;
+      else if (opt === "off") turnOn = false;
+    }
+
+    if (turnOn === null) {
+      if (this.compactChats.has(chatId)) this.compactChats.delete(chatId);
+      else this.compactChats.add(chatId);
+    } else if (turnOn) {
+      this.compactChats.add(chatId);
+    } else {
+      this.compactChats.delete(chatId);
+    }
+
+    const enabled = this.compactChats.has(chatId);
+    await this.sendMessage(
+      chatId,
+      enabled
+        ? "✅ Compact mode enabled. Future results will be shorter."
+        : "✅ Compact mode disabled. Detailed results restored.",
+    );
+  }
+
   private async handleAlerts(msg: TelegramBot.Message, args: string[]) {
     const keyboard = {
       inline_keyboard: [
