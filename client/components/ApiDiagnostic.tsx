@@ -8,6 +8,8 @@ interface DiagnosticResult {
   timestamp: number;
 }
 
+import { fetchWithFallback } from "../utils/fetchWithFallback";
+
 export default function ApiDiagnostic() {
   const [results, setResults] = useState<DiagnosticResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);
