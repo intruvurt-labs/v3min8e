@@ -15,6 +15,8 @@ export class NimRevTelegramBot {
   private scanQueue: ScanQueue;
   private commands: Map<string, BotCommand> = new Map();
   private compactChats: Set<number> = new Set();
+  private groupSettingsCache: Map<number, { captchaEnabled: boolean; welcomeMessage: string | null }> = new Map();
+  private pendingCaptchas: Map<string, { chatId: number; userId: number; answer: number }> = new Map();
 
   constructor(scanQueue: ScanQueue) {
     const token = getEnv("TELEGRAM_BOT_TOKEN");
