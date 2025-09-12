@@ -377,6 +377,53 @@ router.get("/stats", authMiddleware, async (req: Request, res: Response) => {
 });
 
 /**
+ * @route GET /api/security/threats/live
+ * @desc Get recent live global threat events (public)
+ * @access Public
+ */
+router.get("/threats/live", async (_req: Request, res: Response) => {
+  try {
+    // Pull last 20 events from Unified Threat Monitor
+    const events = unifiedThreatMonitor.getRecentEvents(20);
+
+    const threats = events
+      .map((evt) => {
+        const net = (evt.data.blockchain || "unknown").toString();
+        const addr = evt.data.address || "";
+        const message =
+          evt.data.alertMessage ||
+          (evt.type === "scan_completed"
+            ? `Scan completed: risk ${evt.data.riskScore ?? "n/a"}/100`
+            : evt.type.replace(/_/g, " "));
+
+        return {
+          id: evt.id,
+          type: evt.type,
+          address: addr,
+          network: net,
+          severity:
+            evt.severity === "critical"
+              ? "high"
+              : evt.severity === "low"
+                ? "info"
+                : evt.severity,
+          message,
+          timestamp: evt.timestamp instanceof Date ? evt.timestamp.toISOString() : new Date(evt.timestamp as any).toISOString(),
+          confidence: typeof evt.data.riskScore === "number" ? Math.min(99, Math.max(50, 100 - evt.data.riskScore)) : 85,
+          source: evt.data.source,
+        };
+      })
+      // Filter out entries missing address/blockchain to avoid fake-looking rows
+      .filter((t) => t.address && t.network);
+
+    res.json({ success: true, threats });
+  } catch (error) {
+    console.error("❌ Error fetching live threats:", error);
+    res.status(200).json({ success: true, threats: [] });
+  }
+});
+
+/**
  * @route GET /api/security/patterns
  * @desc Get available threat detection patterns
  * @access Private
