@@ -622,7 +622,7 @@ Choose your preferred settings:
         token_address: address,
         blockchain,
         priority: "normal",
-        requested_by: user.id,
+        requested_by: userId!,
         deep_scan: detailed,
       });
 
