@@ -74,17 +74,30 @@ export class SupabaseHelper {
   }
 
   static async consumeScanCredit(userId: string): Promise<boolean> {
-    const { data, error } = await supabase
-      .from("verified_users")
-      .update({
-        scan_credits: supabase.raw("scan_credits - 1"),
-        last_active: new Date().toISOString(),
-      })
-      .eq("id", userId)
-      .eq("scan_credits", supabase.raw("scan_credits > 0"))
-      .select("scan_credits");
+    try {
+      // Read current credits
+      const { data, error } = await supabase
+        .from("verified_users")
+        .select("scan_credits")
+        .eq("id", userId)
+        .single();
+      if (error) return false;
 
-    return !error && data && data.length > 0;
+      const current = (data?.scan_credits as number) ?? 0;
+      if (current <= 0) return false;
+
+      const { error: upErr } = await supabase
+        .from("verified_users")
+        .update({
+          scan_credits: current - 1,
+          last_active: new Date().toISOString(),
+        })
+        .eq("id", userId);
+
+      return !upErr;
+    } catch {
+      return false;
+    }
   }
 
   static async logAlert(alertData: {
