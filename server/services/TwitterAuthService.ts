@@ -264,8 +264,8 @@ export class TwitterAuthService {
         return false;
       }
 
-      // Test API connection
-      await this.twitterClient.v2.me();
+      // Test API connection (lazy)
+      await this.getAppClient().v2.me();
       return true;
     } catch (error) {
       console.error('Twitter API validation failed:', error);
