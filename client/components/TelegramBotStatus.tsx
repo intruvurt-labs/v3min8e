@@ -39,12 +39,12 @@ export default function TelegramBotStatus({
         const [botResult, nimrevResult] = await Promise.allSettled([
           fetchWithFallback(
             "/api/bot/status",
-            { timeout: 5000 },
+            { timeout: 12000, retries: 1 },
             fallbackData.botStatus,
           ),
           fetchWithFallback(
             "/api/nimrev/status",
-            { timeout: 5000 },
+            { timeout: 12000, retries: 1 },
             fallbackData.nimrevStatus,
           ),
         ]);
