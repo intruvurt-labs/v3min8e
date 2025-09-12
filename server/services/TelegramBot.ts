@@ -1,4 +1,5 @@
 import TelegramBot from "node-telegram-bot-api";
+import TelegramBot from "node-telegram-bot-api";
 import { supabase, SupabaseHelper } from "../utils/supabase";
 import { BlockchainType, ScanRequest } from "../../shared/nimrev-types";
 import { ScanQueue } from "./ScanQueue";
