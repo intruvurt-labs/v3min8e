@@ -20,18 +20,39 @@ export async function fetchWithFallback<T>(
   fallbackData?: T,
 ): Promise<FallbackResponse<T>> {
   const {
-    timeout = 8000,
+    timeout = 12000,
     retries = 1,
     retryDelay = 1000,
     ...fetchOptions
-  } = options;
+  } = options as FetchOptions & { signal?: AbortSignal };
 
   let lastError: Error | null = null;
 
   for (let attempt = 0; attempt <= retries; attempt++) {
+    // Create an internal controller and bridge any external signal
+    const controller = new AbortController();
+    const externalSignal = (fetchOptions as any).signal as AbortSignal | undefined;
+    const onExternalAbort = () => {
+      try {
+        if (!controller.signal.aborted) controller.abort(externalSignal?.reason ?? "external-abort");
+      } catch {}
+    };
+
+    if (externalSignal) {
+      if (externalSignal.aborted) {
+        controller.abort(externalSignal.reason ?? "external-abort");
+      } else {
+        externalSignal.addEventListener("abort", onExternalAbort, { once: true });
+      }
+    }
+
+    let timeoutId: any;
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeout);
+      timeoutId = setTimeout(() => {
+        try {
+          if (!controller.signal.aborted) controller.abort("timeout");
+        } catch {}
+      }, timeout);
 
       const response = await fetch(url, {
         ...fetchOptions,
@@ -43,8 +64,6 @@ export async function fetchWithFallback<T>(
         },
       });
 
-      clearTimeout(timeoutId);
-
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
@@ -54,12 +73,22 @@ export async function fetchWithFallback<T>(
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
 
-      // Don't retry for certain errors
-      if (
-        lastError.name === "AbortError" ||
-        lastError.message.includes("TypeError: Failed to fetch")
-      ) {
-        console.warn(`Fetch failed for ${url}: ${lastError.message}`);
+      // Handle aborts and network errors gracefully
+      if (lastError.name === "AbortError") {
+        // Retry if it was our timeout and retries remain
+        const isTimeout = (lastError as any).message?.toLowerCase?.().includes("timeout") || (controller.signal as any).reason === "timeout";
+        if (isTimeout && attempt < retries) {
+          await new Promise((r) => setTimeout(r, retryDelay));
+          continue;
+        }
+        // Stop retrying on external aborts
+        break;
+      }
+      if (lastError.message.includes("TypeError: Failed to fetch")) {
+        if (attempt < retries) {
+          await new Promise((r) => setTimeout(r, retryDelay));
+          continue;
+        }
         break;
       }
 
@@ -67,10 +96,11 @@ export async function fetchWithFallback<T>(
       if (attempt < retries) {
         await new Promise((resolve) => setTimeout(resolve, retryDelay));
       }
+    } finally {
+      clearTimeout(timeoutId);
+      if (externalSignal) externalSignal.removeEventListener("abort", onExternalAbort);
     }
   }
-
-  console.warn(`All fetch attempts failed for ${url}. Using fallback data.`);
 
   if (fallbackData !== undefined) {
     return {
