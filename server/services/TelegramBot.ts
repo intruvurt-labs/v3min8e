@@ -160,18 +160,44 @@ export class NimRevTelegramBot {
 
     // Only set bot commands for Telegram UI if bot is initialized
     if (this.bot) {
+      const commandList = commands.map((cmd) => ({
+        command: cmd.command,
+        description: cmd.description,
+      }));
+
       try {
-        this.bot.setMyCommands(
-          commands.map((cmd) => ({
-            command: cmd.command,
-            description: cmd.description,
-          })),
-        );
+        // Default scope (all chats)
+        await this.bot.setMyCommands(commandList);
       } catch (error) {
         console.warn(
-          "⚠️ Failed to set Telegram bot commands (bot may be offline):",
-          error.message,
+          "⚠️ Failed to set default bot commands:",
+          (error as any)?.message || error,
         );
+      }
+
+      // Explicitly set per-scope to surface in group menus
+      try {
+        await this.bot.setMyCommands(commandList, {
+          scope: { type: "all_private_chats" },
+        } as any);
+      } catch (e) {
+        console.warn("⚠️ setMyCommands all_private_chats failed:", (e as any)?.message || e);
+      }
+
+      try {
+        await this.bot.setMyCommands(commandList, {
+          scope: { type: "all_group_chats" },
+        } as any);
+      } catch (e) {
+        console.warn("⚠️ setMyCommands all_group_chats failed:", (e as any)?.message || e);
+      }
+
+      try {
+        await this.bot.setMyCommands(commandList, {
+          scope: { type: "all_chat_administrators" },
+        } as any);
+      } catch (e) {
+        console.warn("⚠️ setMyCommands all_chat_administrators failed:", (e as any)?.message || e);
       }
     }
   }
@@ -608,7 +634,7 @@ Choose your preferred settings:
       } else {
         await this.sendMessage(
           msg.chat.id,
-          `✅ **Address Monitoring Started**\n\n📍 **Address:** \`${address}\`\n🌐 **Blockchain:** ${blockchain}\n\n🔔 You will receive alerts for any suspicious activity.`,
+          `✅ **Address Monitoring Started**\n\n��� **Address:** \`${address}\`\n🌐 **Blockchain:** ${blockchain}\n\n🔔 You will receive alerts for any suspicious activity.`,
           { parse_mode: "Markdown" },
         );
       }
