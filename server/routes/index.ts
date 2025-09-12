@@ -48,7 +48,16 @@ import {
   healthCheck,
 } from "./nimrev";
 
+import { ensureOrchestratorStarted } from "./nimrev";
+
 export function setupRoutes(app: Express) {
+  // Start background services (Telegram bot, monitors) at boot
+  try {
+    ensureOrchestratorStarted();
+  } catch (e) {
+    console.warn("Failed to start orchestrator at boot:", (e as any)?.message);
+  }
+
   // Basic routes
   app.get("/api/ping", (_req, res) => {
     const ping = process.env.PING_MESSAGE ?? "ping";
