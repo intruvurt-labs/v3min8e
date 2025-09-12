@@ -588,14 +588,24 @@ Choose your preferred settings:
       return;
     }
 
-    // Check user credits
-    const user = await SupabaseHelper.ensureUserExists(msg.from?.id);
-    const hasCredits = await SupabaseHelper.consumeScanCredit(user.id);
-
-    if (!hasCredits) {
+    // Check user credits with graceful fallback
+    let userId: string | null = null;
+    try {
+      const user = await SupabaseHelper.ensureUserExists(msg.from?.id);
+      userId = user.id;
+      const hasCredits = await SupabaseHelper.consumeScanCredit(user.id);
+      if (!hasCredits) {
+        await this.sendMessage(
+          msg.chat.id,
+          "❌ Insufficient scan credits. Use /credits or contact @NimRevSupport.",
+        );
+        return;
+      }
+    } catch (e) {
+      console.error("User/credits check failed:", e);
       await this.sendMessage(
         msg.chat.id,
-        "❌ Insufficient scan credits. Contact @NimRevSupport to get more credits.",
+        "⚠️ Temporary account service issue. Please try again shortly.",
       );
       return;
     }
@@ -784,7 +794,7 @@ Choose your preferred settings:
         // Limit to 10
         const shortAddress = `${watch.address.substring(0, 8)}...${watch.address.substring(watch.address.length - 6)}`;
         message += `🔹 \`${shortAddress}\` (${watch.blockchain})\n`;
-        message += `   📅 Since: ${new Date(watch.created_at).toLocaleDateString()}\n`;
+        message += `   �� Since: ${new Date(watch.created_at).toLocaleDateString()}\n`;
         message += `   🚨 Alerts sent: ${watch.total_alerts_sent}\n\n`;
       }
 
@@ -871,7 +881,7 @@ Choose your preferred settings:
       const statusMessage = `
 📊 **NimRev Scanner Status**
 
-🔄 **Queue Status:**
+�� **Queue Status:**
 • Queued Scans: ${queueStatus.queued}
 • Processing: ${queueStatus.processing}
 • Capacity: ${queueStatus.capacity}/${queueStatus.capacity + queueStatus.processing}
