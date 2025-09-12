@@ -76,7 +76,7 @@ export class TwitterAuthService {
     oauth_token_secret: string
   ): Promise<{ accessToken: string; accessSecret: string; user: TwitterUserData }> {
     try {
-      const loginResult = await this.twitterClient.login(oauth_verifier);
+      const loginResult = await this.getAppClient().login(oauth_verifier);
       
       const user = await loginResult.client.v2.me({
         'user.fields': ['public_metrics', 'verified']
