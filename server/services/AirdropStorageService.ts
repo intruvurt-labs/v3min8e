@@ -217,6 +217,25 @@ export class AirdropStorageService {
     if (!userProgress.completedTasks.includes(completion.taskId)) {
       userProgress.completedTasks.push(completion.taskId);
     }
+
+    // Update streaks for scan-related tasks
+    if (completion.taskId.includes('scan')) {
+      const now = new Date();
+      const last = userProgress.streakLastUpdated ? new Date(userProgress.streakLastUpdated) : null;
+      const isSameDay = last && now.toDateString() === last.toDateString();
+      const isYesterday = last && new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1).toDateString() === last.toDateString();
+      if (!last) {
+        userProgress.currentStreak = 1;
+      } else if (isSameDay) {
+        // no change
+      } else if (isYesterday) {
+        userProgress.currentStreak += 1;
+      } else {
+        userProgress.currentStreak = 1;
+      }
+      userProgress.streakLastUpdated = now.toISOString();
+    }
+
     userProgress.lastActive = new Date().toISOString();
 
     // Update rank
