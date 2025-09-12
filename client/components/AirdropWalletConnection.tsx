@@ -32,7 +32,7 @@ export default function AirdropWalletConnection({
   requiredForTasks = true,
   showRewards = true
 }: AirdropWalletConnectionProps) {
-  const { publicKey, connected, connecting, disconnect } = useWallet();
+  const { publicKey, connected, connecting, disconnect, connect } = useWallet();
   const [walletStats, setWalletStats] = useState<WalletStats>({
     totalEarned: 0,
     pendingRewards: 0,
