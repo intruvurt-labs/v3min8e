@@ -159,7 +159,7 @@ router.post(
       }
 
       // Store verification result using storage service
-      await airdropStorageService.saveBotVerification({
+      const savedRecord = await airdropStorageService.saveBotVerification({
         userId,
         walletAddress,
         botToken: token.substring(0, 10) + "..." + token.slice(-4), // Store only partial token for security
@@ -191,7 +191,7 @@ router.post(
             canReadAllGroupMessages: botInfo.canReadAllGroupMessages,
             supportsInlineQueries: botInfo.supportsInlineQueries,
           },
-          verifiedAt: verificationRecord.verifiedAt,
+          verifiedAt: savedRecord.verifiedAt,
           reward: 200, // VERM tokens
           multiplier: 2,
         },
