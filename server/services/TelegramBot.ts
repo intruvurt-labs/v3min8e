@@ -65,7 +65,7 @@ export class NimRevTelegramBot {
     }
   }
 
-  private setupCommands() {
+  private async setupCommands() {
     const commands: BotCommand[] = [
       {
         command: "start",
@@ -683,7 +683,7 @@ Choose your preferred settings:
       if (count && count > 0) {
         await this.sendMessage(
           msg.chat.id,
-          `✅ **Monitoring Stopped**\n\n📍 **Address:** \`${address}\`\n🌐 **Blockchain:** ${blockchain}`,
+          `�� **Monitoring Stopped**\n\n📍 **Address:** \`${address}\`\n🌐 **Blockchain:** ${blockchain}`,
           { parse_mode: "Markdown" },
         );
       } else {
