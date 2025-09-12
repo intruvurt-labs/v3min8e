@@ -34,34 +34,17 @@ export default function ApiDiagnostic() {
       };
 
       try {
-        console.log(`Testing ${endpoint}...`);
-
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-        const response = await fetch(endpoint, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Cache-Control": "no-cache",
-          },
-          signal: controller.signal,
-        });
-
-        clearTimeout(timeoutId);
-
-        if (response.ok) {
-          const data = await response.json();
+        const res = await fetchWithFallback(endpoint, { timeout: 12000, retries: 1 });
+        if (res.success) {
           result.status = "success";
-          result.response = data;
+          result.response = res.data;
         } else {
           result.status = "error";
-          result.error = `HTTP ${response.status}: ${response.statusText}`;
+          result.error = res.error || "timeout";
         }
       } catch (error) {
         result.status = "error";
         result.error = error instanceof Error ? error.message : String(error);
-        console.error(`Failed to test ${endpoint}:`, error);
       }
 
       newResults.push(result);
