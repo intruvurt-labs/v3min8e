@@ -73,57 +73,48 @@ router.get("/status", async (req, res) => {
     // Check actual bot service health
     let status = "OFFLINE";
     let health = 0;
-    let recentActivity = [];
+    let recentActivity: any[] = [];
 
     try {
-      // Check if services are actually running
-      const systemRunning = process.env.NODE_ENV === "development";
-
-      if (systemRunning) {
-        status = "ONLINE";
-        health = 85; // Real health metric
-        recentActivity = [
-          {
-            type: "info",
-            message: "System operational",
-            timestamp: Date.now() - 30000,
-          },
-          {
-            type: "success",
-            message: "Health check passed",
-            timestamp: Date.now() - 60000,
-          },
-        ];
-      } else {
-        recentActivity = [
-          {
-            type: "warning",
-            message: "Services not detected",
-            timestamp: Date.now(),
-          },
-        ];
-      }
-    } catch (error) {
-      console.error("Health check failed:", error);
-      status = "ERROR";
+      const m = botMetricsService.toJSON();
+      status = "ONLINE";
+      health = Math.min(100, 100 - Math.min(50, m.errors));
       recentActivity = [
         {
-          type: "error",
-          message: "Health check failed",
-          timestamp: Date.now(),
+          type: "info",
+          message: `Messages processed: ${m.messagesProcessed}`,
+          timestamp: m.lastMessageAt || Date.now(),
         },
       ];
+
+      const systemHealth = {
+        status,
+        health,
+        lastPing: m.lastMessageAt || Date.now(),
+        recentActivity,
+        activeUsers: m.activeChats,
+        messagesProcessed: m.messagesProcessed,
+        uptime: `${(m.uptimeMs / 3600000).toFixed(1)}h`,
+        isReal: true,
+      };
+
+      res.header("Access-Control-Allow-Origin", "*");
+      res.header("Access-Control-Allow-Methods", "GET");
+      res.header("Access-Control-Allow-Headers", "Content-Type");
+      return res.json(systemHealth);
+    } catch (error) {
+      console.error("Health check failed:", error);
     }
 
     const systemHealth = {
       status,
       health,
-      lastPing: status === "ONLINE" ? Date.now() : null,
+      lastPing: null,
       recentActivity,
-      activeUsers: status === "ONLINE" ? 8 : 0, // Real active user count
-      messagesProcessed: status === "ONLINE" ? 156 : 0, // Real message count
-      uptime: status === "ONLINE" ? "95.2%" : "0%", // Real uptime
-      isReal: true, // Flag to indicate this is real data
+      activeUsers: 0,
+      messagesProcessed: 0,
+      uptime: "0%",
+      isReal: false,
     };
 
     // Add CORS headers for better compatibility
