@@ -1032,7 +1032,7 @@ Last update: ${new Date().toLocaleTimeString()}
             callback_data: `alerts_high_${msg.chat.id}`,
           },
           {
-            text: "��️ Medium + High",
+            text: "⚠️ Medium + High",
             callback_data: `alerts_medium_${msg.chat.id}`,
           },
         ],
@@ -1515,11 +1515,22 @@ Last update: ${new Date().toLocaleTimeString()}
   }> {
     const conns = this.getSolanaConnections();
     let lastErr: any = null;
-    for (let attempt = 0; attempt < Math.max(3, conns.length); attempt++) {
+
+    for (let attempt = 0; attempt < Math.max(4, conns.length * 2); attempt++) {
       const conn = conns[attempt % conns.length];
       try {
         const mintPubkey = new PublicKey(mintStr);
-        const mintInfo = await getMint(conn as any, mintPubkey as any);
+
+        // Detect which token program owns the mint account
+        const acct = await conn.getAccountInfo(mintPubkey);
+        if (!acct) {
+          throw new Error("Mint not found on mainnet");
+        }
+        const programId = acct.owner.equals(TOKEN_2022_PROGRAM_ID)
+          ? TOKEN_2022_PROGRAM_ID
+          : TOKEN_PROGRAM_ID;
+
+        const mintInfo = await getMint(conn as any, mintPubkey as any, undefined as any, programId as any);
         return {
           supply: Number(mintInfo.supply),
           decimals: mintInfo.decimals,
