@@ -51,7 +51,7 @@ export class TwitterAuthService {
    */
   async generateAuthUrl(state?: string): Promise<{ url: string; oauth_token: string; oauth_token_secret: string }> {
     try {
-      const authLink = await this.twitterClient.generateAuthLink(this.config.callbackUrl, { 
+      const authLink = await this.getAppClient().generateAuthLink(this.config.callbackUrl, { 
         linkMode: 'authorize',
         forceLogin: false 
       });
