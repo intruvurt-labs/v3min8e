@@ -122,7 +122,13 @@ export default function AirdropWalletConnection({
         </p>
 
         <div className="mb-6">
-          <WalletMultiButton className="!bg-gradient-to-r !from-cyber-green !to-cyber-blue hover:!from-cyber-blue hover:!to-cyber-green !text-white !rounded-lg !px-8 !py-3 !font-bold !transition-all !duration-300" />
+          <button
+            onClick={() => connect()}
+            disabled={connecting}
+            className="px-8 py-3 bg-gradient-to-r from-cyber-green to-cyber-blue hover:from-cyber-blue hover:to-cyber-green text-white rounded-lg font-bold transition-all duration-300 border border-cyber-green/60"
+          >
+            {connecting ? 'Connecting...' : 'Connect Wallet'}
+          </button>
         </div>
 
         {requiredForTasks && (
