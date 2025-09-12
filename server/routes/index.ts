@@ -102,6 +102,9 @@ export function setupRoutes(app: Express) {
   // Payment routes
   app.use("/api", paymentRoutes);
 
+  // Security routes
+  app.use("/api/security", securityRoutes);
+
   // Security audit routes
   app.use("/api/security-audit", securityAuditRoutes);
 
