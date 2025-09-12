@@ -3,6 +3,9 @@ import { supabase, SupabaseHelper } from "../utils/supabase";
 import { BlockchainType, ScanRequest } from "../../shared/nimrev-types";
 import { ScanQueue } from "./ScanQueue";
 import { getEnv } from "../utils/env";
+import { Connection, PublicKey, clusterApiUrl } from "@solana/web3.js";
+import { getMint } from "@solana/spl-token";
+import bs58 from "bs58";
 
 interface BotCommand {
   command: string;
@@ -210,7 +213,7 @@ export class NimRevTelegramBot {
         } as any);
       } catch (e) {
         console.warn(
-          "⚠️ setMyCommands all_chat_administrators failed:",
+          "��️ setMyCommands all_chat_administrators failed:",
           (e as any)?.message || e,
         );
       }
@@ -578,82 +581,109 @@ Choose your preferred settings:
     input: string,
     detailed: boolean,
   ) {
-    const { address, blockchain } = this.parseAddressInput(input);
-
-    if (!address) {
-      await this.sendMessage(
-        msg.chat.id,
-        "❌ Invalid address format. Please provide a valid token address.",
-      );
-      return;
-    }
-
-    // Check user credits with graceful fallback
-    let userId: string | null = null;
     try {
-      const user = await SupabaseHelper.ensureUserExists(msg.from?.id);
-      userId = user.id;
-      const hasCredits = await SupabaseHelper.consumeScanCredit(user.id);
-      if (!hasCredits) {
+      const { address, blockchain } = this.parseAddressInput(input);
+
+      if (!address) {
         await this.sendMessage(
           msg.chat.id,
-          "❌ Insufficient scan credits. Use /credits or contact @NimRevSupport.",
+          "⚠️ Please include a valid token address (e.g., /scan So111... or 0x...:ethereum)",
         );
         return;
       }
-    } catch (e) {
-      console.error("User/credits check failed:", e);
-      await this.sendMessage(
+
+      // Try user credits but don't hard-fail the scan if the account service is down
+      let userId: string | null = null;
+      let creditsOk = true;
+      try {
+        const user = await SupabaseHelper.ensureUserExists(msg.from?.id);
+        userId = user.id;
+        creditsOk = await SupabaseHelper.consumeScanCredit(user.id);
+        if (!creditsOk) {
+          await this.sendMessage(
+            msg.chat.id,
+            "❌ Insufficient scan credits. Use /credits or contact @NimRevSupport.",
+          );
+          return;
+        }
+      } catch (e) {
+        console.warn("Account service unavailable, proceeding with basic scan:", e);
+      }
+
+      const scanningMessage = await this.sendMessage(
         msg.chat.id,
-        "⚠️ Temporary account service issue. Please try again shortly.",
+        `🔍 Scanning ${blockchain}:${address.substring(0, 10)}...${address.substring(address.length - 8)}\n\n⏳ Analysis in progress...`,
       );
-      return;
-    }
 
-    const scanningMessage = await this.sendMessage(
-      msg.chat.id,
-      `🔍 **Scanning ${blockchain}:${address.substring(0, 10)}...${address.substring(address.length - 8)}**\n\n⏳ Analysis in progress...`,
-      { parse_mode: "Markdown" },
-    );
+      try {
+        // Queue the scan (full pipeline)
+        const scanId = await this.scanQueue.addScan({
+          token_address: address,
+          blockchain,
+          priority: "normal",
+          requested_by: userId || "anonymous",
+          deep_scan: detailed,
+        } as any);
 
-    try {
-      // Queue the scan
-      const scanId = await this.scanQueue.addScan({
-        token_address: address,
-        blockchain,
-        priority: "normal",
-        requested_by: userId!,
-        deep_scan: detailed,
-      });
+        // Wait for scan completion (with timeout)
+        const result = await this.waitForScanCompletion(scanId, 60000);
 
-      // Wait for scan completion (with timeout)
-      const result = await this.waitForScanCompletion(scanId, 60000); // 60 second timeout
+        if (result) {
+          await this.sendScanResult(
+            msg.chat.id,
+            result,
+            scanningMessage.message_id,
+          );
+          return;
+        }
+      } catch (queueErr) {
+        console.warn("Queue scan failed or timed out, attempting quick fallback:", queueErr);
+      }
 
-      if (result) {
-        await this.sendScanResult(
-          msg.chat.id,
-          result,
-          scanningMessage.message_id,
-        );
-      } else {
-        await this.bot.editMessageText(
-          "⏳ Scan is taking longer than expected. You will receive the results when ready.",
-          {
+      // Quick fallback for Solana mints when full scan is unavailable
+      if (blockchain === "solana" && this.isValidSolanaPubkey(address)) {
+        try {
+          const info = await this.quickSolanaMintScan(address);
+          const mintAuth = info.mintAuthority
+            ? `🟡 Mint Authority: ${info.mintAuthority}`
+            : "🟢 Mint Authority: revoked";
+          const freezeAuth = info.freezeAuthority
+            ? `🟡 Freeze Authority: ${info.freezeAuthority}`
+            : "🟢 Freeze Authority: revoked";
+
+          const textOut =
+            `✅ Token Found\n` +
+            `• Mint: ${address}\n` +
+            `• Initialized: ${info.isInitialized ? "yes" : "no"}\n` +
+            `• Decimals: ${info.decimals}\n` +
+            `• Supply: ${this.formatSupply(info.supply, info.decimals)}\n` +
+            `• ${mintAuth}\n` +
+            `• ${freezeAuth}\n\n` +
+            `Quick links: ${this.solanaExplorers(address)}`;
+
+          await this.bot.editMessageText(textOut, {
             chat_id: msg.chat.id,
             message_id: scanningMessage.message_id,
-            parse_mode: "Markdown",
-          },
-        );
+            disable_web_page_preview: true,
+          });
+          return;
+        } catch (fallbackErr) {
+          console.error("Fallback Solana scan failed:", fallbackErr);
+        }
       }
-    } catch (error) {
-      console.error("Scan failed:", error);
-      await this.bot.editMessageText(
-        "❌ Scan failed. Please try again later.",
-        {
-          chat_id: msg.chat.id,
-          message_id: scanningMessage.message_id,
-        },
-      );
+
+      await this.bot.editMessageText("❌ Scan failed. Please try again later.", {
+        chat_id: msg.chat.id,
+        message_id: scanningMessage.message_id,
+      });
+    } catch (err) {
+      console.error("performScan fatal error:", err);
+      try {
+        await this.sendMessage(
+          msg.chat.id,
+          "❌ An internal error occurred while processing that request.",
+        );
+      } catch {}
     }
   }
 
@@ -1238,13 +1268,20 @@ Last update: ${new Date().toLocaleTimeString()}
   }
 
   private isTokenAddress(text: string): boolean {
-    // Ethereum-style address
-    if (/^0x[a-fA-F0-9]{40}$/.test(text)) return true;
-
-    // Solana address
-    if (/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(text)) return true;
-
+    if (/^0x[a-fA-F0-9]{40}$/.test(text)) return true; // EVM
+    if (this.isValidSolanaPubkey(text)) return true; // Solana strong check
     return false;
+  }
+
+  private isValidSolanaPubkey(s: string): boolean {
+    try {
+      if (!s || s.length < 32 || s.length > 64) return false;
+      bs58.decode(s);
+      new PublicKey(s);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   private parseAddressInput(input: string): {
@@ -1408,6 +1445,55 @@ Last update: ${new Date().toLocaleTimeString()}
     };
 
     return categoryMap[category] || category;
+  }
+
+  private solanaExplorers(mint: string): string {
+    return [
+      `[Solscan](https://solscan.io/token/${mint})`,
+      `[Birdeye](https://birdeye.so/token/${mint}?chain=solana)`,
+      `[Phantom](https://phantom.app/asset/${mint})`,
+    ].join("  •  ");
+  }
+
+  private formatSupply(raw: number, decimals: number): string {
+    const scaled = Number(raw) / 10 ** decimals;
+    return `${scaled.toLocaleString("en-US", { maximumFractionDigits: Math.min(9, decimals) })}  (raw ${new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(raw)})`;
+  }
+
+  private getSolanaConnections(): Connection[] {
+    const poolEnv = (process.env.SOLANA_RPC_POOL || "").split(",").map((s) => s.trim()).filter(Boolean);
+    const helius = (getEnv("HELIUS_RPC_URL") as unknown as string) || "";
+    const network = (getEnv("SOLANA_NETWORK") as unknown as string) || "mainnet-beta";
+    const urls = poolEnv.length > 0 ? poolEnv : [helius || clusterApiUrl(network as any)];
+    return urls.map((u) => new Connection(u, "confirmed"));
+  }
+
+  private async quickSolanaMintScan(mintStr: string): Promise<{
+    supply: number;
+    decimals: number;
+    isInitialized: boolean;
+    mintAuthority: string | null;
+    freezeAuthority: string | null;
+  }> {
+    const conns = this.getSolanaConnections();
+    let lastErr: any = null;
+    for (let attempt = 0; attempt < Math.max(3, conns.length); attempt++) {
+      const conn = conns[attempt % conns.length];
+      try {
+        const mintPubkey = new PublicKey(mintStr);
+        const mintInfo = await getMint(conn as any, mintPubkey as any);
+        return {
+          supply: Number(mintInfo.supply),
+          decimals: mintInfo.decimals,
+          isInitialized: mintInfo.isInitialized,
+          mintAuthority: mintInfo.mintAuthority ? mintInfo.mintAuthority.toBase58() : null,
+          freezeAuthority: mintInfo.freezeAuthority ? mintInfo.freezeAuthority.toBase58() : null,
+        };
+      } catch (e) {
+        lastErr = e;
+      }
+    }
+    throw lastErr || new Error("Unable to fetch mint info");
   }
 
   private async handleCallbackQuery(query: TelegramBot.CallbackQuery) {
