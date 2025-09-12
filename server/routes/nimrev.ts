@@ -14,6 +14,9 @@ const getOrchestrator = () => {
   return orchestrator;
 };
 
+// Public boot helper to start background services at app startup
+export const ensureOrchestratorStarted = () => getOrchestrator();
+
 // Validation schemas
 const scanRequestSchema = z.object({
   address: z.string().min(1),
