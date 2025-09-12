@@ -5,7 +5,6 @@ import { ScanQueue } from "./ScanQueue";
 import { getEnv } from "../utils/env";
 import { Connection, PublicKey, clusterApiUrl } from "@solana/web3.js";
 import { getMint } from "@solana/spl-token";
-import bs58 from "bs58";
 
 interface BotCommand {
   command: string;
@@ -213,7 +212,7 @@ export class NimRevTelegramBot {
         } as any);
       } catch (e) {
         console.warn(
-          "��️ setMyCommands all_chat_administrators failed:",
+          "⚠️ setMyCommands all_chat_administrators failed:",
           (e as any)?.message || e,
         );
       }
@@ -1276,7 +1275,7 @@ Last update: ${new Date().toLocaleTimeString()}
   private isValidSolanaPubkey(s: string): boolean {
     try {
       if (!s || s.length < 32 || s.length > 64) return false;
-      bs58.decode(s);
+      // PublicKey constructor will validate base58 and length
       new PublicKey(s);
       return true;
     } catch {
