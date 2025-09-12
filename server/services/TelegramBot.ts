@@ -558,7 +558,17 @@ Choose your preferred settings:
   }
 
   private async handleScan(msg: TelegramBot.Message, args: string[]) {
-    if (args.length === 0) {
+    let input = args.join(" ").trim();
+
+    if (!input) {
+      const full = msg.text || "";
+      const lines = full.split("\n").map((s) => s.trim()).filter(Boolean);
+      if (lines.length >= 2) {
+        input = lines[1];
+      }
+    }
+
+    if (!input) {
       await this.sendMessage(
         msg.chat.id,
         "❓ Please provide a token address to scan.\n\nExample: `/scan 0x1234...abcd` or `/scan 0x1234...abcd:ethereum`",
@@ -567,7 +577,6 @@ Choose your preferred settings:
       return;
     }
 
-    const input = args.join(" ");
     await this.performScan(msg, input, true); // Detailed scan
   }
 
