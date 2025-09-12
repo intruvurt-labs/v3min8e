@@ -4,7 +4,7 @@ import { BlockchainType, ScanRequest } from "../../shared/nimrev-types";
 import { ScanQueue } from "./ScanQueue";
 import { getEnv } from "../utils/env";
 import { Connection, PublicKey, clusterApiUrl } from "@solana/web3.js";
-import { getMint } from "@solana/spl-token";
+import { getMint, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
 interface BotCommand {
   command: string;
@@ -1032,7 +1032,7 @@ Last update: ${new Date().toLocaleTimeString()}
             callback_data: `alerts_high_${msg.chat.id}`,
           },
           {
-            text: "⚠️ Medium + High",
+            text: "��️ Medium + High",
             callback_data: `alerts_medium_${msg.chat.id}`,
           },
         ],
