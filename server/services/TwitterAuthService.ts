@@ -23,7 +23,7 @@ interface FollowVerificationResult {
 
 export class TwitterAuthService {
   private config: TwitterAuthConfig;
-  private twitterClient: TwitterApi;
+  private twitterClient: TwitterApi | null = null;
 
   constructor() {
     this.config = {
