@@ -181,22 +181,80 @@ export class NimRevTelegramBot {
     // Handle callback queries (inline keyboard buttons)
     this.bot.on("callback_query", async (query) => {
       try {
+        if (query.data?.startsWith("captcha_")) {
+          const parts = query.data.split("_");
+          const chatId = parseInt(parts[1], 10);
+          const userId = parseInt(parts[2], 10);
+          const selected = parseInt(parts[3], 10);
+          const key = `${chatId}:${userId}`;
+          const session = this.pendingCaptchas.get(key);
+
+          if (session) {
+            if (selected === session.answer) {
+              await this.unmuteUser(chatId, userId);
+              this.pendingCaptchas.delete(key);
+              await this.bot.answerCallbackQuery(query.id, { text: "✅ Verified" });
+              try {
+                await supabase.from("captcha_verifications").insert({ chat_id: chatId, user_id: userId, status: "passed" });
+              } catch {}
+              const settings = await this.getGroupSettings(chatId);
+              if (settings.welcomeMessage) {
+                await this.sendMessage(chatId, settings.welcomeMessage.replace(/\{user\}/g, `[${query.from.first_name}](tg://user?id=${userId})`), { parse_mode: "Markdown" });
+              }
+            } else {
+              await this.bot.answerCallbackQuery(query.id, { text: "❌ Try again" });
+            }
+          } else {
+            await this.bot.answerCallbackQuery(query.id, { text: "Session expired" });
+          }
+          return;
+        }
+
         await this.handleCallbackQuery(query);
       } catch (error) {
         console.error("Error handling callback query:", error);
       }
     });
 
-    // Handle new chat members (group setup)
+    // Handle new chat members (group setup + captcha)
     this.bot.on("new_chat_members", async (msg) => {
-      const newMembers = msg.new_chat_members;
-      if (
-        newMembers &&
-        newMembers.some(
-          (member) => member.username === this.bot.options.username,
-        )
-      ) {
+      const newMembers = msg.new_chat_members || [];
+      if (newMembers.some((m) => m.username === (this.bot as any).options?.username)) {
         await this.handleBotAddedToGroup(msg);
+      }
+
+      for (const member of newMembers) {
+        try {
+          if (member.is_bot) continue;
+          const chatId = msg.chat.id;
+          const settings = await this.getGroupSettings(chatId);
+          if (!settings.captchaEnabled) {
+            if (settings.welcomeMessage) {
+              await this.sendMessage(chatId, settings.welcomeMessage.replace(/\{user\}/g, `[${member.first_name}](tg://user?id=${member.id})`), { parse_mode: "Markdown" });
+            }
+            continue;
+          }
+
+          await this.muteUser(chatId, member.id);
+
+          const a = Math.floor(Math.random() * 7) + 3;
+          const b = Math.floor(Math.random() * 7) + 3;
+          const answer = a + b;
+          const key = `${chatId}:${member.id}`;
+          this.pendingCaptchas.set(key, { chatId, userId: member.id, answer });
+
+          const opts = new Set<number>([answer]);
+          while (opts.size < 4) opts.add(answer + Math.floor(Math.random() * 5) - 2);
+          const buttons = Array.from(opts).sort(() => Math.random() - 0.5).map((n) => [{ text: `${n}`, callback_data: `captcha_${chatId}_${member.id}_${n}` }]);
+
+          await this.sendMessage(
+            chatId,
+            `👋 Welcome, [${member.first_name}](tg://user?id=${member.id})\n\nPlease solve to speak: ${a} + ${b} = ?`,
+            { parse_mode: "Markdown", reply_markup: { inline_keyboard: buttons } },
+          );
+        } catch (e) {
+          console.error("Failed to handle new member captcha:", e);
+        }
       }
     });
 
