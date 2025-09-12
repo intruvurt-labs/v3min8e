@@ -432,7 +432,7 @@ Need help? Contact @NimRevSupport
             text: "⏰ Recurring Messages",
             callback_data: `setup_recurring_${chatId}`,
           },
-          { text: "📊 Scanner Stats", callback_data: `setup_stats_${chatId}` },
+          { text: "�� Scanner Stats", callback_data: `setup_stats_${chatId}` },
         ],
         [
           {
@@ -882,42 +882,191 @@ Last update: ${new Date().toLocaleTimeString()}
     const keyboard = {
       inline_keyboard: [
         [
-          {
-            text: "🚨 High Risk Only",
-            callback_data: `alerts_high_${msg.chat.id}`,
-          },
-          {
-            text: "⚠️ Medium + High",
-            callback_data: `alerts_medium_${msg.chat.id}`,
-          },
+          { text: "🚨 High Risk Only", callback_data: `alerts_high_${msg.chat.id}` },
+          { text: "⚠️ Medium + High", callback_data: `alerts_medium_${msg.chat.id}` },
         ],
         [
-          {
-            text: "📊 All Threats",
-            callback_data: `alerts_all_${msg.chat.id}`,
-          },
-          {
-            text: "🔕 Disable Alerts",
-            callback_data: `alerts_disable_${msg.chat.id}`,
-          },
+          { text: "📊 All Threats", callback_data: `alerts_all_${msg.chat.id}` },
+          { text: "🔕 Disable Alerts", callback_data: `alerts_disable_${msg.chat.id}` },
         ],
         [
-          {
-            text: "⏰ Set Cooldown",
-            callback_data: `alerts_cooldown_${msg.chat.id}`,
-          },
+          { text: "⏰ Set Cooldown", callback_data: `alerts_cooldown_${msg.chat.id}` },
         ],
       ],
     };
 
     await this.sendMessage(
       msg.chat.id,
-      "��� **Alert Configuration**\n\nChoose your alert sensitivity:",
-      {
-        parse_mode: "Markdown",
-        reply_markup: keyboard,
-      },
+      "🔔 **Alert Configuration**\n\nChoose your alert sensitivity:",
+      { parse_mode: "Markdown", reply_markup: keyboard },
     );
+  }
+
+  private async handleReportCommand(msg: TelegramBot.Message, args: string[]) {
+    const chatId = msg.chat.id;
+    const text = args.join(" ").trim();
+    if (!text) {
+      await this.sendMessage(chatId, "❓ Usage: /report <issue or feedback>");
+      return;
+    }
+    try {
+      await supabase.from("bot_reports").insert({
+        chat_id: chatId,
+        user_id: msg.from?.id,
+        username: msg.from?.username,
+        text,
+        created_at: new Date().toISOString(),
+      });
+    } catch (e) {
+      console.warn("Failed to store report:", (e as any).message);
+    }
+    try {
+      const adminChat = getEnv("NIMREV_ADMIN_CHAT_ID");
+      if (adminChat) {
+        await this.sendMessage(parseInt(adminChat), `📣 New report from ${msg.from?.username || msg.from?.id}\nChat: ${chatId}\n\n${text}`);
+      }
+    } catch {}
+    await this.sendMessage(chatId, "✅ Thanks! Your report was submitted to admins.");
+  }
+
+  private async handleCaptchaCommand(msg: TelegramBot.Message, args: string[]) {
+    if (msg.chat.type === "private") {
+      await this.sendMessage(msg.chat.id, "⚠️ Use this in a group to enable/disable join captcha.");
+      return;
+    }
+    const chatId = msg.chat.id;
+    const opt = (args[0] || "").toLowerCase();
+    if (opt !== "on" && opt !== "off") {
+      const settings = await this.getGroupSettings(chatId);
+      await this.sendMessage(chatId, `ℹ️ Captcha is currently ${settings.captchaEnabled ? "ON" : "OFF"}. Use /captcha on or /captcha off.`);
+      return;
+    }
+    const member = await this.bot.getChatMember(chatId, msg.from!.id);
+    if (!["creator", "administrator"].includes(member.status)) {
+      await this.sendMessage(chatId, "❌ Only admins can change captcha settings.");
+      return;
+    }
+    const enable = opt === "on";
+    await this.setGroupSettings(chatId, { captchaEnabled: enable });
+    await this.sendMessage(chatId, enable ? "✅ Captcha enabled for new members." : "✅ Captcha disabled.");
+  }
+
+  private async handleWelcomeMsgCommand(msg: TelegramBot.Message, args: string[]) {
+    const chatId = msg.chat.id;
+    if (msg.chat.type === "private") {
+      await this.sendMessage(chatId, "⚠️ Use this in a group: /welcomemsg Welcome {user}!");
+      return;
+    }
+    const member = await this.bot.getChatMember(chatId, msg.from!.id);
+    if (!["creator", "administrator"].includes(member.status)) {
+      await this.sendMessage(chatId, "❌ Only admins can set the welcome message.");
+      return;
+    }
+    const text = args.join(" ").trim();
+    if (!text) {
+      await this.sendMessage(chatId, "❓ Usage: /welcomemsg Welcome {user}!");
+      return;
+    }
+    await this.setGroupSettings(chatId, { welcomeMessage: text });
+    await this.sendMessage(chatId, "✅ Welcome message updated.");
+  }
+
+  private async handleRaidCommand(msg: TelegramBot.Message, args: string[]) {
+    const chatId = msg.chat.id;
+    if (msg.chat.type === "private") {
+      await this.sendMessage(chatId, "⚠️ Use /raid in a group.");
+      return;
+    }
+    const member = await this.bot.getChatMember(chatId, msg.from!.id);
+    if (!["creator", "administrator"].includes(member.status)) {
+      await this.sendMessage(chatId, "❌ Only admins can start a raid.");
+      return;
+    }
+    const payload = args.join(" ").trim();
+    if (!payload) {
+      await this.sendMessage(chatId, "❓ Usage: /raid <url or text>");
+      return;
+    }
+    const urlMatch = payload.match(/https?:\/\/\S+/);
+    const url = urlMatch ? urlMatch[0] : undefined;
+    const keyboard = url ? { inline_keyboard: [[{ text: "⚡ Join Now", url }]] } : undefined;
+    await this.sendMessage(chatId, `🚀 **RAID ACTIVE**\n\n${payload}`, { parse_mode: "Markdown", reply_markup: keyboard });
+  }
+
+  private async getGroupSettings(chatId: number): Promise<{ captchaEnabled: boolean; welcomeMessage: string | null }> {
+    if (this.groupSettingsCache.has(chatId)) return this.groupSettingsCache.get(chatId)!;
+    let settings = { captchaEnabled: false, welcomeMessage: null as string | null };
+    try {
+      const { data } = await supabase
+        .from("group_settings")
+        .select("captcha_enabled, welcome_message")
+        .eq("chat_id", chatId)
+        .single();
+      if (data) {
+        settings.captchaEnabled = !!data.captcha_enabled;
+        settings.welcomeMessage = data.welcome_message || null;
+      }
+    } catch {}
+    this.groupSettingsCache.set(chatId, settings);
+    return settings;
+  }
+
+  private async setGroupSettings(chatId: number, update: Partial<{ captchaEnabled: boolean; welcomeMessage: string | null }>) {
+    const current = await this.getGroupSettings(chatId);
+    const next = { ...current, ...update };
+    try {
+      await supabase.from("group_settings").upsert({
+        chat_id: chatId,
+        captcha_enabled: next.captchaEnabled,
+        welcome_message: next.welcomeMessage,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "chat_id" as any });
+    } catch (e) {
+      console.warn("Failed to persist group settings:", (e as any).message);
+    }
+    this.groupSettingsCache.set(chatId, next);
+  }
+
+  private async muteUser(chatId: number, userId: number) {
+    try {
+      await this.bot.restrictChatMember(chatId, userId, {
+        can_send_messages: false,
+        can_send_audios: false,
+        can_send_documents: false,
+        can_send_photos: false,
+        can_send_videos: false,
+        can_send_video_notes: false,
+        can_send_voice_notes: false,
+        can_send_polls: false,
+        can_add_web_page_previews: false,
+        can_change_info: false,
+        can_invite_users: false,
+        can_pin_messages: false,
+      } as any);
+    } catch (e) {
+      console.warn("Failed to mute user (bot likely lacks admin rights):", (e as any).message);
+    }
+  }
+
+  private async unmuteUser(chatId: number, userId: number) {
+    try {
+      await this.bot.restrictChatMember(chatId, userId, {
+        can_send_messages: true,
+        can_send_audios: true,
+        can_send_documents: true,
+        can_send_photos: true,
+        can_send_videos: true,
+        can_send_video_notes: true,
+        can_send_voice_notes: true,
+        can_send_polls: true,
+        can_add_web_page_previews: true,
+        can_change_info: false,
+        can_invite_users: true,
+        can_pin_messages: false,
+      } as any);
+    } catch (e) {
+      console.warn("Failed to unmute user:", (e as any).message);
+    }
   }
 
   // Utility methods
