@@ -380,7 +380,7 @@ export class NimRevTelegramBot {
     if (!this.bot) return; // Skip if bot not initialized
 
     this.bot.on("polling_error", (error) => {
-      console.warn("���� Telegram polling error (retrying):", {
+      console.warn("🔄 Telegram polling error (retrying):", {
         code: error.code,
         message: error.message.substring(0, 100), // Truncate long messages
       });
@@ -626,6 +626,49 @@ Choose your preferred settings:
         msg.chat.id,
         `🔍 Scanning ${blockchain}:${address.substring(0, 10)}...${address.substring(address.length - 8)}\n\n⏳ Analysis in progress...`,
       );
+
+      // If Solana, provide instant mint info before full scan
+      if (blockchain === "solana" && this.isValidSolanaPubkey(address)) {
+        try {
+          const info = await this.quickSolanaMintScan(address);
+          const mintAuth = info.mintAuthority
+            ? `🟡 Mint Authority: ${info.mintAuthority}`
+            : "🟢 Mint Authority: revoked";
+          const freezeAuth = info.freezeAuthority
+            ? `🟡 Freeze Authority: ${info.freezeAuthority}`
+            : "🟢 Freeze Authority: revoked";
+          const textOut =
+            `✅ Token Found\n` +
+            `• Mint: ${address}\n` +
+            `• Initialized: ${info.isInitialized ? "yes" : "no"}\n` +
+            `• Decimals: ${info.decimals}\n` +
+            `• Supply: ${this.formatSupply(info.supply, info.decimals)}\n` +
+            `• ${mintAuth}\n` +
+            `• ${freezeAuth}\n\n` +
+            `Quick links: ${this.solanaExplorers(address)}`;
+          await this.bot.editMessageText(textOut, {
+            chat_id: msg.chat.id,
+            message_id: scanningMessage.message_id,
+            disable_web_page_preview: true,
+          });
+        } catch (e) {
+          console.warn("Instant Solana mint scan failed:", e);
+        }
+
+        // Try to queue full scan in background but don't wait
+        try {
+          await this.scanQueue.addScan({
+            token_address: address,
+            blockchain,
+            priority: "normal",
+            requested_by: userId || "anonymous",
+            deep_scan: detailed,
+          } as any);
+        } catch (e) {
+          console.warn("Failed to queue full scan after instant mint info:", e);
+        }
+        return;
+      }
 
       try {
         // Queue the scan (full pipeline)
