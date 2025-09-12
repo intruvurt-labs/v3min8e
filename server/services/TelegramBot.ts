@@ -14,6 +14,7 @@ export class NimRevTelegramBot {
   private bot: TelegramBot;
   private scanQueue: ScanQueue;
   private commands: Map<string, BotCommand> = new Map();
+  private compactChats: Set<number> = new Set();
 
   constructor(scanQueue: ScanQueue) {
     const token = getEnv("TELEGRAM_BOT_TOKEN");
