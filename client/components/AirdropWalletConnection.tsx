@@ -179,7 +179,7 @@ export default function AirdropWalletConnection({
           <div>
             <div className="flex items-center gap-2">
               <span className="text-white font-bold">
-                {formatWalletAddress(publicKey!.toBase58())}
+                {formatWalletAddress(publicKey!)}
               </span>
               {walletVerified && (
                 <CheckCircle className="w-4 h-4 text-cyber-green" />
