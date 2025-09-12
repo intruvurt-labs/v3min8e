@@ -31,7 +31,7 @@ export class NimRevTelegramBot {
       token.includes("PLACEHOLDER") ||
       token.length < 30 || // Telegram tokens are typically 46+ chars
       !token.includes(":") ||
-      getEnv("ENABLE_BOT") === "false";
+      (process.env.ENABLE_BOT === "false");
 
     if (isDevelopmentToken) {
       console.log(
@@ -921,7 +921,7 @@ Last update: ${new Date().toLocaleTimeString()}
       console.warn("Failed to store report:", (e as any).message);
     }
     try {
-      const adminChat = getEnv("NIMREV_ADMIN_CHAT_ID");
+      const adminChat = process.env.NIMREV_ADMIN_CHAT_ID;
       if (adminChat) {
         await this.sendMessage(parseInt(adminChat), `📣 New report from ${msg.from?.username || msg.from?.id}\nChat: ${chatId}\n\n${text}`);
       }
