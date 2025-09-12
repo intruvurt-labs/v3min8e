@@ -207,20 +207,23 @@ export class AirdropStorageService {
     const filePath = path.join(this.dataDir, 'tasks', `${taskCompletion.id}.json`);
     await this.writeJsonFile(filePath, taskCompletion);
 
-    // Update user progress
-    const userProgress = await this.getUserProgress(completion.userId);
-    if (userProgress) {
-      userProgress.totalEarned += completion.reward * (completion.multiplier || 1);
-      userProgress.tasksCompleted += 1;
-      userProgress.completedTasks.push(completion.taskId);
-      userProgress.lastActive = new Date().toISOString();
-      
-      // Update rank
-      userProgress.rank = this.calculateRank(userProgress.totalEarned);
-      userProgress.nextMilestone = this.calculateNextMilestone(userProgress.totalEarned);
-      
-      await this.saveUserProgress(userProgress);
+    // Ensure and update user progress
+    let userProgress = await this.getUserProgress(completion.userId);
+    if (!userProgress) {
+      userProgress = await this.createUserProgress(completion.userId, completion.walletAddress);
     }
+    userProgress.totalEarned += completion.reward * (completion.multiplier || 1);
+    userProgress.tasksCompleted += 1;
+    if (!userProgress.completedTasks.includes(completion.taskId)) {
+      userProgress.completedTasks.push(completion.taskId);
+    }
+    userProgress.lastActive = new Date().toISOString();
+
+    // Update rank
+    userProgress.rank = this.calculateRank(userProgress.totalEarned);
+    userProgress.nextMilestone = this.calculateNextMilestone(userProgress.totalEarned);
+
+    await this.saveUserProgress(userProgress);
 
     return taskCompletion;
   }
