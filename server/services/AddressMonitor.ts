@@ -7,7 +7,7 @@ import {
   AlertType,
 } from "../../shared/nimrev-types";
 import { supabase, SupabaseHelper } from "../utils/supabase";
-import { TelegramBot } from "./TelegramBot";
+import { NimRevTelegramBot } from "./TelegramBot";
 
 interface MonitoringAlert {
   type: AlertType;
@@ -31,7 +31,7 @@ interface AddressActivity {
 export class AddressMonitor extends EventEmitter {
   private providers: Map<BlockchainType, ethers.JsonRpcProvider> = new Map();
   private solanaConnection?: Connection;
-  private telegramBot?: TelegramBot;
+  private telegramBot?: NimRevTelegramBot;
   private monitoringIntervals: Map<string, NodeJS.Timeout> = new Map();
   private isRunning = false;
   private watchedAddresses: Map<string, WatchedAddress> = new Map();
