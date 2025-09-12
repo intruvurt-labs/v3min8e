@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 import { supabase, SupabaseHelper } from "../utils/supabase";
-import { TelegramBot } from "./TelegramBot";
+import { NimRevTelegramBot } from "./TelegramBot";
 import {
   AlertType,
   BlockchainType,
@@ -38,7 +38,7 @@ interface AlertTemplate {
 }
 
 export class AlertSystem extends EventEmitter {
-  private telegramBot?: TelegramBot;
+  private telegramBot?: NimRevTelegramBot;
   private discordBot?: any; // Discord bot would be implemented similarly
   private alertConfigs: Map<string, AlertConfig> = new Map();
   private recurringMessages: Map<string, RecurringMessage> = new Map();
@@ -135,7 +135,7 @@ export class AlertSystem extends EventEmitter {
     ],
   ]);
 
-  constructor(telegramBot?: TelegramBot) {
+  constructor(telegramBot?: NimRevTelegramBot) {
     super();
     this.telegramBot = telegramBot;
   }
