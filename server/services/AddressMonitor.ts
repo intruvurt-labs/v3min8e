@@ -47,7 +47,7 @@ export class AddressMonitor extends EventEmitter {
     riskScoreThreshold: 30, // Alert if calculated risk score <= 30
   };
 
-  constructor(telegramBot?: TelegramBot) {
+  constructor(telegramBot?: NimRevTelegramBot) {
     super();
     this.telegramBot = telegramBot;
     this.initializeProviders();
