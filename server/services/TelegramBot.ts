@@ -5,6 +5,7 @@ import { ScanQueue } from "./ScanQueue";
 import { getEnv } from "../utils/env";
 import { Connection, PublicKey, clusterApiUrl } from "@solana/web3.js";
 import { getMint, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { botMetricsService } from "./BotMetricsService";
 
 interface BotCommand {
   command: string;
@@ -228,10 +229,12 @@ export class NimRevTelegramBot {
     // Handle text messages
     this.bot.on("message", async (msg) => {
       try {
+        botMetricsService.recordMessage(msg.chat?.id);
         if (!msg.text) return;
 
         // Check if it's a command
         if (msg.text.startsWith("/")) {
+          botMetricsService.recordCommand(msg.chat?.id);
           await this.handleCommand(msg);
         } else {
           // Check if it looks like a token address
@@ -240,6 +243,7 @@ export class NimRevTelegramBot {
           }
         }
       } catch (error) {
+        botMetricsService.recordError();
         console.error("Error handling message:", error);
         await this.sendMessage(
           msg.chat.id,
@@ -376,7 +380,7 @@ export class NimRevTelegramBot {
     if (!this.bot) return; // Skip if bot not initialized
 
     this.bot.on("polling_error", (error) => {
-      console.warn("🔄 Telegram polling error (retrying):", {
+      console.warn("���� Telegram polling error (retrying):", {
         code: error.code,
         message: error.message.substring(0, 100), // Truncate long messages
       });
