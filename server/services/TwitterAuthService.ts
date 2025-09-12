@@ -31,12 +31,19 @@ export class TwitterAuthService {
       clientSecret: process.env.TWITTER_CLIENT_SECRET || '',
       callbackUrl: process.env.TWITTER_CALLBACK_URL || 'http://localhost:3000/auth/twitter/callback'
     };
+  }
 
-    // Initialize Twitter API client
-    this.twitterClient = new TwitterApi({
-      appKey: this.config.clientId,
-      appSecret: this.config.clientSecret,
-    });
+  private getAppClient(): TwitterApi {
+    if (!this.twitterClient) {
+      if (!this.config.clientId || !this.config.clientSecret) {
+        throw new Error('Twitter API credentials not configured');
+      }
+      this.twitterClient = new TwitterApi({
+        appKey: this.config.clientId,
+        appSecret: this.config.clientSecret,
+      });
+    }
+    return this.twitterClient;
   }
 
   /**
