@@ -225,6 +225,9 @@ export class TwitterAuthService {
     userAccessSecret: string
   ): Promise<TwitterUserData | null> {
     try {
+      if (!this.config.clientId || !this.config.clientSecret) {
+        throw new Error('Twitter API credentials not configured');
+      }
       const userClient = new TwitterApi({
         appKey: this.config.clientId,
         appSecret: this.config.clientSecret,
