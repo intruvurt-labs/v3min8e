@@ -211,7 +211,7 @@ export default function AirdropWalletConnection({
           </button>
           
           <button
-            onClick={() => window.open(`https://solscan.io/account/${publicKey!.toBase58()}`, '_blank')}
+            onClick={() => window.open(`https://solscan.io/account/${publicKey!}`, '_blank')}
             className="p-2 hover:bg-cyber-blue/20 rounded-lg transition-colors"
             title="View on Solscan"
           >
