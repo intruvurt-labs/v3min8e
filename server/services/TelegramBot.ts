@@ -666,7 +666,22 @@ Choose your preferred settings:
             disable_web_page_preview: true,
           });
           return;
-        } catch (fallbackErr) {
+        } catch (fallbackErr: any) {
+          const m = String(fallbackErr?.message || fallbackErr);
+          if (/429|rate/i.test(m)) {
+            await this.bot.editMessageText(
+              "⏱ RPC rate limit reached; try again shortly or set a private RPC.",
+              { chat_id: msg.chat.id, message_id: scanningMessage.message_id },
+            );
+            return;
+          }
+          if (/invalid|not found|failed to/i.test(m)) {
+            await this.bot.editMessageText(
+              "❌ Could not fetch token; the mint may not exist on mainnet or the RPC failed.",
+              { chat_id: msg.chat.id, message_id: scanningMessage.message_id },
+            );
+            return;
+          }
           console.error("Fallback Solana scan failed:", fallbackErr);
         }
       }
