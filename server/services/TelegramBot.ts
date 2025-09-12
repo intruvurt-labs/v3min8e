@@ -370,7 +370,7 @@ Welcome to secure, decentralized threat intelligence!
 • All Threats: Get alerts for all detected threats
 
 ⏰ **Recurring Messages:**
-• Periodic threat summaries
+�� Periodic threat summaries
 • Scanner status updates
 • Community announcements
 
@@ -932,32 +932,39 @@ Last update: ${new Date().toLocaleTimeString()}
   ) {
     const riskEmoji = this.getRiskEmoji(result.risk_score);
     const riskCategory = this.getRiskCategory(result.risk_score);
+    const isCompact = this.compactChats.has(chatId);
 
-    let message = `${riskEmoji} **Scan Complete**\n\n`;
-    message += `📍 **Address:** \`${result.token_address}\`\n`;
-    message += `🌐 **Blockchain:** ${result.blockchain}\n`;
-    message += `🏷️ **Symbol:** ${result.token_symbol || "Unknown"}\n`;
-    message += `���� **Risk Score:** ${result.risk_score}/100 (${riskCategory})\n\n`;
+    let message = "";
+    if (isCompact) {
+      const shortAddr = `${result.token_address.substring(0, 6)}...${result.token_address.substring(result.token_address.length - 4)}`;
+      message = `${riskEmoji} ${result.token_symbol || "Unknown"} • ${result.blockchain} • ${result.risk_score}/100 (${riskCategory})\n${shortAddr}`;
+    } else {
+      message = `${riskEmoji} **Scan Complete**\n\n`;
+      message += `📍 **Address:** \`${result.token_address}\`\n`;
+      message += `🌐 **Blockchain:** ${result.blockchain}\n`;
+      message += `🏷️ **Symbol:** ${result.token_symbol || "Unknown"}\n`;
+      message += `🧮 **Risk Score:** ${result.risk_score}/100 (${riskCategory})\n\n`;
 
-    if (result.threat_categories && result.threat_categories.length > 0) {
-      message += `🚨 **Threats Detected:**\n`;
-      for (const threat of result.threat_categories) {
-        message += `• ${this.formatThreatCategory(threat)}\n`;
+      if (result.threat_categories && result.threat_categories.length > 0) {
+        message += `🚨 **Threats Detected:**\n`;
+        for (const threat of result.threat_categories) {
+          message += `• ${this.formatThreatCategory(threat)}\n`;
+        }
+        message += "\n";
       }
-      message += "\n";
-    }
 
-    if (result.risk_score <= 30) {
-      message += `⚠️ **WARNING:** High risk token detected!\n`;
-      message += `❌ **Recommendation:** Avoid this token\n\n`;
-    } else if (result.risk_score >= 70) {
-      message += `✅ **Status:** Looks safe\n`;
-      message += `💚 **Recommendation:** Proceed with normal caution\n\n`;
-    }
+      if (result.risk_score <= 30) {
+        message += `⚠️ **WARNING:** High risk token detected!\n`;
+        message += `❌ **Recommendation:** Avoid this token\n\n`;
+      } else if (result.risk_score >= 70) {
+        message += `✅ **Status:** Looks safe\n`;
+        message += `💚 **Recommendation:** Proceed with normal caution\n\n`;
+      }
 
-    message += `⏱️ **Scan Duration:** ${result.scan_duration_ms}ms\n`;
-    message += `🔍 **Scanner Version:** ${result.scanner_version}\n`;
-    message += `📅 **Timestamp:** ${new Date(result.created_at).toLocaleString()}`;
+      message += `⏱️ **Scan Duration:** ${result.scan_duration_ms}ms\n`;
+      message += `🔍 **Scanner Version:** ${result.scanner_version}\n`;
+      message += `📅 **Timestamp:** ${new Date(result.created_at).toLocaleString()}`;
+    }
 
     const keyboard = {
       inline_keyboard: [
@@ -974,18 +981,16 @@ Last update: ${new Date().toLocaleTimeString()}
       ],
     };
 
+    const payload = { parse_mode: "Markdown", reply_markup: keyboard } as any;
+
     if (messageId) {
       await this.bot.editMessageText(message, {
         chat_id: chatId,
         message_id: messageId,
-        parse_mode: "Markdown",
-        reply_markup: keyboard,
+        ...payload,
       });
     } else {
-      await this.sendMessage(chatId, message, {
-        parse_mode: "Markdown",
-        reply_markup: keyboard,
-      });
+      await this.sendMessage(chatId, message, payload);
     }
   }
 
