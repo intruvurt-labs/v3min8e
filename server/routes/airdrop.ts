@@ -354,8 +354,33 @@ router.post(
           break;
 
         case "daily_scan_streak":
-          // In production, this would check blockchain data
-          verificationResult = { success: true, reward: 500 };
+          try {
+            // Require user to have at least one verified scan per day for last 7 days
+            const completions = await airdropStorageService.getUserTaskCompletions(userId);
+            const now = new Date();
+            let ok = true;
+            for (let i = 0; i < 7; i++) {
+              const day = new Date(now);
+              day.setDate(now.getDate() - i);
+              const dayStr = day.toISOString().slice(0, 10);
+              const hasScan = completions.some((c) => {
+                const cDay = new Date(c.completedAt).toISOString().slice(0, 10);
+                return cDay === dayStr && (c.taskId === "first_scan" || c.taskId.includes("scan"));
+              });
+              if (!hasScan) { ok = false; break; }
+            }
+            if (!ok) {
+              return res.status(400).json({
+                success: false,
+                error: "Streak requirement not met",
+                message: "Perform at least one verified scan each day for 7 consecutive days",
+              });
+            }
+            verificationResult = { success: true, reward: 500 };
+          } catch (e) {
+            console.error('Streak verification error:', e);
+            verificationResult = { success: false, reward: 0 };
+          }
           break;
 
         case "stake_100_verm":
