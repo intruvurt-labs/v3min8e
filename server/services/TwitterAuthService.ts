@@ -180,6 +180,9 @@ export class TwitterAuthService {
     tweetId: string
   ): Promise<{ liked: boolean; retweeted: boolean; error?: string }> {
     try {
+      if (!this.config.clientId || !this.config.clientSecret) {
+        throw new Error('Twitter API credentials not configured');
+      }
       const userClient = new TwitterApi({
         appKey: this.config.clientId,
         appSecret: this.config.clientSecret,
