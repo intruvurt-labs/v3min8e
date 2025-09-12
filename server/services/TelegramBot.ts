@@ -125,6 +125,31 @@ export class NimRevTelegramBot {
         description: "Toggle compact output (on/off)",
         handler: this.handleCompact.bind(this),
       },
+      {
+        command: "captcha",
+        description: "Enable/disable join captcha: /captcha on|off",
+        handler: this.handleCaptchaCommand.bind(this),
+      },
+      {
+        command: "welcomemsg",
+        description: "Set custom welcome message",
+        handler: this.handleWelcomeMsgCommand.bind(this),
+      },
+      {
+        command: "report",
+        description: "Send feedback/bug report to admins",
+        handler: this.handleReportCommand.bind(this),
+      },
+      {
+        command: "raid",
+        description: "Create a raid CTA: /raid <url or text>",
+        handler: this.handleRaidCommand.bind(this),
+      },
+      {
+        command: "compact",
+        description: "Toggle compact output (on/off)",
+        handler: this.handleCompact.bind(this),
+      },
     ];
 
     for (const cmd of commands) {
