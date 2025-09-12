@@ -100,8 +100,35 @@ export default function Airdrop() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [verificationCode, setVerificationCode] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
-  const [totalVermDetected, setTotalVermDetected] = useState(2938402); // Start with fallback value
+  const [totalVermDetected, setTotalVermDetected] = useState(2938402);
   const [lastScanUpdate, setLastScanUpdate] = useState(Date.now());
+  const [endTimestamp, setEndTimestamp] = useState<number>(0);
+  const [countdown, setCountdown] = useState({ days: 90, hours: 0, mins: 0, secs: 0 });
+  const pad2 = (n: number) => n.toString().padStart(2, "0");
+
+  // Initialize and reset countdown to 90 days (persist new target)
+  useEffect(() => {
+    const ninetyDaysMs = 90 * 24 * 60 * 60 * 1000;
+    const newEnd = Date.now() + ninetyDaysMs;
+    setEndTimestamp(newEnd);
+    try {
+      localStorage.setItem("nimrev_airdrop_end", String(newEnd));
+    } catch {}
+
+    const update = () => {
+      const now = Date.now();
+      const total = Math.max(0, Math.floor((newEnd - now) / 1000));
+      const days = Math.floor(total / 86400);
+      const hours = Math.floor((total % 86400) / 3600);
+      const mins = Math.floor((total % 3600) / 60);
+      const secs = total % 60;
+      setCountdown({ days, hours, mins, secs });
+    };
+
+    update();
+    const interval = setInterval(update, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Fetch real statistics
   useEffect(() => {
@@ -637,7 +664,12 @@ export default function Airdrop() {
                 </span>
               </div>
               <div className="flex justify-center gap-4">
-                {["55", "23", "47", "12"].map((time, index) => (
+                {[
+                  String(countdown.days),
+                  pad2(countdown.hours),
+                  pad2(countdown.mins),
+                  pad2(countdown.secs),
+                ].map((time, index) => (
                   <div
                     key={index}
                     className="bg-cyber-green/30 border border-cyber-green rounded-lg p-4 text-center backdrop-blur-sm"
