@@ -1552,16 +1552,20 @@ Last update: ${new Date().toLocaleTimeString()}
 
     const network =
       (getEnv("SOLANA_NETWORK") as unknown as string) || "mainnet-beta";
-    const helius = (getEnv("HELIUS_RPC_URL") as unknown as string) || "";
-    const hasHeliusKey =
-      !!process.env.HELIUS_API_KEY || /api-key=/i.test(helius);
+    let helius = (getEnv("HELIUS_RPC_URL") as unknown as string) || "";
+    const heliusKey = process.env.HELIUS_API_KEY || "";
+    const hasApiParam = /api-key=/i.test(helius);
+    if (helius && heliusKey && !hasApiParam) {
+      helius = `${helius}${helius.includes("?") ? "&" : "?"}api-key=${heliusKey}`;
+    }
+    const hasHeliusKey = !!heliusKey || /api-key=/i.test(helius);
 
     const fallback = clusterApiUrl(network as any);
 
     const baseUrls =
       poolEnv.length > 0
         ? poolEnv
-        : hasHeliusKey && helius
+        : helius
           ? [helius]
           : [fallback];
 
