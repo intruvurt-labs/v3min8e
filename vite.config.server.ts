@@ -11,7 +11,7 @@ export default defineConfig({
       formats: ["es"],
     },
     outDir: "dist/server",
-    target: "node22",
+    target: "node20",                 // match Netlify's Node 20
     ssr: true,
     rollupOptions: {
       external: [
@@ -32,13 +32,15 @@ export default defineConfig({
         // External dependencies that should not be bundled
         "express",
         "cors",
+        "@nareshbhatia/react-force",  // add this
+        /^@react-force\//             // covers split packages if used
       ],
       output: {
         format: "es",
         entryFileNames: "[name].mjs",
       },
     },
-    minify: false, // Keep readable for debugging
+    minify: false,
     sourcemap: true,
   },
   resolve: {
