@@ -17,6 +17,7 @@
     "build:server": "vite build --config vite.config.server.ts",
     "start": "node index.js",
     "test": "vitest --run",
+      "postinstall": "npx sharp install --force || npm rebuild sharp --verbose || true",
     "format.fix": "prettier --write .",
     "typecheck": "tsc"
   },
