@@ -1,24 +1,16 @@
 [build]
-  command = "npm run build:client"
-  functions = "netlify/functions"
-  publish = "dist/spa"
-
+  command = "npm run build"     # keep your existing build script if different
+  publish = "dist"              # or .next/out, build, etc.
 
 [functions]
-  external_node_modules = ["express"]
+  directory = "netlify/functions"
   node_bundler = "esbuild"
-  
-[[redirects]]
-  force = true
-  from = "/api/check-verm-balance"
-  status = 200
-  to = "/.netlify/functions/check-verm-balance"
 
 [[redirects]]
-  force = true
-  from = "/api/platform/analytics"
+  from = "/api/*"
+  to = "/.netlify/functions/app"
   status = 200
-  to = "/.netlify/functions/platform-analytics"
+
 
 [[redirects]]
   force = true
