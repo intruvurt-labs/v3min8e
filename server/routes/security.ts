@@ -408,8 +408,14 @@ router.get("/threats/live", async (_req: Request, res: Response) => {
                 ? "info"
                 : evt.severity,
           message,
-          timestamp: evt.timestamp instanceof Date ? evt.timestamp.toISOString() : new Date(evt.timestamp as any).toISOString(),
-          confidence: typeof evt.data.riskScore === "number" ? Math.min(99, Math.max(50, 100 - evt.data.riskScore)) : 85,
+          timestamp:
+            evt.timestamp instanceof Date
+              ? evt.timestamp.toISOString()
+              : new Date(evt.timestamp as any).toISOString(),
+          confidence:
+            typeof evt.data.riskScore === "number"
+              ? Math.min(99, Math.max(50, 100 - evt.data.riskScore))
+              : 85,
           source: evt.data.source,
         };
       })

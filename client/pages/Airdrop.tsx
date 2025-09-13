@@ -103,7 +103,12 @@ export default function Airdrop() {
   const [totalVermDetected, setTotalVermDetected] = useState(2938402);
   const [lastScanUpdate, setLastScanUpdate] = useState(Date.now());
   const [endTimestamp, setEndTimestamp] = useState<number>(0);
-  const [countdown, setCountdown] = useState({ days: 90, hours: 0, mins: 0, secs: 0 });
+  const [countdown, setCountdown] = useState({
+    days: 90,
+    hours: 0,
+    mins: 0,
+    secs: 0,
+  });
   const pad2 = (n: number) => n.toString().padStart(2, "0");
 
   // Initialize and reset countdown to 90 days (persist new target)
@@ -591,12 +596,12 @@ export default function Airdrop() {
           <div className="mb-8">
             <AirdropWalletConnection
               onWalletConnected={(publicKey) => {
-                console.log('Wallet connected:', publicKey);
+                console.log("Wallet connected:", publicKey);
                 // Refresh user progress when wallet connects
                 loadUserProgress();
               }}
               onWalletDisconnected={() => {
-                console.log('Wallet disconnected');
+                console.log("Wallet disconnected");
               }}
               requiredForTasks={true}
               showRewards={true}
@@ -1016,43 +1021,47 @@ export default function Airdrop() {
             )}
 
             {activeTab === "tasks" && (
-            <motion.div
-              key="tasks"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              className="space-y-4"
-            >
-              {/* Task Requirements Notice */}
-              {!connected && (
-                <div className="bg-cyber-orange/20 border border-cyber-orange/50 rounded-xl p-6 text-center mb-6">
-                  <Wallet className="w-12 h-12 text-cyber-orange mx-auto mb-4" />
-                  <h3 className="text-xl font-bold text-cyber-orange mb-2">
-                    Wallet Required for Task Verification
-                  </h3>
-                  <p className="text-gray-300">
-                    Connect your Solana wallet above to participate in tasks and earn VERM rewards.
-                  </p>
-                </div>
-              )}
+              <motion.div
+                key="tasks"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="space-y-4"
+              >
+                {/* Task Requirements Notice */}
+                {!connected && (
+                  <div className="bg-cyber-orange/20 border border-cyber-orange/50 rounded-xl p-6 text-center mb-6">
+                    <Wallet className="w-12 h-12 text-cyber-orange mx-auto mb-4" />
+                    <h3 className="text-xl font-bold text-cyber-orange mb-2">
+                      Wallet Required for Task Verification
+                    </h3>
+                    <p className="text-gray-300">
+                      Connect your Solana wallet above to participate in tasks
+                      and earn VERM rewards.
+                    </p>
+                  </div>
+                )}
 
-              {tasks.map((task) => (
+                {tasks.map((task) => (
                   <motion.div
                     key={task.id}
                     whileHover={{ scale: 1.02 }}
                     className={`border rounded-xl p-6 transition-all duration-300 ${
-                    task.status === "locked"
-                      ? "border-gray-500/30 bg-gray-500/10 opacity-50"
-                      : task.status === "completed"
-                        ? "border-cyber-green/50 bg-cyber-green/10"
-                        : `border-cyber-green/30 bg-dark-bg/60 hover:border-cyber-green/50 ${connected ? 'cursor-pointer' : 'cursor-not-allowed opacity-75'}`
-                  }`}
-                  onClick={() => {
-                    if (!connected) return;
-                    if (task.status !== "locked" && task.status !== "completed") {
-                      startTask(task);
-                    }
-                  }}
+                      task.status === "locked"
+                        ? "border-gray-500/30 bg-gray-500/10 opacity-50"
+                        : task.status === "completed"
+                          ? "border-cyber-green/50 bg-cyber-green/10"
+                          : `border-cyber-green/30 bg-dark-bg/60 hover:border-cyber-green/50 ${connected ? "cursor-pointer" : "cursor-not-allowed opacity-75"}`
+                    }`}
+                    onClick={() => {
+                      if (!connected) return;
+                      if (
+                        task.status !== "locked" &&
+                        task.status !== "completed"
+                      ) {
+                        startTask(task);
+                      }
+                    }}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-4 flex-1">
@@ -1385,12 +1394,17 @@ export default function Airdrop() {
                     </button>
 
                     {/* Social Auth Integration */}
-                    {(selectedTask.id === 'follow_twitter' || selectedTask.id === 'join_telegram') && (
+                    {(selectedTask.id === "follow_twitter" ||
+                      selectedTask.id === "join_telegram") && (
                       <div className="mb-4">
                         <SocialAuthVerification
-                          userId={currentProfile?.id || 'guest'}
+                          userId={currentProfile?.id || "guest"}
                           taskId={selectedTask.id}
-                          platform={selectedTask.id === 'follow_twitter' ? 'twitter' : 'telegram'}
+                          platform={
+                            selectedTask.id === "follow_twitter"
+                              ? "twitter"
+                              : "telegram"
+                          }
                           onVerificationComplete={(success, data) => {
                             if (success) {
                               completeTask(selectedTask.id, data);
@@ -1402,25 +1416,26 @@ export default function Airdrop() {
                     )}
 
                     {/* Default completion button for non-social tasks */}
-                    {selectedTask.id !== 'follow_twitter' && selectedTask.id !== 'join_telegram' && (
-                      <button
-                        onClick={() => completeTask(selectedTask.id)}
-                        disabled={isVerifying}
-                        className="flex-1 px-4 py-2 bg-gradient-to-r from-cyber-green to-cyber-blue text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
-                      >
-                        {isVerifying ? (
-                          <>
-                            <RefreshCw className="w-4 h-4 animate-spin" />
-                            Verifying...
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircle className="w-4 h-4" />
-                            Complete Task
-                          </>
-                        )}
-                      </button>
-                    )}
+                    {selectedTask.id !== "follow_twitter" &&
+                      selectedTask.id !== "join_telegram" && (
+                        <button
+                          onClick={() => completeTask(selectedTask.id)}
+                          disabled={isVerifying}
+                          className="flex-1 px-4 py-2 bg-gradient-to-r from-cyber-green to-cyber-blue text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                          {isVerifying ? (
+                            <>
+                              <RefreshCw className="w-4 h-4 animate-spin" />
+                              Verifying...
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle className="w-4 h-4" />
+                              Complete Task
+                            </>
+                          )}
+                        </button>
+                      )}
                   </div>
                 </div>
               </div>

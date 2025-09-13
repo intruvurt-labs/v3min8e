@@ -4,7 +4,11 @@ import { BlockchainType, ScanRequest } from "../../shared/nimrev-types";
 import { ScanQueue } from "./ScanQueue";
 import { getEnv } from "../utils/env";
 import { Connection, PublicKey, clusterApiUrl } from "@solana/web3.js";
-import { getMint, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import {
+  getMint,
+  TOKEN_2022_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
 import { botMetricsService } from "./BotMetricsService";
 
 interface BotCommand {
@@ -271,13 +275,11 @@ export class NimRevTelegramBot {
                 text: "✅ Verified",
               });
               try {
-                await supabase
-                  .from("captcha_verifications")
-                  .insert({
-                    chat_id: chatId,
-                    user_id: userId,
-                    status: "passed",
-                  });
+                await supabase.from("captcha_verifications").insert({
+                  chat_id: chatId,
+                  user_id: userId,
+                  status: "passed",
+                });
               } catch {}
               const settings = await this.getGroupSettings(chatId);
               if (settings.welcomeMessage) {
@@ -566,7 +568,10 @@ Choose your preferred settings:
 
     if (!input) {
       const full = msg.text || "";
-      const lines = full.split("\n").map((s) => s.trim()).filter(Boolean);
+      const lines = full
+        .split("\n")
+        .map((s) => s.trim())
+        .filter(Boolean);
       if (lines.length >= 2) {
         input = lines[1];
       }
@@ -619,7 +624,10 @@ Choose your preferred settings:
           return;
         }
       } catch (e) {
-        console.warn("Account service unavailable, proceeding with basic scan:", e);
+        console.warn(
+          "Account service unavailable, proceeding with basic scan:",
+          e,
+        );
       }
 
       const scanningMessage = await this.sendMessage(
@@ -692,7 +700,10 @@ Choose your preferred settings:
           return;
         }
       } catch (queueErr) {
-        console.warn("Queue scan failed or timed out, attempting quick fallback:", queueErr);
+        console.warn(
+          "Queue scan failed or timed out, attempting quick fallback:",
+          queueErr,
+        );
       }
 
       // Quick fallback for Solana mints when full scan is unavailable
@@ -742,10 +753,13 @@ Choose your preferred settings:
         }
       }
 
-      await this.bot.editMessageText("❌ Scan failed. Please try again later.", {
-        chat_id: msg.chat.id,
-        message_id: scanningMessage.message_id,
-      });
+      await this.bot.editMessageText(
+        "❌ Scan failed. Please try again later.",
+        {
+          chat_id: msg.chat.id,
+          message_id: scanningMessage.message_id,
+        },
+      );
     } catch (err) {
       console.error("performScan fatal error:", err);
       try {
@@ -1536,17 +1550,24 @@ Last update: ${new Date().toLocaleTimeString()}
       .map((s) => s.trim())
       .filter(Boolean);
 
-    const network = (getEnv("SOLANA_NETWORK") as unknown as string) || "mainnet-beta";
-    const helius = (getEnv("HELIUS_RPC_URL") as unknown as string) || "";
-    const hasHeliusKey = !!process.env.HELIUS_API_KEY || /api-key=/i.test(helius);
+    const network =
+      (getEnv("SOLANA_NETWORK") as unknown as string) || "mainnet-beta";
+    let helius = (getEnv("HELIUS_RPC_URL") as unknown as string) || "";
+    const heliusKey = process.env.HELIUS_API_KEY || "";
+    const hasApiParam = /api-key=/i.test(helius);
+    if (helius && heliusKey && !hasApiParam) {
+      helius = `${helius}${helius.includes("?") ? "&" : "?"}api-key=${heliusKey}`;
+    }
+    const hasHeliusKey = !!heliusKey || /api-key=/i.test(helius);
 
     const fallback = clusterApiUrl(network as any);
 
-    const baseUrls = poolEnv.length > 0
-      ? poolEnv
-      : hasHeliusKey && helius
-        ? [helius]
-        : [fallback];
+    const baseUrls =
+      poolEnv.length > 0
+        ? poolEnv
+        : helius
+          ? [helius]
+          : [fallback];
 
     // Always append a public fallback as last resort
     const urls = Array.from(new Set([...baseUrls, fallback]));
@@ -1577,13 +1598,22 @@ Last update: ${new Date().toLocaleTimeString()}
           ? TOKEN_2022_PROGRAM_ID
           : TOKEN_PROGRAM_ID;
 
-        const mintInfo = await getMint(conn as any, mintPubkey as any, undefined as any, programId as any);
+        const mintInfo = await getMint(
+          conn as any,
+          mintPubkey as any,
+          undefined as any,
+          programId as any,
+        );
         return {
           supply: Number(mintInfo.supply),
           decimals: mintInfo.decimals,
           isInitialized: mintInfo.isInitialized,
-          mintAuthority: mintInfo.mintAuthority ? mintInfo.mintAuthority.toBase58() : null,
-          freezeAuthority: mintInfo.freezeAuthority ? mintInfo.freezeAuthority.toBase58() : null,
+          mintAuthority: mintInfo.mintAuthority
+            ? mintInfo.mintAuthority.toBase58()
+            : null,
+          freezeAuthority: mintInfo.freezeAuthority
+            ? mintInfo.freezeAuthority.toBase58()
+            : null,
         };
       } catch (e) {
         lastErr = e;

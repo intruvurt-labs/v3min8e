@@ -30,8 +30,22 @@ export class SubversiveScanner {
   }
 
   private initializeProviders() {
-    // Initialize EVM providers
-    const evmChains = {
+    // Prefer Infura when available, fallback to public RPCs
+    const infuraProjectId = process.env.INFURA_PROJECT_ID || "";
+
+    const infuraRpcMap: Record<string, string> = infuraProjectId
+      ? {
+          ethereum: `https://mainnet.infura.io/v3/${infuraProjectId}`,
+          base: `https://base-mainnet.infura.io/v3/${infuraProjectId}`,
+          polygon: `https://polygon-mainnet.infura.io/v3/${infuraProjectId}`,
+          arbitrum: `https://arbitrum-mainnet.infura.io/v3/${infuraProjectId}`,
+          avalanche: `https://avalanche-mainnet.infura.io/v3/${infuraProjectId}`,
+          optimism: `https://optimism-mainnet.infura.io/v3/${infuraProjectId}`,
+          // Blast not on Infura; use public
+        }
+      : {};
+
+    const publicRpcs: Record<string, string> = {
       ethereum: "https://eth.llamarpc.com",
       base: "https://mainnet.base.org",
       blast: "https://rpc.blast.io",
@@ -41,18 +55,29 @@ export class SubversiveScanner {
       optimism: "https://mainnet.optimism.io",
     };
 
-    for (const [chain, rpc] of Object.entries(evmChains)) {
-      this.providers.set(
-        chain as BlockchainType,
-        new ethers.JsonRpcProvider(rpc),
-      );
+    const evmChains = Object.keys(publicRpcs);
+
+    for (const chain of evmChains) {
+      const rpc = infuraRpcMap[chain] || publicRpcs[chain];
+      this.providers.set(chain as BlockchainType, new ethers.JsonRpcProvider(rpc));
     }
 
     // Initialize Solana connection
-    this.solanaConnection = new Connection(
-      "https://api.mainnet-beta.solana.com",
-      "confirmed",
-    );
+    const heliusBase = process.env.HELIUS_RPC_URL || "";
+    const heliusKey = process.env.HELIUS_API_KEY || "";
+    const hasApiParam = /api-key=/i.test(heliusBase);
+    const heliusUrl = heliusBase
+      ? hasApiParam
+        ? heliusBase
+        : heliusKey
+          ? `${heliusBase}${heliusBase.includes("?") ? "&" : "?"}api-key=${heliusKey}`
+          : heliusBase
+      : "";
+
+    const solanaNetwork = (process.env.SOLANA_NETWORK as any) || "mainnet-beta";
+    const solanaRpc = heliusUrl || `https://api.${solanaNetwork}.solana.com`;
+
+    this.solanaConnection = new Connection(solanaRpc, "confirmed");
   }
 
   public async performComprehensiveScan(
@@ -193,8 +218,7 @@ export class SubversiveScanner {
   ): Promise<Partial<ScanResult>> {
     try {
       const provider = this.providers.get(blockchain);
-      if (!provider)
-        throw new Error(`Provider not available for ${blockchain}`);
+      if (!provider) throw new Error(`Provider not available for ${blockchain}`);
 
       const contract = new ethers.Contract(
         address,
