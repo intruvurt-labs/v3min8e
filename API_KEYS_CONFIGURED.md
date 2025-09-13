@@ -27,14 +27,14 @@ STRIPE_SECRET_KEY=sk_test_51QVkMDLcbRIp7FXx... (Test key configured)
 VITE_STRIPE_PUBLISHABLE_KEY=pk_test_51QVkMDLcbRIp7FXx... (Test key configured)
 
 # Solana Wallet (Crypto Payments)
-VITE_PAYMENT_WALLET=9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM
-PAYMENT_WALLET_ADDRESS=9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM
+VITE_PAYMENT_WALLET=4XygsJdgpKRqvAuyyyXczDQRDxuSeumns7RA3Ak1RZpf
+PAYMENT_WALLET_ADDRESS=4XygsJdgpKRqvAuyyyXczDQRDxuSeumns7RA3Ak1RZpf
 ```
 
 ### **🗄️ Database Configuration**
 
 ```bash
-SUPABASE_URL=https://tzoqzhrulyrbxhkwbruu.supabase.co
+SUPABASE_URL=https://fibhyokezizzskjhffci.supabase.co
 SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... (Configured)
 SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... (Configured)
 ```
@@ -45,8 +45,8 @@ SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... (Configured)
 # Solana Network
 SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
 HELIUS_RPC_URL=https://mainnet.helius-rpc.com/?api-key=4f8e9c2a-7b3d-1e6f-9a4c-8e2b5d7f1a3c
-VERM_TOKEN_MINT=9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM
-VITE_VERM_MINT_ADDRESS=9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM
+VERM_TOKEN_MINT=Auu4U7cVjm41yVnVtBCwHW2FBAKznPgLR7hQf4Esjups
+VITE_VERM_MINT_ADDRESS=Auu4U7cVjm41yVnVtBCwHW2FBAKznPgLR7hQf4Esjups
 ```
 
 ### **🐦 Social Media APIs**
