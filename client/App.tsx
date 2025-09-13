@@ -65,7 +65,7 @@ const App = () => (
                 <Route path="/age-restriction" element={<AgeRestriction />} />
                 <Route path="/nimrev" element={<NimRevDashboard />} />
                 <Route path="/bot-platform" element={<BotPlatform />} />
-                <Route path="/bot-dashboard" element={<BotPlatform />} />
+                <Route path="/bot-platform" element={<BotPlatform />} />
                 <Route path="/security-audit" element={<SecurityAudit />} />
                 <Route path="/blogs" element={<Blogs />} />
                 <Route path="/chat" element={<ChatPage />} />
