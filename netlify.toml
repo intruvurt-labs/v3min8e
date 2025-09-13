@@ -1,61 +1,22 @@
+# netlify.toml
 [build]
-  command = "npm run build"     # keep your existing build script if different
-  publish = "dist"              # or .next/out, build, etc.
+  command = "npm run build:client"   # or your actual client build
+  publish = "dist/spa"               # must contain index.html after build
 
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
+  external_node_modules = ["express"]  # if your api function uses express
 
+# Route all /api/* to the ONE function named 'api'
 [[redirects]]
   from = "/api/*"
-  to   = "/.netlify/functions/:splat"
+  to   = "/.netlify/functions/api/:splat"
   status = 200
-
-
-[[redirects]]
   force = true
-  from = "/api/user/profile"
-  status = 200
-  to = "/.netlify/functions/user-profile"
 
-[[redirects]]
-  force = true
-  from = "/api/user/profile/update"
-  status = 200
-  to = "/.netlify/functions/user-profile-update"
-
-[[redirects]]
-  force = true
-  from = "/api/track-scan"
-  status = 200
-  to = "/.netlify/functions/track-scan"
-
-[[redirects]]
-  force = true
-  from = "/api/ip-scan-tracking"
-  status = 200
-  to = "/.netlify/functions/ip-scan-tracking"
-
-[[redirects]]
-  force = true
-  from = "/api/scan-history"
-  status = 200
-  to = "/.netlify/functions/scan-history"
-
-[[redirects]]
-  force = true
-  from = "/api/verm-price"
-  status = 200
-  to = "/.netlify/functions/verm-price"
-
-[[redirects]]
-  force = true
-  from = "/api/*"
-  status = 200
-  to = "/.netlify/functions/api/:splat"
-
-# SPA fallback - serve index.html for all non-API routes
+# SPA fallback — keep LAST
 [[redirects]]
   from = "/*"
-  to = "/index.html"
+  to   = "/index.html"
   status = 200
