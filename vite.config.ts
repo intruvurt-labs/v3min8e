@@ -6,7 +6,7 @@ import path from "path";
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
-    port: 8080,
+    port: 3000,
     fs: {
       allow: ["./client", "./shared"],
       deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**", "server/**"],
@@ -23,6 +23,10 @@ export default defineConfig(({ mode }) => ({
     },
   },
 }));
+// vite.config.ts
+export default {
+  ssr: { external: ['sharp'] }
+}
 
 function expressPlugin(): Plugin {
   return {
