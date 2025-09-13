@@ -208,7 +208,7 @@ const CleanSystemStatus = ({ status, currentTime }) => (
         className={`w-2 h-2 rounded-full ${status.botStatus === "ONLINE" ? "bg-green-500 animate-pulse" : "bg-red-500"}`}
       ></div>
       <span
-        className={`text-${status.botStatus === "ONLINE" ? "green-400" : "red-400"}`}
+        className={status.botStatus === "ONLINE" ? "text-green-400" : "text-red-400"}
       >
         {status.botStatus}
       </span>
@@ -589,6 +589,7 @@ export default function App() {
             <div className="flex items-center gap-4">
               <a
                 href="https://t.me/nimrev_bot"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-cyber-purple/20 border border-cyber-purple text-cyber-purple rounded-lg hover:bg-cyber-purple hover:text-white transition-all duration-300"
               >
@@ -627,7 +628,7 @@ export default function App() {
             backgroundColor: shape.color,
             transform: `rotate(${shape.rotation}deg)`,
             animationDelay: `${shape.animationDelay}s`,
-            animationDuration: `${shape.animationDuration}s`,
+            ["--animation-duration"]: `${shape.animationDuration}s`,
             borderRadius: shape.type === "circle" ? "50%" : "10%",
             opacity: 0,
           }}
@@ -716,6 +717,7 @@ export default function App() {
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center mb-16">
               <a
                 href="https://t.me/NimRev_Bot"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="group relative inline-flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-cyber-purple to-cyber-blue px-8 sm:px-12 py-4 sm:py-6 text-base sm:text-lg font-semibold text-white transition-all duration-300 hover:scale-105 font-mono"
               >
@@ -733,6 +735,7 @@ export default function App() {
 
               <a
                 href="https://jup.ag/tokens/Auu4U7cVjm41yVnVtBCwHW2FBAKznPgLR7hQf4Esjups"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="group relative inline-flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-cyber-green via-cyber-blue to-cyber-cyan px-8 sm:px-12 py-4 sm:py-6 text-base sm:text-lg font-semibold text-white transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-cyber-green/25 font-mono"
               >
@@ -930,16 +933,14 @@ export default function App() {
                     <button
                       onClick={() => toggleConfig(config.id)}
                       disabled={config.isPremium && !isPremium}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ml-4 ${
-                        config.enabled ? "bg-cyber-green" : "bg-gray-300"
-                      } ${config.isPremium && !isPremium ? "opacity-50 cursor-not-allowed" : ""}`}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ml-4 ${config.enabled ? "bg-cyber-green" : "bg-gray-300"
+                        } ${config.isPremium && !isPremium ? "opacity-50 cursor-not-allowed" : ""}`}
                       aria-label={`Toggle ${config.label}`}
                       title={`Toggle ${config.label}`}
                     >
                       <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                          config.enabled ? "translate-x-6" : "translate-x-1"
-                        }`}
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${config.enabled ? "translate-x-6" : "translate-x-1"
+                          }`}
                       />
                     </button>
                   </div>
