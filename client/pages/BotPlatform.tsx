@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
-// Placeholder for react-router-dom Link, as it's not available in this environment
+/** --------------------------------
+ *  Lightweight stand-ins (router & icons)
+ * -------------------------------- */
 const Link = ({ to, className, children }) => (
   <a href={to} className={className}>
     {children}
   </a>
 );
 
-// Placeholder for Lucide React icons
 const Bot = ({ className }) => (
   <svg
     className={className}
@@ -20,6 +21,7 @@ const Bot = ({ className }) => (
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
+    aria-hidden="true"
   >
     <path d="M12 8V4H8" />
     <path d="M22 6c0-2.2-1.8-4-4-4H8c-2.2 0-4 1.8-4 4v8a4 4 0 0 0 4 4h4v4h8a4 4 0 0 0 4-4V6Z" />
@@ -38,6 +40,7 @@ const Users = ({ className }) => (
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
+    aria-hidden="true"
   >
     <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
     <circle cx="9" cy="7" r="4" />
@@ -57,6 +60,7 @@ const Crown = ({ className }) => (
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
+    aria-hidden="true"
   >
     <path d="m2 4 3 12h14l3-12-6 8-4-8-4 8-6-8z" />
     <path d="M12 15a4 4 0 0 1 4 4v2H8v-2a4 4 0 0 1 4-4Z" />
@@ -74,6 +78,7 @@ const ArrowLeft = ({ className }) => (
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
+    aria-hidden="true"
   >
     <path d="m12 19-7-7 7-7" />
     <path d="M19 12H5" />
@@ -91,6 +96,7 @@ const ExternalLink = ({ className }) => (
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
+    aria-hidden="true"
   >
     <path d="M15 3h6v6" />
     <path d="M10 14 21 3" />
@@ -109,6 +115,7 @@ const MessageSquare = ({ className }) => (
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
+    aria-hidden="true"
   >
     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
   </svg>
@@ -125,6 +132,7 @@ const Shield = ({ className }) => (
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
+    aria-hidden="true"
   >
     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
   </svg>
@@ -141,6 +149,7 @@ const TrendingUp = ({ className }) => (
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
+    aria-hidden="true"
   >
     <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
     <polyline points="16 7 22 7 22 13" />
@@ -158,6 +167,7 @@ const Zap = ({ className }) => (
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
+    aria-hidden="true"
   >
     <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
   </svg>
@@ -174,6 +184,7 @@ const DollarSign = ({ className }) => (
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
+    aria-hidden="true"
   >
     <line x1="12" x2="12" y1="2" y2="22" />
     <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
@@ -191,6 +202,7 @@ const BarChart3 = ({ className }) => (
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
+    aria-hidden="true"
   >
     <path d="M3 3v18h18" />
     <path d="M18 17V9" />
@@ -199,17 +211,18 @@ const BarChart3 = ({ className }) => (
   </svg>
 );
 
-// Real components with API integration
+/** --------------------------------
+ *  Small components
+ * -------------------------------- */
 const CleanSystemStatus = ({ status, currentTime }) => (
   <div className="bg-dark-bg/80 backdrop-blur-xl border border-cyber-green/30 p-4 rounded-xl shadow-2xl shadow-cyber-purple/20 text-xs font-mono">
     <h3 className="text-white text-sm font-semibold mb-2">System Status</h3>
     <div className="flex items-center gap-2">
       <div
-        className={`w-2 h-2 rounded-full ${status.botStatus === "ONLINE" ? "bg-green-500 animate-pulse" : "bg-red-500"}`}
-      ></div>
-      <span
-        className={status.botStatus === "ONLINE" ? "text-green-400" : "text-red-400"}
-      >
+        className={`w-2 h-2 rounded-full ${status.botStatus === "ONLINE" ? "bg-green-500 animate-pulse" : "bg-red-500"
+          }`}
+      />
+      <span className={status.botStatus === "ONLINE" ? "text-green-400" : "text-red-400"}>
         {status.botStatus}
       </span>
     </div>
@@ -230,7 +243,8 @@ const FeatureCard = ({ icon: Icon, title, description, status }) => (
       <h3 className="text-lg font-semibold text-white mb-3">{title}</h3>
       <p className="text-gray-300 text-sm flex-grow">{description}</p>
       <div
-        className={`mt-4 text-xs font-mono px-2 py-1 rounded-full ${status === "Active" ? "bg-cyber-green/20 text-cyber-green" : "bg-gray-500/20 text-gray-400"}`}
+        className={`mt-4 text-xs font-mono px-2 py-1 rounded-full ${status === "Active" ? "bg-cyber-green/20 text-cyber-green" : "bg-gray-500/20 text-gray-400"
+          }`}
       >
         Status: {status}
       </div>
@@ -239,30 +253,15 @@ const FeatureCard = ({ icon: Icon, title, description, status }) => (
 );
 
 const CyberGrid = () => (
-  <div className="absolute inset-0 w-full h-full z-0 overflow-hidden opacity-30">
+  <div className="absolute inset-0 w-full h-full z-0 overflow-hidden opacity-30" aria-hidden="true">
     <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <pattern
-          id="smallGrid"
-          width="8"
-          height="8"
-          patternUnits="userSpaceOnUse"
-        >
-          <path
-            d="M 8 0 L 0 0 0 8"
-            fill="none"
-            stroke="#2a2a2a"
-            strokeWidth="0.5"
-          />
+        <pattern id="smallGrid" width="8" height="8" patternUnits="userSpaceOnUse">
+          <path d="M 8 0 L 0 0 0 8" fill="none" stroke="#2a2a2a" strokeWidth="0.5" />
         </pattern>
         <pattern id="grid" width="80" height="80" patternUnits="userSpaceOnUse">
           <rect width="80" height="80" fill="url(#smallGrid)" />
-          <path
-            d="M 80 0 L 0 0 0 80"
-            fill="none"
-            stroke="#3d3d3d"
-            strokeWidth="1"
-          />
+          <path d="M 80 0 L 0 0 0 80" fill="none" stroke="#3d3d3d" strokeWidth="1" />
         </pattern>
       </defs>
       <rect width="100%" height="100%" fill="url(#grid)" />
@@ -275,8 +274,27 @@ const styles = {
     "text-transparent bg-clip-text bg-gradient-to-r from-cyber-purple via-cyber-blue to-cyber-green",
 };
 
+/** --------------------------------
+ *  Helper: safe fetch with timeout
+ * -------------------------------- */
+async function fetchJSON(url, { timeoutMs = 9000 } = {}) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { signal: ctrl.signal });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    // tolerate empty body
+    const text = await res.text();
+    return text ? JSON.parse(text) : {};
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+/** --------------------------------
+ *  Main App
+ * -------------------------------- */
 export default function App() {
-  // Real data state
   const [realTimeStatus, setRealTimeStatus] = useState({
     botStatus: "LOADING",
     activeGroups: "...",
@@ -301,36 +319,35 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const mountedRef = useRef(true);
+
   // API functions
   const fetchBotStats = async () => {
     try {
-      const response = await fetch("/api/bot/stats");
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
-      }
-      const data = await response.json();
-
+      const data = await fetchJSON("/api/bot/stats");
+      if (!mountedRef.current) return;
       setBotStats({
-        activeGroups: data.activeGroups || "0",
-        messagesProcessed: data.messagesProcessed || "0",
-        spamBlocked: data.spamBlocked || "0",
-        uptime: data.uptime || "0%",
+        activeGroups: data.activeGroups ?? "0",
+        messagesProcessed: data.messagesProcessed ?? "0",
+        spamBlocked: data.spamBlocked ?? "0",
+        uptime: data.uptime ?? "0%",
       });
-
       setRealTimeStatus((prev) => ({
         ...prev,
-        botStatus: data.botStatus || "OFFLINE",
-        activeGroups: data.activeGroups || "0",
-        messagesProcessed: data.messagesProcessed || "0",
-        spamBlocked: data.spamBlocked || "0",
-        uptime: data.uptime || "0%",
-        activeUsers: data.activeUsers || 0,
-        lastSync: data.lastSync || new Date().toISOString(),
+        botStatus: data.botStatus ?? "OFFLINE",
+        activeGroups: data.activeGroups ?? "0",
+        messagesProcessed: data.messagesProcessed ?? "0",
+        spamBlocked: data.spamBlocked ?? "0",
+        uptime: data.uptime ?? "0%",
+        activeUsers: data.activeUsers ?? 0,
+        lastSync: data.lastSync ?? new Date().toISOString(),
       }));
-    } catch (error) {
-      console.error("Failed to fetch bot stats:", error);
+      setError(null);
+    } catch (e) {
+      console.error("Failed to fetch bot stats:", e);
+      if (!mountedRef.current) return;
       setError("Failed to load bot statistics");
-      // Fallback to basic values instead of demo data
+      // Fallback demo-ish values
       setBotStats({
         activeGroups: "3",
         messagesProcessed: "156",
@@ -350,38 +367,30 @@ export default function App() {
 
   const fetchBotStatus = async () => {
     try {
-      const response = await fetch("/api/bot/status");
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
-      }
-      const data = await response.json();
-
+      const data = await fetchJSON("/api/bot/status");
+      if (!mountedRef.current) return;
       setRealTimeStatus((prev) => ({
         ...prev,
-        botStatus: data.status || "OFFLINE",
-        health: data.health || 0,
-        lastPing: data.lastPing,
-        activeUsers: data.activeUsers || 0,
+        botStatus: data.status ?? "OFFLINE",
+        health: data.health ?? 0,
+        lastPing: data.lastPing ?? null,
+        activeUsers: data.activeUsers ?? 0,
       }));
-    } catch (error) {
-      console.error("Failed to fetch bot status:", error);
-      setRealTimeStatus((prev) => ({
-        ...prev,
-        botStatus: "ERROR",
-      }));
+    } catch (e) {
+      console.error("Failed to fetch bot status:", e);
+      if (!mountedRef.current) return;
+      setRealTimeStatus((prev) => ({ ...prev, botStatus: "ERROR" }));
     }
   };
 
   const loadConfigurations = async () => {
     try {
-      // In a real app, this would come from an API
-      // For now, using minimal real configuration options
+      // Could be fetched from /api/bot/config in the future
       const realConfigs = [
         {
           id: 1,
           label: "Anti-Spam Protection",
-          description:
-            "Automatically detect and block spam messages in your groups.",
+          description: "Automatically detect and block spam messages in your groups.",
           isPremium: false,
           enabled: true,
         },
@@ -407,43 +416,40 @@ export default function App() {
           enabled: false,
         },
       ];
+      if (!mountedRef.current) return;
       setConfigs(realConfigs);
-    } catch (error) {
-      console.error("Failed to load configurations:", error);
+    } catch (e) {
+      console.error("Failed to load configurations:", e);
+      if (!mountedRef.current) return;
       setConfigs([]);
     }
   };
 
   const loadFeatures = async () => {
     try {
-      // Real features based on actual platform capabilities
       const realFeatures = [
         {
           icon: Bot,
           title: "Telegram Bot Integration",
-          description:
-            "Native Telegram bot with /scan, /verify, and /help commands.",
+          description: "Native Telegram bot with /scan, /verify, and /help commands.",
           status: realTimeStatus.botStatus === "ONLINE" ? "Active" : "Offline",
         },
         {
           icon: Users,
           title: "Multi-Group Support",
-          description:
-            "Manage multiple Telegram groups with isolated settings.",
+          description: "Manage multiple Telegram groups with isolated settings.",
           status: "Active",
         },
         {
           icon: Crown,
           title: "Solana Token Support",
-          description:
-            "Full integration with Solana blockchain and SPL tokens.",
+          description: "Full integration with Solana blockchain and SPL tokens.",
           status: "Active",
         },
         {
           icon: Shield,
           title: "Security Scanning",
-          description:
-            "Real-time blockchain security analysis and threat detection.",
+          description: "Real-time blockchain security analysis and threat detection.",
           status: "Active",
         },
         {
@@ -459,36 +465,37 @@ export default function App() {
           status: "Active",
         },
       ];
+      if (!mountedRef.current) return;
       setFeatures(realFeatures);
-    } catch (error) {
-      console.error("Failed to load features:", error);
+    } catch (e) {
+      console.error("Failed to load features:", e);
+      if (!mountedRef.current) return;
       setFeatures([]);
     }
   };
 
-  // Function to toggle a configuration setting
   const toggleConfig = async (id) => {
     try {
-      // In a real app, this would make an API call to update the setting
-      setConfigs(
-        configs.map((config) =>
-          config.id === id ? { ...config, enabled: !config.enabled } : config,
-        ),
+      setConfigs((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, enabled: !c.enabled } : c))
       );
-
-      // Here you would typically make an API call:
-      // await fetch(`/api/bot/config/${id}`, { method: 'PUT', ... });
-    } catch (error) {
-      console.error("Failed to toggle configuration:", error);
+      // TODO: PUT /api/bot/config/:id in real app
+    } catch (e) {
+      console.error("Failed to toggle configuration:", e);
     }
   };
 
-  const handlePremiumFeatureClick = () => {
-    setIsPaymentOpen(true);
-  };
-
+  // Mount / unmount tracking for safe state updates
   useEffect(() => {
-    // Generate minimal geometric shapes
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  // Initial data + shapes
+  useEffect(() => {
+    // generate some subtle animated shapes
     const shapes = Array.from({ length: 4 }, (_, i) => ({
       id: i,
       type: Math.random() > 0.5 ? "circle" : "polygon",
@@ -498,46 +505,43 @@ export default function App() {
       rotation: Math.random() * 360,
       color: [
         "rgba(160, 100, 255, 0.1)", // Purple
-        "rgba(0, 191, 255, 0.1)", // Blue
-        "rgba(0, 255, 200, 0.1)", // Green
-        "rgba(255, 107, 0, 0.1)", // Orange
+        "rgba(0, 191, 255, 0.1)",   // Blue
+        "rgba(0, 255, 200, 0.1)",   // Green
+        "rgba(255, 107, 0, 0.1)",   // Orange
       ][Math.floor(Math.random() * 4)],
       animationDelay: Math.random() * 3,
       animationDuration: 4 + Math.random() * 3,
     }));
     setGeometricShapes(shapes);
 
-    // Initial data load
-    const loadInitialData = async () => {
+    const loadInitial = async () => {
       setLoading(true);
-      await Promise.all([
-        fetchBotStats(),
-        fetchBotStatus(),
-        loadConfigurations(),
-        loadFeatures(),
-      ]);
-      setLoading(false);
+      await Promise.all([fetchBotStats(), fetchBotStatus(), loadConfigurations()]);
+      await loadFeatures();
+      if (mountedRef.current) setLoading(false);
     };
 
-    loadInitialData();
+    loadInitial();
 
-    // Set up real-time intervals for live data
-    const statusInterval = setInterval(fetchBotStatus, 10000); // Every 10 seconds
-    const statsInterval = setInterval(fetchBotStats, 30000); // Every 30 seconds
-    const timeInterval = setInterval(() => setCurrentTime(Date.now()), 1000); // Every second
+    // realtime intervals
+    const statusInterval = setInterval(fetchBotStatus, 10_000);
+    const statsInterval = setInterval(fetchBotStats, 30_000);
+    const timeInterval = setInterval(() => setCurrentTime(Date.now()), 1_000);
 
     return () => {
       clearInterval(statusInterval);
       clearInterval(statsInterval);
       clearInterval(timeInterval);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Update features when status changes
+  // Refresh feature badges when status flips
   useEffect(() => {
     if (!loading) {
       loadFeatures();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [realTimeStatus.botStatus, loading]);
 
   if (loading) {
@@ -566,9 +570,7 @@ export default function App() {
                 className="flex items-center gap-2 text-cyber-green hover:text-cyber-blue transition-colors duration-300"
               >
                 <ArrowLeft className="w-5 h-5" />
-                <span className="font-mono text-sm hidden sm:inline">
-                  Back to Protocol
-                </span>
+                <span className="font-mono text-sm hidden sm:inline">Back to Protocol</span>
               </Link>
               <div className="w-px h-6 bg-cyber-green/30 hidden sm:block"></div>
               <div className="flex items-center gap-3">
@@ -588,15 +590,13 @@ export default function App() {
 
             <div className="flex items-center gap-4">
               <a
-                href="https://t.me/nimrev_bot"
+                href="https://t.me/NimRev_Bot"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-cyber-purple/20 border border-cyber-purple text-cyber-purple rounded-lg hover:bg-cyber-purple hover:text-white transition-all duration-300"
               >
                 <ExternalLink className="w-4 h-4" />
-                <span className="font-mono text-sm hidden sm:inline">
-                  Now Available on Telegram
-                </span>
+                <span className="font-mono text-sm hidden sm:inline">Now Available on Telegram</span>
                 <span className="font-mono text-sm sm:hidden">Telegram</span>
               </a>
             </div>
@@ -635,12 +635,12 @@ export default function App() {
         />
       ))}
 
-      {/* Real-time Bot Status Panel - Responsive positioning */}
+      {/* Real-time Bot Status Panel */}
       <div className="absolute top-20 sm:top-24 left-4 sm:left-8 z-20">
         <CleanSystemStatus status={realTimeStatus} currentTime={currentTime} />
       </div>
 
-      {/* Video Header - Responsive positioning */}
+      {/* Video Header */}
       <div className="absolute top-20 sm:top-24 right-4 sm:right-8 z-20">
         <div className="relative w-[150px] h-[180px] sm:w-[200px] sm:h-[250px] rounded-2xl overflow-hidden backdrop-blur-sm bg-dark-bg/60 border border-cyber-green/50 shadow-2xl shadow-cyber-purple/20">
           <img
@@ -653,7 +653,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* Hero Section - Improved spacing and layout */}
+      {/* Hero Section */}
       <section className="relative z-10 pt-24 pb-16 sm:pt-32 sm:pb-24">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="max-w-5xl mx-auto text-center">
@@ -671,16 +671,12 @@ export default function App() {
                   <span className="absolute inset-0 text-cyber-blue opacity-60 nimrev-glitch-blue">
                     NimRev
                   </span>
-                  <span className="relative text-white nimrev-title-glow">
-                    NimRev
-                  </span>
+                  <span className="relative text-white nimrev-title-glow">NimRev</span>
                 </div>
               </h1>
 
               <div className="relative text-2xl sm:text-4xl md:text-7xl font-bold mb-8 font-mono">
-                <span
-                  className={`bg-gradient-to-r from-cyber-purple via-cyber-blue to-cyber-green bg-clip-text text-transparent ${styles.gradientTitle}`}
-                >
+                <span className={`bg-gradient-to-r from-cyber-purple via-cyber-blue to-cyber-green bg-clip-text text-transparent ${styles.gradientTitle}`}>
                   Multi-Tenant Bot
                 </span>
               </div>
@@ -688,17 +684,13 @@ export default function App() {
 
             <p className="text-lg sm:text-xl md:text-2xl text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed font-mono">
               The most sophisticated{" "}
-              <span className="text-cyber-green font-semibold">
-                multi-tenant platform
-              </span>{" "}
+              <span className="text-cyber-green font-semibold">multi-tenant platform</span>{" "}
               that transforms any project into a professional{" "}
-              <span className="text-cyber-purple font-semibold">
-                Telegram ecosystem
-              </span>{" "}
+              <span className="text-cyber-purple font-semibold">Telegram ecosystem</span>{" "}
               with enterprise-grade features
             </p>
 
-            {/* Feature Preview Cards - Better responsive grid */}
+            {/* Feature Preview Cards */}
             <div className="relative mb-16">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
                 {features.slice(0, 3).map((feature, index) => (
@@ -713,7 +705,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Primary Action Buttons - Better responsive layout */}
+            {/* Primary Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center mb-16">
               <a
                 href="https://t.me/NimRev_Bot"
@@ -745,18 +737,14 @@ export default function App() {
               </a>
             </div>
 
-            {/* Live Stats - Real data display */}
+            {/* Live Stats */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-5xl mx-auto">
               <div className="group relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-cyber-purple/20 to-cyber-blue/20 rounded-2xl blur opacity-50 group-hover:opacity-75 transition duration-300"></div>
                 <div className="relative bg-dark-bg/60 backdrop-blur-xl border border-cyber-green/30 rounded-2xl p-4 sm:p-6 text-center">
                   <Users className="h-6 w-6 sm:h-8 sm:w-8 text-cyber-purple mx-auto mb-2 sm:mb-3" />
-                  <div className="text-lg sm:text-2xl font-bold text-white">
-                    {botStats.activeGroups}
-                  </div>
-                  <div className="text-xs sm:text-sm text-gray-300">
-                    Active Groups
-                  </div>
+                  <div className="text-lg sm:text-2xl font-bold text-white">{botStats.activeGroups}</div>
+                  <div className="text-xs sm:text-sm text-gray-300">Active Groups</div>
                   <div className="text-xs text-cyber-purple mt-1">
                     {realTimeStatus.botStatus === "ONLINE" ? "Live" : "Offline"}
                   </div>
@@ -767,12 +755,8 @@ export default function App() {
                 <div className="absolute inset-0 bg-gradient-to-r from-cyber-blue/20 to-cyber-cyan/20 rounded-2xl blur opacity-50 group-hover:opacity-75 transition duration-300"></div>
                 <div className="relative bg-dark-bg/60 backdrop-blur-xl border border-cyber-blue/30 rounded-2xl p-4 sm:p-6 text-center">
                   <MessageSquare className="h-6 w-6 sm:h-8 sm:w-8 text-cyber-blue mx-auto mb-2 sm:mb-3" />
-                  <div className="text-lg sm:text-2xl font-bold text-white">
-                    {botStats.messagesProcessed}
-                  </div>
-                  <div className="text-xs sm:text-sm text-gray-300">
-                    Messages Processed
-                  </div>
+                  <div className="text-lg sm:text-2xl font-bold text-white">{botStats.messagesProcessed}</div>
+                  <div className="text-xs sm:text-sm text-gray-300">Messages Processed</div>
                   <div className="text-xs text-cyber-blue mt-1">Total</div>
                 </div>
               </div>
@@ -781,15 +765,9 @@ export default function App() {
                 <div className="absolute inset-0 bg-gradient-to-r from-cyber-cyan/20 to-cyber-green/20 rounded-2xl blur opacity-50 group-hover:opacity-75 transition duration-300"></div>
                 <div className="relative bg-dark-bg/60 backdrop-blur-xl border border-cyber-cyan/30 rounded-2xl p-4 sm:p-6 text-center">
                   <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-cyber-cyan mx-auto mb-2 sm:mb-3" />
-                  <div className="text-lg sm:text-2xl font-bold text-white">
-                    {botStats.spamBlocked}
-                  </div>
-                  <div className="text-xs sm:text-sm text-gray-300">
-                    Threats Blocked
-                  </div>
-                  <div className="text-xs text-cyber-cyan mt-1">
-                    Protection active
-                  </div>
+                  <div className="text-lg sm:text-2xl font-bold text-white">{botStats.spamBlocked}</div>
+                  <div className="text-xs sm:text-sm text-gray-300">Threats Blocked</div>
+                  <div className="text-xs text-cyber-cyan mt-1">Protection active</div>
                 </div>
               </div>
 
@@ -797,16 +775,10 @@ export default function App() {
                 <div className="absolute inset-0 bg-gradient-to-r from-cyber-green/20 to-cyber-purple/20 rounded-2xl blur opacity-50 group-hover:opacity-75 transition duration-300"></div>
                 <div className="relative bg-dark-bg/60 backdrop-blur-xl border border-cyber-green/30 rounded-2xl p-4 sm:p-6 text-center">
                   <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-cyber-green mx-auto mb-2 sm:mb-3" />
-                  <div className="text-lg sm:text-2xl font-bold text-white">
-                    {botStats.uptime}
-                  </div>
-                  <div className="text-xs sm:text-sm text-gray-300">
-                    System Uptime
-                  </div>
+                  <div className="text-lg sm:text-2xl font-bold text-white">{botStats.uptime}</div>
+                  <div className="text-xs sm:text-sm text-gray-300">System Uptime</div>
                   <div className="text-xs text-cyber-green mt-1">
-                    {realTimeStatus.botStatus === "ONLINE"
-                      ? "Operational"
-                      : "Degraded"}
+                    {realTimeStatus.botStatus === "ONLINE" ? "Operational" : "Degraded"}
                   </div>
                 </div>
               </div>
@@ -815,7 +787,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* Features Grid - Real feature data */}
+      {/* Features Grid */}
       <section className="py-16 sm:py-24 lg:py-32 relative z-10">
         <div className="absolute inset-0 bg-gradient-to-br from-dark-bg/50 to-transparent"></div>
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -851,33 +823,19 @@ export default function App() {
           <div className="mt-16 sm:mt-20 text-center">
             <div className="inline-flex flex-wrap items-center justify-center gap-6 sm:gap-8 rounded-2xl border border-cyber-green/30 bg-dark-bg/60 backdrop-blur-xl px-8 sm:px-12 py-6 sm:py-8 font-mono">
               <div className="text-center">
-                <div className="text-xl sm:text-2xl font-bold text-white">
-                  {realTimeStatus.activeGroups}
-                </div>
-                <div className="text-xs sm:text-sm text-gray-300">
-                  Active Groups
-                </div>
+                <div className="text-xl sm:text-2xl font-bold text-white">{realTimeStatus.activeGroups}</div>
+                <div className="text-xs sm:text-sm text-gray-300">Active Groups</div>
               </div>
               <div className="text-center">
-                <div className="text-xl sm:text-2xl font-bold text-cyber-purple">
-                  {realTimeStatus.activeUsers}
-                </div>
-                <div className="text-xs sm:text-sm text-gray-300">
-                  Active Users
-                </div>
+                <div className="text-xl sm:text-2xl font-bold text-cyber-purple">{realTimeStatus.activeUsers}</div>
+                <div className="text-xs sm:text-sm text-gray-300">Active Users</div>
               </div>
               <div className="text-center">
-                <div className="text-xl sm:text-2xl font-bold text-cyber-blue">
-                  {realTimeStatus.botStatus}
-                </div>
-                <div className="text-xs sm:text-sm text-gray-300">
-                  Bot Status
-                </div>
+                <div className="text-xl sm:text-2xl font-bold text-cyber-blue">{realTimeStatus.botStatus}</div>
+                <div className="text-xs sm:text-sm text-gray-300">Bot Status</div>
               </div>
               <div className="text-center">
-                <div className="text-xl sm:text-2xl font-bold text-cyber-green">
-                  {realTimeStatus.uptime}
-                </div>
+                <div className="text-xl sm:text-2xl font-bold text-cyber-green">{realTimeStatus.uptime}</div>
                 <div className="text-xs sm:text-sm text-gray-300">Uptime</div>
               </div>
             </div>
@@ -885,7 +843,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* Live Configuration Demo - Real configuration options */}
+      {/* Live Configuration */}
       <section className="py-16 sm:py-20 relative z-10 bg-gradient-to-br from-dark-bg/10 to-transparent">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto">
@@ -900,9 +858,7 @@ export default function App() {
 
             <div className="rounded-xl bg-dark-bg/80 border border-cyber-green/30 p-6 sm:p-8 backdrop-blur-xl">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg sm:text-xl font-semibold text-white font-mono">
-                  Bot Configuration
-                </h3>
+                <h3 className="text-lg sm:text-xl font-semibold text-white font-mono">Bot Configuration</h3>
                 <div className="flex items-center gap-2 text-cyber-green">
                   <div className="w-2 h-2 bg-cyber-green rounded-full animate-pulse" />
                   <span className="text-sm font-medium font-mono">
@@ -919,16 +875,12 @@ export default function App() {
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <h4 className="font-medium text-white font-mono text-sm sm:text-base">
-                          {config.label}
-                        </h4>
+                        <h4 className="font-medium text-white font-mono text-sm sm:text-base">{config.label}</h4>
                         {config.isPremium && !isPremium && (
                           <Crown className="h-4 w-4 text-cyber-orange flex-shrink-0" />
                         )}
                       </div>
-                      <p className="text-xs sm:text-sm text-gray-300 font-mono">
-                        {config.description}
-                      </p>
+                      <p className="text-xs sm:text-sm text-gray-300 font-mono">{config.description}</p>
                     </div>
                     <button
                       onClick={() => toggleConfig(config.id)}
@@ -937,6 +889,7 @@ export default function App() {
                         } ${config.isPremium && !isPremium ? "opacity-50 cursor-not-allowed" : ""}`}
                       aria-label={`Toggle ${config.label}`}
                       title={`Toggle ${config.label}`}
+                      type="button"
                     >
                       <span
                         className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${config.enabled ? "translate-x-6" : "translate-x-1"
@@ -955,12 +908,11 @@ export default function App() {
                       Premium Features Available
                     </span>
                   </div>
-                  <p className="text-xs text-gray-300 mb-3 font-mono">
-                    Unlock advanced features with premium access
-                  </p>
+                  <p className="text-xs text-gray-300 mb-3 font-mono">Unlock advanced features with premium access</p>
                   <button
                     onClick={() => setIsPaymentOpen(true)}
                     className="px-4 py-2 rounded bg-cyber-orange text-white text-sm font-medium hover:bg-cyber-orange/90 transition-colors font-mono"
+                    type="button"
                   >
                     Learn More
                   </button>
@@ -982,16 +934,14 @@ export default function App() {
       {isPaymentOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-dark-bg border border-cyber-purple/30 p-6 sm:p-8 rounded-xl max-w-sm w-full text-center font-mono">
-            <h3 className="text-xl font-bold text-white mb-4">
-              Premium Features
-            </h3>
+            <h3 className="text-xl font-bold text-white mb-4">Premium Features</h3>
             <p className="text-gray-300 mb-6">
-              Contact @nimrev_support on Telegram for premium access
-              information.
+              Contact @nimrev_support on Telegram for premium access information.
             </p>
             <button
               onClick={() => setIsPaymentOpen(false)}
               className="px-6 py-2 rounded bg-cyber-green text-white hover:bg-cyber-green/90 transition-colors"
+              type="button"
             >
               Close
             </button>
@@ -1002,71 +952,25 @@ export default function App() {
       {/* CSS Styles */}
       <style>{`
         @keyframes glitch-anim-1 {
-          0% {
-            clip-path: inset(30% 0 55% 0);
-            transform: translate(1px, 1px) rotate(0.5deg);
-          }
-          15% {
-            clip-path: inset(5% 0 85% 0);
-            transform: translate(3px, -2px) rotate(-1deg);
-          }
-          30% {
-            clip-path: inset(70% 0 10% 0);
-            transform: translate(-2px, 2px) rotate(1.5deg);
-          }
-          45% {
-            clip-path: inset(10% 0 60% 0);
-            transform: translate(2px, -1px) rotate(-0.5deg);
-          }
-          60% {
-            clip-path: inset(40% 0 45% 0);
-            transform: translate(-1px, 3px) rotate(1deg);
-          }
-          75% {
-            clip-path: inset(20% 0 60% 0);
-            transform: translate(3px, 1px) rotate(-1.5deg);
-          }
-          90% {
-            clip-path: inset(60% 0 15% 0);
-            transform: translate(-3px, -2px) rotate(0.5deg);
-          }
-          100% {
-            clip-path: inset(30% 0 55% 0);
-            transform: translate(1px, 1px) rotate(0.5deg);
-          }
+          0% { clip-path: inset(30% 0 55% 0); transform: translate(1px, 1px) rotate(0.5deg); }
+          15% { clip-path: inset(5% 0 85% 0); transform: translate(3px, -2px) rotate(-1deg); }
+          30% { clip-path: inset(70% 0 10% 0); transform: translate(-2px, 2px) rotate(1.5deg); }
+          45% { clip-path: inset(10% 0 60% 0); transform: translate(2px, -1px) rotate(-0.5deg); }
+          60% { clip-path: inset(40% 0 45% 0); transform: translate(-1px, 3px) rotate(1deg); }
+          75% { clip-path: inset(20% 0 60% 0); transform: translate(3px, 1px) rotate(-1.5deg); }
+          90% { clip-path: inset(60% 0 15% 0); transform: translate(-3px, -2px) rotate(0.5deg); }
+          100% { clip-path: inset(30% 0 55% 0); transform: translate(1px, 1px) rotate(0.5deg); }
         }
         @keyframes glitch-anim-2 {
-          0% {
-            clip-path: inset(45% 0 40% 0);
-            transform: translate(2px, 3px) rotate(-1.5deg);
-          }
-          20% {
-            clip-path: inset(80% 0 5% 0);
-            transform: translate(-1px, 2px) rotate(1deg);
-          }
-          40% {
-            clip-path: inset(10% 0 70% 0);
-            transform: translate(2px, -3px) rotate(0.5deg);
-          }
-          60% {
-            clip-path: inset(60% 0 20% 0);
-            transform: translate(-3px, -1px) rotate(-1deg);
-          }
-          80% {
-            clip-path: inset(25% 0 65% 0);
-            transform: translate(1px, 1px) rotate(1.5deg);
-          }
-          100% {
-            clip-path: inset(45% 0 40% 0);
-            transform: translate(2px, 3px) rotate(-1.5deg);
-          }
+          0% { clip-path: inset(45% 0 40% 0); transform: translate(2px, 3px) rotate(-1.5deg); }
+          20% { clip-path: inset(80% 0 5% 0); transform: translate(-1px, 2px) rotate(1deg); }
+          40% { clip-path: inset(10% 0 70% 0); transform: translate(2px, -3px) rotate(0.5deg); }
+          60% { clip-path: inset(60% 0 20% 0); transform: translate(-3px, -1px) rotate(-1deg); }
+          80% { clip-path: inset(25% 0 65% 0); transform: translate(1px, 1px) rotate(1.5deg); }
+          100% { clip-path: inset(45% 0 40% 0); transform: translate(2px, 3px) rotate(-1.5deg); }
         }
-        .nimrev-glitch-green {
-          animation: glitch-anim-1 8s infinite linear alternate-reverse;
-        }
-        .nimrev-glitch-blue {
-          animation: glitch-anim-2 8s infinite linear alternate;
-        }
+        .nimrev-glitch-green { animation: glitch-anim-1 8s infinite linear alternate-reverse; }
+        .nimrev-glitch-blue { animation: glitch-anim-2 8s infinite linear alternate; }
         .nimrev-title-glow {
           text-shadow:
             0 0 10px #0ff,
@@ -1076,23 +980,14 @@ export default function App() {
             0 0 50px #ff00ff;
         }
         .geometric-shape {
-          animation: move-and-fade var(--animation-duration, 5s) infinite
-            ease-in-out alternate;
+          animation: move-and-fade var(--animation-duration, 5s) infinite ease-in-out alternate;
           position: absolute;
           opacity: 0;
         }
         @keyframes move-and-fade {
-          0% {
-            transform: translate(0, 0) rotate(0deg) scale(0.5);
-            opacity: 0;
-          }
-          50% {
-            opacity: 0.3;
-          }
-          100% {
-            transform: translate(30px, -20px) rotate(180deg) scale(1.1);
-            opacity: 0;
-          }
+          0%   { transform: translate(0, 0) rotate(0deg) scale(0.5); opacity: 0; }
+          50%  { opacity: 0.3; }
+          100% { transform: translate(30px, -20px) rotate(180deg) scale(1.1); opacity: 0; }
         }
       `}</style>
     </div>
