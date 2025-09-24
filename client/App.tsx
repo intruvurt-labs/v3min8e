@@ -1,5 +1,5 @@
+// 1. FIX: App.tsx - Remove unsafe hot module replacement logic
 import "./global.css";
-
 import { Toaster } from "@/components/ui/toaster";
 import { createRoot } from "react-dom/client";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -9,12 +9,21 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { WalletProvider } from "@/hooks/useWallet";
 import { StatusProvider } from "@/components/UnifiedStatusManager";
 import { ProfileProvider } from "@/components/UserProfileSystem";
+import { lazy, Suspense } from "react";
+import { ErrorBoundary } from "@/components/ErrorBoundary"; // NEW
+
+// Lazy load heavy components for better performance
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Terminal = lazy(() => import("./pages/Terminal"));
+const NimRevDashboard = lazy(() => import("./pages/NimRevDashboard"));
+const BotPlatform = lazy(() => import("./pages/BotPlatform"));
+const SecurityAudit = lazy(() => import("./pages/SecurityAudit"));
+
+// Import lightweight components normally
 import Index from "./pages/Index";
 import Explorer from "./pages/Explorer";
 import Grid from "./pages/Grid";
-import Terminal from "./pages/Terminal";
 import About from "./pages/About";
-import Dashboard from "./pages/Dashboard";
 import Staking from "./pages/Staking";
 import Whitepaper from "./pages/Whitepaper";
 import Technology from "./pages/Technology";
@@ -27,62 +36,75 @@ import Terms from "./pages/Terms";
 import Disclaimer from "./pages/Disclaimer";
 import AgeRestriction from "./pages/AgeRestriction";
 import NotFound from "./pages/NotFound";
-import NimRevDashboard from "./pages/NimRevDashboard";
-import BotPlatform from "./pages/BotPlatform";
-import SecurityAudit from "./pages/SecurityAudit";
 import Blogs from "./pages/Blogs";
 
-const queryClient = new QueryClient();
+// Create query client with optimized settings
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000,   // 10 minutes (renamed from cacheTime)
+      retry: 3,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <WalletProvider>
-      <StatusProvider>
-        <ProfileProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/grid" element={<Grid />} />
-                <Route path="/scanner" element={<Grid />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/terminal" element={<Terminal />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/explorer" element={<Explorer />} />
-                <Route path="/staking" element={<Staking />} />
-                <Route path="/whitepaper" element={<Whitepaper />} />
-                <Route path="/technology" element={<Technology />} />
-                <Route path="/roadmap" element={<Roadmap />} />
-                <Route path="/community" element={<Community />} />
-                <Route path="/airdrop" element={<Airdrop />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/privacy" element={<Privacy />} />
-                <Route path="/terms" element={<Terms />} />
-                <Route path="/disclaimer" element={<Disclaimer />} />
-                <Route path="/age-restriction" element={<AgeRestriction />} />
-                <Route path="/nimrev" element={<NimRevDashboard />} />
-                <Route path="/bot-platform" element={<BotPlatform />} />
-                <Route path="/bot-dashboard" element={<BotPlatform />} />
-                <Route path="/security-audit" element={<SecurityAudit />} />
-                <Route path="/blogs" element={<Blogs />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </TooltipProvider>
-        </ProfileProvider>
-      </StatusProvider>
-    </WalletProvider>
-  </QueryClientProvider>
+// Loading component for Suspense
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyber-green"></div>
+  </div>
 );
 
-// Prevent multiple root creations during hot module reloading
+const App = () => (
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <WalletProvider>
+        <StatusProvider>
+          <ProfileProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/grid" element={<Grid />} />
+                    <Route path="/scanner" element={<Grid />} />
+                    <Route path="/about" element={<About />} />
+                    <Route path="/terminal" element={<Terminal />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/explorer" element={<Explorer />} />
+                    <Route path="/staking" element={<Staking />} />
+                    <Route path="/whitepaper" element={<Whitepaper />} />
+                    <Route path="/technology" element={<Technology />} />
+                    <Route path="/roadmap" element={<Roadmap />} />
+                    <Route path="/community" element={<Community />} />
+                    <Route path="/airdrop" element={<Airdrop />} />
+                    <Route path="/contact" element={<Contact />} />
+                    <Route path="/privacy" element={<Privacy />} />
+                    <Route path="/terms" element={<Terms />} />
+                    <Route path="/disclaimer" element={<Disclaimer />} />
+                    <Route path="/age-restriction" element={<AgeRestriction />} />
+                    <Route path="/nimrev" element={<NimRevDashboard />} />
+                    <Route path="/bot-platform" element={<BotPlatform />} />
+                    <Route path="/bot-dashboard" element={<BotPlatform />} />
+                    <Route path="/security-audit" element={<SecurityAudit />} />
+                    <Route path="/blogs" element={<Blogs />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
+              </BrowserRouter>
+            </TooltipProvider>
+          </ProfileProvider>
+        </StatusProvider>
+      </WalletProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
+);
+
+// FIXED: Safe root creation without development-only logic
 const container = document.getElementById("root")!;
-if (!(container as any)._reactRootContainer) {
-  const root = createRoot(container);
-  (container as any)._reactRootContainer = root;
-  root.render(<App />);
-} else {
-  (container as any)._reactRootContainer.render(<App />);
-}
+const root = createRoot(container);
+root.render(<App />);
