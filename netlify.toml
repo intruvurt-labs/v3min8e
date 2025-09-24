@@ -1,6 +1,3 @@
-// Security and performance improvements
-// ============================================================================
-
 [build]
   command = "npm run build" # FIXED: Run full build, not just client
   functions = "netlify/functions"
