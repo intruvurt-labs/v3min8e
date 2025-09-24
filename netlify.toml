@@ -1,13 +1,42 @@
+// 5. UPDATED: netlify.toml - Security and performance improvements
+// ============================================================================
+
 [build]
-  command = "npm run build:client"
+  command = "npm run build" # FIXED: Run full build, not just client
   functions = "netlify/functions"
   publish = "dist/spa"
-
 
 [functions]
   external_node_modules = ["express"]
   node_bundler = "esbuild"
-  
+
+# ADDED: Security headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff" 
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+# ADDED: Performance headers for assets
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+
+# API redirects (existing)
 [[redirects]]
   force = true
   from = "/api/check-verm-balance"
@@ -62,8 +91,59 @@
   status = 200
   to = "/.netlify/functions/api/:splat"
 
-# SPA fallback - serve index.html for all non-API routes
+# SPA fallback
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+# ============================================================================
+// 6. UPDATED: tsconfig.json - Strict mode enabled
+// ============================================================================
+
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* UPDATED: Strict linting - CRITICAL for production */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitAny": true,
+    "noFallthroughCasesInSwitch": true,
+    "strictNullChecks": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "exactOptionalPropertyTypes": true,
+
+    /* Path mapping */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./client/*"],
+      "@shared/*": ["./shared/*"]
+    }
+  },
+  "include": [
+    "client/**/*",
+    "server/**/*",
+    "shared/**/*",
+    "vite.config.ts",
+    "vite.config.server.ts"
+  ],
+  "exclude": ["node_modules", "dist"]
+}
