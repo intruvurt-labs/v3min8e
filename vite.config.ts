@@ -75,8 +75,7 @@ plugins: [react()],
       '@solana/web3.js',
       'ethers'
     ]
-  }
-}));
+  },
 
 function expressPlugin(): Plugin {
   return {
