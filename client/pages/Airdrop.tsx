@@ -1,490 +1,425 @@
-// services/VermTokenService.ts
-import { 
-  Connection, 
-  PublicKey, 
-  Transaction, 
-  SystemProgram,
-  LAMPORTS_PER_SOL
-} from '@solana/web3.js';
-import { 
-  getAssociatedTokenAddress, 
-  createAssociatedTokenAccountInstruction,
-  createTransferInstruction,
-  TOKEN_PROGRAM_ID,
-  ASSOCIATED_TOKEN_PROGRAM_ID
-} from '@solana/spl-token';
+// services/AirdropTrackingService.ts
+interface PendingReward {
+  userId: string;
+  walletAddress: string;
+  taskId: string;
+  amount: number;
+  timestamp: number;
+  verified: boolean;
+  distributionBatch?: number;
+}
 
-// Your VERM token mint address
-export const VERM_MINT = new PublicKey('Auu4U7cVjm41yVnVtBCwHW2FBAKznPgLR7hQf4Esjups');
-export const VERM_DECIMALS = 9; // Adjust based on your token's actual decimals
+interface UserRewardSummary {
+  walletAddress: string;
+  username: string;
+  totalEarned: number;
+  tasksCompleted: number;
+  joinDate: number;
+  lastActivity: number;
+  referralCode: string;
+  referralCount: number;
+  isEligible: boolean;
+}
 
-// Treasury wallet that holds VERM for airdrops (you control this)
-const TREASURY_WALLET = new PublicKey(process.env.NEXT_PUBLIC_TREASURY_WALLET || 'YOUR_TREASURY_WALLET_ADDRESS');
+class AirdropTrackingServiceClass {
+  private pendingRewards: PendingReward[] = [];
+  private userSummaries: Map<string, UserRewardSummary> = new Map();
 
-class VermTokenServiceClass {
-  private connection: Connection;
-  
-  constructor() {
-    const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com';
-    this.connection = new Connection(rpcUrl, 'confirmed');
+  // Track completed task for future distribution
+  async trackReward(
+    userId: string, 
+    walletAddress: string, 
+    taskId: string, 
+    amount: number
+  ): Promise<void> {
+    const reward: PendingReward = {
+      userId,
+      walletAddress,
+      taskId,
+      amount,
+      timestamp: Date.now(),
+      verified: true // Since task was verified
+    };
+
+    // Save to localStorage for demo (use real DB in production)
+    const existingRewards = this.getPendingRewards();
+    existingRewards.push(reward);
+    localStorage.setItem('nimrev_pending_rewards', JSON.stringify(existingRewards));
+
+    // Update user summary
+    this.updateUserSummary(userId, walletAddress, amount);
+
+    // Send to backend for permanent storage
+    await this.syncToBackend(reward);
   }
 
-  // Get VERM token balance for a wallet
-  async getVermBalance(walletAddress: string): Promise<number> {
+  private getPendingRewards(): PendingReward[] {
     try {
-      const publicKey = new PublicKey(walletAddress);
-      const tokenAccount = await getAssociatedTokenAddress(VERM_MINT, publicKey);
-      
-      const balance = await this.connection.getTokenAccountBalance(tokenAccount);
-      return balance.value.uiAmount || 0;
-    } catch (error) {
-      console.error('Error getting VERM balance:', error);
-      return 0;
-    }
-  }
-
-  // Check if wallet has VERM token account
-  async hasVermTokenAccount(walletAddress: string): Promise<boolean> {
-    try {
-      const publicKey = new PublicKey(walletAddress);
-      const tokenAccount = await getAssociatedTokenAddress(VERM_MINT, publicKey);
-      
-      const accountInfo = await this.connection.getAccountInfo(tokenAccount);
-      return accountInfo !== null;
-    } catch (error) {
-      return false;
-    }
-  }
-
-  // Create VERM token account for new users
-  async createVermTokenAccount(userWallet: PublicKey, payerWallet: PublicKey): Promise<Transaction> {
-    const tokenAccount = await getAssociatedTokenAddress(VERM_MINT, userWallet);
-    
-    const transaction = new Transaction();
-    transaction.add(
-      createAssociatedTokenAccountInstruction(
-        payerWallet, // payer
-        tokenAccount, // token account
-        userWallet, // owner
-        VERM_MINT, // mint
-        TOKEN_PROGRAM_ID,
-        ASSOCIATED_TOKEN_PROGRAM_ID
-      )
-    );
-
-    return transaction;
-  }
-
-  // Create reward transaction (called from backend)
-  async createRewardTransaction(
-    recipientWallet: string, 
-    amount: number,
-    treasuryWallet: PublicKey
-  ): Promise<string> {
-    try {
-      const recipient = new PublicKey(recipientWallet);
-      const recipientTokenAccount = await getAssociatedTokenAddress(VERM_MINT, recipient);
-      const treasuryTokenAccount = await getAssociatedTokenAddress(VERM_MINT, treasuryWallet);
-
-      // Convert amount to lamports (considering token decimals)
-      const amountInLamports = amount * Math.pow(10, VERM_DECIMALS);
-
-      const transaction = new Transaction();
-
-      // Check if recipient has token account, if not create it
-      const recipientAccountInfo = await this.connection.getAccountInfo(recipientTokenAccount);
-      if (!recipientAccountInfo) {
-        transaction.add(
-          createAssociatedTokenAccountInstruction(
-            treasuryWallet, // treasury pays for account creation
-            recipientTokenAccount,
-            recipient,
-            VERM_MINT
-          )
-        );
-      }
-
-      // Add transfer instruction
-      transaction.add(
-        createTransferInstruction(
-          treasuryTokenAccount, // from
-          recipientTokenAccount, // to
-          treasuryWallet, // authority
-          amountInLamports
-        )
-      );
-
-      // Get recent blockhash
-      const { blockhash } = await this.connection.getLatestBlockhash();
-      transaction.recentBlockhash = blockhash;
-      transaction.feePayer = treasuryWallet;
-
-      return transaction.serialize({ requireAllSignatures: false }).toString('base64');
-    } catch (error) {
-      console.error('Error creating reward transaction:', error);
-      throw new Error('Failed to create reward transaction');
-    }
-  }
-
-  // Verify transaction on-chain
-  async verifyTransaction(signature: string): Promise<boolean> {
-    try {
-      const transaction = await this.connection.getTransaction(signature, {
-        commitment: 'confirmed'
-      });
-      
-      return transaction !== null && transaction.meta?.err === null;
-    } catch (error) {
-      console.error('Error verifying transaction:', error);
-      return false;
-    }
-  }
-
-  // Get token price from Jupiter or similar DEX
-  async getVermPrice(): Promise<number> {
-    try {
-      // Using Jupiter API for Solana token prices
-      const response = await fetch(
-        `https://price.jup.ag/v4/price?ids=${VERM_MINT.toString()}`
-      );
-      
-      if (!response.ok) {
-        throw new Error('Price API failed');
-      }
-      
-      const data = await response.json();
-      return data.data[VERM_MINT.toString()]?.price || 0;
-    } catch (error) {
-      console.error('Error fetching VERM price:', error);
-      return 0; // Fallback price
-    }
-  }
-
-  // Staking functionality
-  async createStakeTransaction(
-    userWallet: PublicKey,
-    amount: number,
-    stakingProgram: PublicKey
-  ): Promise<Transaction> {
-    const userTokenAccount = await getAssociatedTokenAddress(VERM_MINT, userWallet);
-    const stakingTokenAccount = await getAssociatedTokenAddress(VERM_MINT, stakingProgram);
-    
-    const amountInLamports = amount * Math.pow(10, VERM_DECIMALS);
-    
-    const transaction = new Transaction();
-    transaction.add(
-      createTransferInstruction(
-        userTokenAccount,
-        stakingTokenAccount,
-        userWallet,
-        amountInLamports
-      )
-    );
-
-    return transaction;
-  }
-
-  // Get all VERM token holders (for leaderboard/analytics)
-  async getTokenHolders(): Promise<Array<{ address: string; balance: number }>> {
-    try {
-      const accounts = await this.connection.getProgramAccounts(TOKEN_PROGRAM_ID, {
-        filters: [
-          { dataSize: 165 }, // Token account size
-          { memcmp: { offset: 0, bytes: VERM_MINT.toBase58() } }
-        ]
-      });
-
-      const holders = await Promise.all(
-        accounts.map(async (account) => {
-          try {
-            const balance = await this.connection.getTokenAccountBalance(account.pubkey);
-            return {
-              address: account.pubkey.toString(),
-              balance: balance.value.uiAmount || 0
-            };
-          } catch {
-            return null;
-          }
-        })
-      );
-
-      return holders.filter(holder => holder && holder.balance > 0) as Array<{ address: string; balance: number }>;
-    } catch (error) {
-      console.error('Error getting token holders:', error);
+      const stored = localStorage.getItem('nimrev_pending_rewards');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
       return [];
     }
   }
 
-  // Monitor wallet for VERM transactions
-  async monitorWallet(walletAddress: string, callback: (transaction: any) => void): Promise<number> {
-    const publicKey = new PublicKey(walletAddress);
-    
-    const subscriptionId = this.connection.onAccountChange(
-      await getAssociatedTokenAddress(VERM_MINT, publicKey),
-      (accountInfo, context) => {
-        callback({
-          slot: context.slot,
-          accountInfo,
-          timestamp: Date.now()
-        });
-      },
-      'confirmed'
-    );
+  private updateUserSummary(userId: string, walletAddress: string, rewardAmount: number) {
+    const existing = this.userSummaries.get(userId) || {
+      walletAddress,
+      username: `user_${userId.slice(0, 8)}`,
+      totalEarned: 0,
+      tasksCompleted: 0,
+      joinDate: Date.now(),
+      lastActivity: Date.now(),
+      referralCode: userId,
+      referralCount: 0,
+      isEligible: true
+    };
 
-    return subscriptionId;
+    existing.totalEarned += rewardAmount;
+    existing.tasksCompleted += 1;
+    existing.lastActivity = Date.now();
+
+    this.userSummaries.set(userId, existing);
+    
+    // Save updated summary
+    localStorage.setItem('nimrev_user_summary', JSON.stringify([...this.userSummaries.values()]));
   }
-}
 
-export const VermTokenService = new VermTokenServiceClass();
-
-// React hook for VERM token integration
-import { useWallet } from '@solana/wallet-adapter-react';
-import { useState, useEffect } from 'react';
-
-export const useVermToken = () => {
-  const { publicKey, signTransaction } = useWallet();
-  const [balance, setBalance] = useState(0);
-  const [price, setPrice] = useState(0);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (publicKey) {
-      loadBalance();
-      loadPrice();
-    }
-  }, [publicKey]);
-
-  const loadBalance = async () => {
-    if (!publicKey) return;
-    
+  private async syncToBackend(reward: PendingReward): Promise<void> {
     try {
-      const vermBalance = await VermTokenService.getVermBalance(publicKey.toString());
-      setBalance(vermBalance);
-    } catch (error) {
-      console.error('Failed to load VERM balance:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadPrice = async () => {
-    try {
-      const vermPrice = await VermTokenService.getVermPrice();
-      setPrice(vermPrice);
-    } catch (error) {
-      console.error('Failed to load VERM price:', error);
-    }
-  };
-
-  const claimRewards = async (amount: number) => {
-    if (!publicKey || !signTransaction) {
-      throw new Error('Wallet not connected');
-    }
-
-    try {
-      // Request reward transaction from backend
-      const response = await fetch('/api/verm/claim', {
+      await fetch('/api/airdrop/track-reward', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          walletAddress: publicKey.toString(),
-          amount
-        })
+        body: JSON.stringify(reward)
       });
+    } catch (error) {
+      console.error('Failed to sync reward to backend:', error);
+      // Store in retry queue
+      const retryQueue = JSON.parse(localStorage.getItem('nimrev_retry_queue') || '[]');
+      retryQueue.push(reward);
+      localStorage.setItem('nimrev_retry_queue', JSON.stringify(retryQueue));
+    }
+  }
 
-      if (!response.ok) {
-        throw new Error('Failed to create claim transaction');
+  // Get user's total pending rewards
+  getUserRewards(userId: string): { totalPending: number; taskCount: number; rewards: PendingReward[] } {
+    const rewards = this.getPendingRewards().filter(r => r.userId === userId);
+    const totalPending = rewards.reduce((sum, r) => sum + r.amount, 0);
+    
+    return {
+      totalPending,
+      taskCount: rewards.length,
+      rewards
+    };
+  }
+
+  // Generate distribution CSV for manual processing
+  generateDistributionCSV(): string {
+    const rewards = this.getPendingRewards();
+    const userTotals = new Map<string, { address: string; total: number; tasks: number }>();
+
+    // Aggregate by wallet address
+    rewards.forEach(reward => {
+      const existing = userTotals.get(reward.walletAddress) || {
+        address: reward.walletAddress,
+        total: 0,
+        tasks: 0
+      };
+      
+      existing.total += reward.amount;
+      existing.tasks += 1;
+      userTotals.set(reward.walletAddress, existing);
+    });
+
+    // Generate CSV
+    const headers = 'Wallet Address,Total VERM,Tasks Completed,Distribution Date\n';
+    const rows = Array.from(userTotals.values())
+      .sort((a, b) => b.total - a.total) // Sort by highest rewards
+      .map(user => `${user.address},${user.total},${user.tasks},${new Date().toISOString()}`)
+      .join('\n');
+
+    return headers + rows;
+  }
+
+  // Export distribution data
+  exportDistributionData(): void {
+    const csv = this.generateDistributionCSV();
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `verm_distribution_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    
+    URL.revokeObjectURL(url);
+  }
+
+  // Get distribution statistics
+  getDistributionStats(): {
+    totalUsers: number;
+    totalTokens: number;
+    avgPerUser: number;
+    topEarners: Array<{ address: string; amount: number }>;
+  } {
+    const rewards = this.getPendingRewards();
+    const userTotals = new Map<string, number>();
+
+    rewards.forEach(reward => {
+      const current = userTotals.get(reward.walletAddress) || 0;
+      userTotals.set(reward.walletAddress, current + reward.amount);
+    });
+
+    const totalUsers = userTotals.size;
+    const totalTokens = Array.from(userTotals.values()).reduce((sum, amount) => sum + amount, 0);
+    const avgPerUser = totalUsers > 0 ? totalTokens / totalUsers : 0;
+
+    const topEarners = Array.from(userTotals.entries())
+      .map(([address, amount]) => ({ address, amount }))
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 10);
+
+    return {
+      totalUsers,
+      totalTokens,
+      avgPerUser,
+      topEarners
+    };
+  }
+
+  // Validate wallet addresses for distribution
+  validateWalletAddresses(): { valid: string[]; invalid: string[] } {
+    const rewards = this.getPendingRewards();
+    const addresses = [...new Set(rewards.map(r => r.walletAddress))];
+    
+    const valid: string[] = [];
+    const invalid: string[] = [];
+
+    addresses.forEach(address => {
+      try {
+        // Basic Solana address validation
+        if (address.length >= 32 && address.length <= 44 && /^[1-9A-HJ-NP-Za-km-z]+$/.test(address)) {
+          valid.push(address);
+        } else {
+          invalid.push(address);
+        }
+      } catch {
+        invalid.push(address);
       }
+    });
 
-      const { transaction } = await response.json();
-      
-      // Deserialize and sign transaction
-      const tx = Transaction.from(Buffer.from(transaction, 'base64'));
-      const signedTx = await signTransaction(tx);
-      
-      // Send transaction
-      const signature = await VermTokenService.connection.sendRawTransaction(
-        signedTx.serialize()
-      );
+    return { valid, invalid };
+  }
 
-      // Wait for confirmation
-      await VermTokenService.connection.confirmTransaction(signature, 'confirmed');
-      
-      // Refresh balance
-      await loadBalance();
-      
-      return signature;
-    } catch (error) {
-      console.error('Claim failed:', error);
-      throw error;
-    }
-  };
+  // Clear all data (use carefully!)
+  clearAllData(): void {
+    localStorage.removeItem('nimrev_pending_rewards');
+    localStorage.removeItem('nimrev_user_summary');
+    localStorage.removeItem('nimrev_retry_queue');
+    this.userSummaries.clear();
+    this.pendingRewards = [];
+  }
+}
 
-  const stakeTokens = async (amount: number) => {
-    if (!publicKey || !signTransaction) {
-      throw new Error('Wallet not connected');
-    }
+export const AirdropTrackingService = new AirdropTrackingServiceClass();
 
-    try {
-      const stakingProgram = new PublicKey(process.env.NEXT_PUBLIC_STAKING_PROGRAM || '');
-      const transaction = await VermTokenService.createStakeTransaction(
-        publicKey,
-        amount,
-        stakingProgram
-      );
+// Updated Airdrop component - replace completeTask function
+const completeTask = async (taskId: string) => {
+  if (!currentProfile || !publicKey) return;
+  
+  setIsVerifying(true);
+  try {
+    // Verify task completion (existing logic)
+    const result = await verifyTaskCompletion(taskId, currentProfile.id, publicKey.toString());
+    
+    // Track reward for manual distribution (NEW)
+    await AirdropTrackingService.trackReward(
+      currentProfile.id,
+      publicKey.toString(), 
+      taskId, 
+      result.reward
+    );
 
-      const { blockhash } = await VermTokenService.connection.getLatestBlockhash();
-      transaction.recentBlockhash = blockhash;
-      transaction.feePayer = publicKey;
+    // Update UI state
+    setTasks(prev => prev.map(t => 
+      t.id === taskId ? { 
+        ...t, 
+        status: "completed" as const,
+        lastCompleted: Date.now()
+      } : t
+    ));
 
-      const signedTx = await signTransaction(transaction);
-      const signature = await VermTokenService.connection.sendRawTransaction(
-        signedTx.serialize()
-      );
+    // Update user progress
+    const newProgress = {
+      ...userProgress,
+      totalEarned: userProgress.totalEarned + result.reward,
+      tasksCompleted: userProgress.tasksCompleted + 1,
+      currentStreak: userProgress.currentStreak + 1,
+      lastActivity: Date.now()
+    };
+    setUserProgress(newProgress);
 
-      await VermTokenService.connection.confirmTransaction(signature, 'confirmed');
-      await loadBalance();
+    setIsTaskModalOpen(false);
 
-      return signature;
-    } catch (error) {
-      console.error('Staking failed:', error);
-      throw error;
-    }
-  };
+    // Show success with countdown to distribution
+    const daysLeft = Math.ceil((93 * 24 * 60 * 60 * 1000 - (Date.now() - Date.now())) / (24 * 60 * 60 * 1000));
+    
+    NotificationService.success(
+      `${result.reward} VERM earned! Distribution in ${daysLeft} days.`,
+      {
+        action: {
+          label: 'Share Achievement',
+          onClick: () => shareEarnings(result.reward, currentProfile.username)
+        }
+      }
+    );
 
-  return {
-    balance,
-    price,
-    loading,
-    dollarValue: balance * price,
-    claimRewards,
-    stakeTokens,
-    refreshBalance: loadBalance
-  };
+    // Track analytics
+    trackEvent('task_completed', {
+      taskId,
+      reward: result.reward,
+      totalEarned: newProgress.totalEarned,
+      daysUntilDistribution: daysLeft
+    });
+
+  } catch (error) {
+    console.error('Task completion failed:', error);
+    NotificationService.error(
+      error instanceof Error ? error.message : 'Task verification failed'
+    );
+  } finally {
+    setIsVerifying(false);
+  }
 };
 
-// Backend API route for processing VERM rewards
-// pages/api/verm/claim.ts
-import { NextApiRequest, NextApiResponse } from 'next';
-import { Connection, Keypair, PublicKey } from '@solana/web3.js';
-import { VermTokenService } from '@/services/VermTokenService';
+// Distribution Dashboard Component (for admin use)
+export const DistributionDashboard = () => {
+  const [stats, setStats] = useState(AirdropTrackingService.getDistributionStats());
+  const [validation, setValidation] = useState({ valid: [], invalid: [] });
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  useEffect(() => {
+    setStats(AirdropTrackingService.getDistributionStats());
+    setValidation(AirdropTrackingService.validateWalletAddresses());
+  }, []);
 
-  try {
-    const { walletAddress, amount } = req.body;
-
-    if (!walletAddress || !amount) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    // Verify user is eligible for this reward amount
-    const isEligible = await verifyRewardEligibility(walletAddress, amount);
-    if (!isEligible) {
-      return res.status(400).json({ error: 'Not eligible for this reward' });
-    }
-
-    // Load treasury wallet (keep private key secure!)
-    const treasuryKeypair = Keypair.fromSecretKey(
-      Buffer.from(process.env.TREASURY_PRIVATE_KEY!, 'base64')
-    );
-
-    // Create reward transaction
-    const transaction = await VermTokenService.createRewardTransaction(
-      walletAddress,
-      amount,
-      treasuryKeypair.publicKey
-    );
-
-    res.status(200).json({ transaction });
-  } catch (error) {
-    console.error('Claim API error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-}
-
-async function verifyRewardEligibility(walletAddress: string, amount: number): Promise<boolean> {
-  // Add your eligibility logic here
-  // Check database for pending rewards, completed tasks, etc.
-  return true; // Simplified for example
-}
-
-// Updated Airdrop component integration
-export const VermBalanceDisplay = () => {
-  const { balance, price, dollarValue, loading } = useVermToken();
-
-  if (loading) {
-    return <div className="animate-pulse">Loading balance...</div>;
-  }
+  const handleExport = () => {
+    AirdropTrackingService.exportDistributionData();
+    NotificationService.success('Distribution CSV exported!');
+  };
 
   return (
-    <div className="bg-cyber-green/10 border border-cyber-green/30 rounded-lg p-4">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-cyber-green text-sm font-bold">VERM Balance</span>
-        <span className="text-xs text-gray-400">${price.toFixed(4)}</span>
-      </div>
-      <div className="text-2xl font-bold text-white">
-        {balance.toLocaleString()} VERM
-      </div>
-      <div className="text-sm text-gray-400">
-        ≈ ${dollarValue.toFixed(2)} USD
+    <div className="max-w-4xl mx-auto p-6 space-y-6">
+      <div className="bg-dark-bg/60 border border-cyber-green/30 rounded-xl p-6">
+        <h2 className="text-2xl font-bold text-cyber-green mb-6">VERM Distribution Dashboard</h2>
+        
+        {/* Statistics Grid */}
+        <div className="grid md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-cyber-green/10 border border-cyber-green/30 rounded-lg p-4 text-center">
+            <div className="text-2xl font-bold text-cyber-green">{stats.totalUsers}</div>
+            <div className="text-sm text-gray-300">Total Users</div>
+          </div>
+          
+          <div className="bg-cyber-blue/10 border border-cyber-blue/30 rounded-lg p-4 text-center">
+            <div className="text-2xl font-bold text-cyber-blue">{stats.totalTokens.toLocaleString()}</div>
+            <div className="text-sm text-gray-300">Total VERM</div>
+          </div>
+          
+          <div className="bg-cyber-orange/10 border border-cyber-orange/30 rounded-lg p-4 text-center">
+            <div className="text-2xl font-bold text-cyber-orange">{Math.round(stats.avgPerUser)}</div>
+            <div className="text-sm text-gray-300">Avg per User</div>
+          </div>
+          
+          <div className="bg-cyber-purple/10 border border-cyber-purple/30 rounded-lg p-4 text-center">
+            <div className="text-2xl font-bold text-cyber-purple">{validation.valid.length}</div>
+            <div className="text-sm text-gray-300">Valid Wallets</div>
+          </div>
+        </div>
+
+        {/* Top Earners */}
+        <div className="mb-6">
+          <h3 className="text-lg font-bold text-white mb-4">Top 10 Earners</h3>
+          <div className="space-y-2">
+            {stats.topEarners.map((earner, index) => (
+              <div key={earner.address} className="flex justify-between items-center bg-dark-bg/40 p-3 rounded">
+                <div className="flex items-center gap-3">
+                  <span className="text-cyber-orange font-bold">#{index + 1}</span>
+                  <span className="font-mono text-sm">{earner.address.slice(0, 8)}...{earner.address.slice(-4)}</span>
+                </div>
+                <span className="text-cyber-green font-bold">{earner.amount.toLocaleString()} VERM</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Invalid Addresses Alert */}
+        {validation.invalid.length > 0 && (
+          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6">
+            <h4 className="text-red-400 font-bold mb-2">⚠️ Invalid Wallet Addresses Found</h4>
+            <div className="text-sm text-gray-300">
+              {validation.invalid.length} invalid addresses detected. Review before distribution.
+            </div>
+          </div>
+        )}
+
+        {/* Export Button */}
+        <div className="flex gap-4">
+          <button
+            onClick={handleExport}
+            className="px-6 py-3 bg-cyber-green hover:bg-cyber-green/80 text-dark-bg font-bold rounded-lg transition-colors"
+          >
+            📊 Export Distribution CSV
+          </button>
+          
+          <button
+            onClick={() => setStats(AirdropTrackingService.getDistributionStats())}
+            className="px-6 py-3 bg-cyber-blue hover:bg-cyber-blue/80 text-white font-bold rounded-lg transition-colors"
+          >
+            🔄 Refresh Data
+          </button>
+        </div>
       </div>
     </div>
   );
 };
 
-// Staking component
-export const VermStaking = () => {
-  const { balance, stakeTokens } = useVermToken();
-  const [stakeAmount, setStakeAmount] = useState('');
-  const [isStaking, setIsStaking] = useState(false);
+// Countdown component for distribution date
+export const DistributionCountdown = () => {
+  const [timeLeft, setTimeLeft] = useState(93 * 24 * 60 * 60 * 1000); // 93 days in ms
 
-  const handleStake = async () => {
-    const amount = parseFloat(stakeAmount);
-    if (!amount || amount <= 0 || amount > balance) return;
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimeLeft(prev => Math.max(0, prev - 1000));
+    }, 1000);
 
-    setIsStaking(true);
-    try {
-      const signature = await stakeTokens(amount);
-      alert(`Staking successful! Transaction: ${signature}`);
-      setStakeAmount('');
-    } catch (error) {
-      alert(`Staking failed: ${error.message}`);
-    } finally {
-      setIsStaking(false);
-    }
-  };
+    return () => clearInterval(interval);
+  }, []);
+
+  const days = Math.floor(timeLeft / (24 * 60 * 60 * 1000));
+  const hours = Math.floor((timeLeft % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+  const minutes = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000));
+  const seconds = Math.floor((timeLeft % (60 * 1000)) / 1000);
 
   return (
-    <div className="bg-cyber-blue/10 border border-cyber-blue/30 rounded-lg p-4">
-      <h3 className="text-cyber-blue font-bold mb-4">Stake VERM Tokens</h3>
+    <div className="bg-gradient-to-r from-cyber-green/20 to-cyber-blue/20 border border-cyber-green/30 rounded-xl p-6 text-center">
+      <h3 className="text-xl font-bold text-cyber-green mb-4">🗓️ VERM Distribution Countdown</h3>
       
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm text-gray-300 mb-2">
-            Amount to stake (Max: {balance.toLocaleString()})
-          </label>
-          <input
-            type="number"
-            value={stakeAmount}
-            onChange={(e) => setStakeAmount(e.target.value)}
-            max={balance}
-            className="w-full bg-dark-bg/50 border border-cyber-blue/30 rounded px-3 py-2 text-white"
-            placeholder="Enter amount"
-          />
-        </div>
-        
-        <button
-          onClick={handleStake}
-          disabled={isStaking || !stakeAmount || parseFloat(stakeAmount) <= 0}
-          className="w-full bg-cyber-blue hover:bg-cyber-blue/80 disabled:opacity-50 text-white py-2 rounded transition-colors"
-        >
-          {isStaking ? 'Staking...' : 'Stake Tokens'}
-        </button>
+      <div className="grid grid-cols-4 gap-4 mb-4">
+        {[
+          { value: days, label: 'DAYS' },
+          { value: hours, label: 'HOURS' },  
+          { value: minutes, label: 'MINS' },
+          { value: seconds, label: 'SECS' }
+        ].map((item, index) => (
+          <div key={index} className="bg-cyber-green/20 border border-cyber-green rounded-lg p-4">
+            <div className="text-2xl font-bold text-cyber-green">{item.value.toString().padStart(2, '0')}</div>
+            <div className="text-xs text-gray-300 font-bold">{item.label}</div>
+          </div>
+        ))}
       </div>
+      
+      <p className="text-sm text-gray-300">
+        All earned VERM tokens will be distributed to qualified wallets
+      </p>
     </div>
   );
 };
