@@ -1,209 +1,266 @@
-// validation.ts
-import type { Request, Response, NextFunction } from "express";
-import { z } from "zod";
-import sanitizeHtml from "sanitize-html"; // npm i sanitize-html
-import { utils as ethersUtils } from "ethers"; // npm i ethers
-import { PublicKey } from "@solana/web3.js"; // npm i @solana/web3.js
-
-/* ---------------------------
-   Helpers
---------------------------- */
-const trim = (s: unknown) => (typeof s === "string" ? s.trim() : s);
-
-const safeNumber = z
-  .union([z.number(), z.string()])
-  .transform((v) => (typeof v === "string" ? Number(v) : v))
-  .refine((n) => Number.isFinite(n), "Not a finite number");
-
-const strict = <T extends z.ZodRawShape>(shape: T) => z.object(shape).strict();
-
-const sanitizeRichText = (s: string) =>
-  sanitizeHtml(s, {
-    allowedTags: ["b", "i", "em", "strong", "a", "code", "pre", "ul", "ol", "li", "p", "br"],
-    allowedAttributes: { a: ["href", "rel", "target"] },
-    allowedSchemes: ["http", "https", "mailto"],
-    transformTags: {
-      a: sanitizeHtml.simpleTransform("a", { rel: "noopener noreferrer", target: "_blank" }),
-    },
-  });
-
-/* ---------------------------
-   Address / Hash validators
---------------------------- */
-// Ethereum checksum (normalizes to checksum on success)
-export const ethereumAddress = z
-  .string()
-  .transform(trim)
-  .refine((addr) => {
-    try {
-      ethersUtils.getAddress(addr);
-      return true;
-    } catch {
-      return false;
-    }
-  }, "Invalid Ethereum address")
-  .transform((addr) => ethersUtils.getAddress(addr)); // normalized
-
-// Solana base58 pubkey
-export const solanaAddress = z
-  .string()
-  .transform(trim)
-  .refine((addr) => {
-    try {
-      // throws if not a valid base58 32-byte public key
-      new PublicKey(addr);
-      return true;
-    } catch {
-      return false;
-    }
-  }, "Invalid Solana address");
-
-// EVM tx hash: 0x + 64 hex
-export const evmTxHash = z
-  .string()
-  .transform(trim)
-  .regex(/^0x[a-fA-F0-9]{64}$/, "Invalid transaction hash");
-
-/* ---------------------------
-   Common fields
---------------------------- */
-export const commonSchemas = {
-  solanaAddress,
-  ethereumAddress,
-  tokenAmount: safeNumber.positive().max(1_000_000_000, "Amount too large"),
-  txHash: evmTxHash,
-  // Safer "display text": allow unicode letters/numbers and common punctuation; sanitize when rendering
-  safeText: z
-    .string()
-    .transform(trim)
-    .max(1000)
-    .regex(/^[\p{L}\p{N}\p{Zs}\-_.!?@#$%&*()[\]{}+=|\\:;"'<>,./~`]+$/u, "Contains unsafe characters"),
-  email: z.string().transform(trim).email("Invalid email"),
-  url: z.string().transform(trim).url("Invalid URL"),
-  projectName: z.string().transform(trim).min(2).max(50).regex(/^[a-zA-Z0-9\s\-_]+$/, "Invalid project name"),
-  tokenSymbol: z.string().transform(trim).min(1).max(10).regex(/^[A-Z0-9]+$/, "Invalid token symbol"),
-};
-
-/* ---------------------------
-   Domain schemas (strict)
---------------------------- */
-export const cryptoSchemas = {
-  auditRequest: strict({
-    packageType: z.enum(["basic", "comprehensive", "enterprise"]),
-    description: z
-      .string()
-      .transform(trim)
-      .min(10)
-      .max(2000)
-      // sanitize *display* copy, keep both raw+clean
-      .transform((s) => ({ raw: s, clean: sanitizeRichText(s) })),
-    walletAddress: solanaAddress,
-    files: z
-      .array(
-        strict({
-          name: z.string().max(255),
-          size: safeNumber.max(50 * 1024 * 1024), // 50MB
-          // simple allow-list for text-ish uploads
-          type: z.string().regex(/^(text\/|application\/(json|javascript|octet-stream))/, "Unsupported MIME"),
-        }),
-      )
-      .max(20),
-  }),
-
-  transaction: strict({
-    hash: evmTxHash,
-    amount: commonSchemas.tokenAmount,
-    fromAddress: z.union([solanaAddress, ethereumAddress]),
-    toAddress: z.union([solanaAddress, ethereumAddress]),
-  }),
-
-  botSetup: strict({
-    projectName: commonSchemas.projectName,
-    tokenSymbol: commonSchemas.tokenSymbol.optional(),
-    tokenContract: solanaAddress.optional(),
-    premiumAmount: safeNumber.min(1).max(1_000_000),
-    welcomeMessage: z.string().transform(trim).min(10).max(500),
-  }),
-};
-
-/* ---------------------------
-   Middleware
---------------------------- */
-export const validateSchema =
-  <T extends z.ZodTypeAny>(schema: T) =>
-  (req: Request, res: Response, next: NextFunction) => {
-    const parsed = schema.safeParse(req.body);
-    if (!parsed.success) {
-      const details = parsed.error.errors.map((e) => ({
-        field: e.path.join(".") || "(root)",
-        message: e.message,
-        code: e.code,
-      }));
-      return res.status(400).json({ error: "Validation failed", details });
-    }
-    req.body = parsed.data;
-    next();
-  };
+// rate-limit.ts
+import type { Request, Response, NextFunction, RequestHandler } from "express";
+import Redis from "ioredis";
 
 /**
- * Targeted sanitization (optional)
- * Only touch fields known to be rendered as HTML.
- * Do NOT mutate IDs/addresses/tx hashes here.
+ * Sliding-window limiter with optional token-bucket burst capacity.
+ * - windowMs: time window
+ * - max: max requests per window
+ * - burst: extra tokens allowed instantly (token bucket)
+ * - prefix: redis key prefix
  */
-export const sanitizeRenderable =
-  (fields: string[] = ["description", "content", "html"]) =>
-  (req: Request, _res: Response, next: NextFunction) => {
-    try {
-      for (const f of fields) {
-        const val = (req.body as any)?.[f];
-        if (typeof val === "string") {
-          (req.body as any)[f] = sanitizeRichText(val);
-        } else if (val && typeof val === "object" && "raw" in val && "clean" in val) {
-          (req.body as any)[f] = { raw: val.raw, clean: sanitizeRichText(String(val.raw)) };
+export type RateLimitOptions = {
+  windowMs: number;           // e.g. 60_000
+  max: number;                // e.g. 120
+  burst?: number;             // optional burst headroom (token bucket)
+  prefix?: string;            // redis key prefix
+  headerPrefix?: string;      // customize headers prefix (default X-RateLimit-*)
+  skipSuccessful?: boolean;   // if true, only count 4xx/5xx (usually false)
+  keyGenerator?: (req: Request) => string; // derive identity
+};
+
+export class RateLimiter {
+  private redis?: Redis;
+  private fallbackMap = new Map<string, { ts: number[]; tokens: number; refillAt: number }>();
+  private opts: Required<Omit<RateLimitOptions, "burst" | "keyGenerator" | "headerPrefix" | "skipSuccessful">> &
+    Pick<RateLimitOptions, "burst" | "keyGenerator" | "headerPrefix" | "skipSuccessful">;
+
+  constructor(
+    options: RateLimitOptions,
+    redis?: Redis
+  ) {
+    const {
+      windowMs,
+      max,
+      burst,
+      prefix = "rl",
+      headerPrefix = "X-RateLimit",
+      skipSuccessful = false,
+      keyGenerator,
+    } = options;
+
+    this.opts = {
+      windowMs,
+      max,
+      burst,
+      prefix,
+      headerPrefix,
+      skipSuccessful,
+      keyGenerator,
+    };
+    this.redis = redis;
+  }
+
+  /**
+   * Express middleware creator
+   */
+  middleware(): RequestHandler {
+    return async (req, res, next) => {
+      const key = this.buildKey(req);
+      const now = Date.now();
+
+      // Optionally skip counting if request later succeeds
+      let counted = false;
+      const countThisRequest = () => {
+        if (!this.opts.skipSuccessful || counted) return;
+        // decrement for success if we skipped counting failures only mode
+        // For simplicity, we'll COUNT immediately and optionally "refund" on success=false.
+        // To truly skip successful, you'd hook on res 'finish' and only increment on >=400.
+      };
+
+      try {
+        const { total, remaining, resetMs, limited } =
+          this.redis
+            ? await this.consumeRedis(key, now)
+            : this.consumeMemory(key, now);
+
+        // Set standard headers
+        const HP = this.opts.headerPrefix || "X-RateLimit";
+        res.setHeader(`${HP}-Limit`, String(this.opts.max + (this.opts.burst ?? 0)));
+        res.setHeader(`${HP}-Remaining`, String(Math.max(remaining, 0)));
+        res.setHeader(`${HP}-Reset`, String(Math.ceil((now + resetMs) / 1000))); // epoch seconds
+        if (limited) {
+          const retryAfter = Math.ceil(resetMs / 1000);
+          res.setHeader("Retry-After", String(retryAfter));
+          return res.status(429).json({
+            success: false,
+            error: "Too many requests",
+            retryAfter,
+          });
         }
+
+        // Optional: refund if success and skipSuccessful=true
+        if (this.opts.skipSuccessful) {
+          counted = true;
+          res.on("finish", async () => {
+            if (res.statusCode < 400) {
+              // refund one unit
+              try {
+                this.redis
+                  ? await this.refundRedis(key)
+                  : this.refundMemory(key);
+              } catch {}
+            }
+          });
+        }
+
+        next();
+      } catch (err) {
+        // On limiter error, fail open
+        next();
       }
-      next();
-    } catch (e) {
-      return next(e);
+    };
+  }
+
+  /* ---------------------------
+     Keying strategy
+  --------------------------- */
+  private buildKey(req: Request) {
+    const custom = this.opts.keyGenerator?.(req);
+    if (custom) return `${this.opts.prefix}:${custom}`;
+
+    const apiKey = (req.headers["x-api-key"] as string) || "";
+    const auth = (req.headers.authorization as string) || "";
+    const uid = (req as any).auth?.userId || "";
+    const ip = req.ip || (req.headers["x-forwarded-for"] as string) || req.socket.remoteAddress || "unknown";
+
+    // Prefer strong identity first
+    const id = uid || apiKey || auth || ip;
+    return `${this.opts.prefix}:${id}`;
+  }
+
+  /* ---------------------------
+     Redis (cluster-safe)
+  --------------------------- */
+  private async consumeRedis(key: string, now: number) {
+    const { windowMs, max, burst = 0 } = this.opts;
+    const ttlMs = windowMs;
+    const bucketKey = `${key}:bucket`;
+    const windowKey = `${key}:win:${Math.floor(now / windowMs)}`;
+
+    // 1) Sliding window count across current + previous windows for smoothness
+    // Strategy: maintain counts per windowKey; compute proportion of previous
+    const prevKey = `${key}:win:${Math.floor((now - windowMs) / windowMs)}`;
+    const [curCount, prevCount] = await this.redis!.mget(windowKey, prevKey);
+    const cur = Number(curCount || 0);
+    const prev = Number(prevCount || 0);
+    const overlap = (now % windowMs) / windowMs; // 0..1
+    const effective = cur + prev * (1 - overlap);
+
+    // 2) Token bucket for burst (optional)
+    let tokens = 0;
+    if (burst > 0) {
+      tokens = Number((await this.redis!.get(bucketKey)) || burst);
     }
-  };
 
-/**
- * File upload guard (works with Multer)
- * - validates presence, size
- * - basic name checks
- * - optional MIME allow-list (pass allowedMimes to tighten)
- */
-export const validateFileUpload =
-  (allowedMimes: RegExp = /^(text\/|application\/(json|javascript|octet-stream))/) =>
-  (req: Request, res: Response, next: NextFunction) => {
-    const files: any[] = [];
-    if (req.file) files.push(req.file);
-    if (req.files) {
-      if (Array.isArray(req.files)) files.push(...req.files);
-      else Object.values(req.files as any).forEach((v: any) => (Array.isArray(v) ? files.push(...v) : files.push(v)));
+    let limited = false;
+    if (effective >= max) {
+      // use a burst token if any left
+      if (burst > 0 && tokens > 0) {
+        await this.redis!.decr(bucketKey);
+      } else {
+        limited = true;
+      }
+    } else {
+      // increment current window
+      await this.redis!.multi()
+        .incrby(windowKey, 1)
+        .pexpire(windowKey, ttlMs + 1000) // keep a bit longer
+        .exec();
+      // initialize bucket TTL lazily
+      if (burst > 0 && tokens === burst) {
+        await this.redis!.pexpire(bucketKey, ttlMs);
+      }
     }
-    if (!files.length) return res.status(400).json({ error: "No files uploaded" });
 
-    for (const f of files) {
-      if (!f || typeof f !== "object" || !("originalname" in f) || !("size" in f))
-        return res.status(400).json({ error: "Invalid file format" });
+    const total = Math.min(max + burst, Math.ceil(effective) + (burst > 0 ? tokens : 0));
+    const remaining = Math.max(0, max + burst - Math.ceil(effective) - (burst > 0 ? (burst - tokens) : 0));
+    const resetMs = windowMs - (now % windowMs);
 
-      if (typeof f.size === "number" && f.size > 50 * 1024 * 1024)
-        return res.status(413).json({ error: "File too large" });
+    return { total, remaining, resetMs, limited };
+  }
 
-      if (!allowedMimes.test(String(f.mimetype || "")))
-        return res.status(415).json({ error: "Unsupported media type" });
+  private async refundRedis(key: string) {
+    const windowKey = `${key}:win:${Math.floor(Date.now() / this.opts.windowMs)}`;
+    // Decrement only if > 0
+    const cur = Number((await this.redis!.get(windowKey)) || 0);
+    if (cur > 0) await this.redis!.decr(windowKey);
+  }
 
-      const bad = [/\.\./, /[<>:"|?*]/, /^(con|prn|aux|nul)$/i];
-      if (bad.some((re) => re.test(String(f.originalname))))
-        return res.status(400).json({ error: "Dangerous filename detected" });
+  /* ---------------------------
+     In-memory fallback (dev)
+  --------------------------- */
+  private consumeMemory(key: string, now: number) {
+    const { windowMs, max, burst = 0 } = this.opts;
+    let state = this.fallbackMap.get(key);
+    if (!state) {
+      state = { ts: [], tokens: burst, refillAt: now + windowMs };
+      this.fallbackMap.set(key, state);
     }
-    next();
-  };
 
-/* ---------------------------
-   Quick usage examples
---------------------------- */
-// app.post("/tx", validateSchema(cryptoSchemas.transaction), handler);
-// app.post("/audit", validateSchema(cryptoSchemas.auditRequest), sanitizeRenderable(["description"]), handler);
+    // Refill tokens
+    if (burst > 0 && now >= state.refillAt) {
+      state.tokens = burst;
+      state.refillAt = now + windowMs;
+    }
+
+    // purge timestamps outside window
+    state.ts = state.ts.filter((t) => t > now - windowMs);
+
+    let limited = false;
+    if (state.ts.length >= max) {
+      if (burst > 0 && state.tokens > 0) state.tokens -= 1;
+      else limited = true;
+    } else {
+      state.ts.push(now);
+    }
+
+    const effective = state.ts.length;
+    const total = Math.min(max + burst, effective + state.tokens);
+    const remaining = Math.max(0, max + burst - effective - (burst - state.tokens));
+    const resetMs = windowMs - (now - (state.ts[0] ?? now));
+
+    return { total, remaining, resetMs, limited };
+  }
+
+  private refundMemory(key: string) {
+    const s = this.fallbackMap.get(key);
+    if (!s) return;
+    // remove one most recent hit if any
+    s.ts.pop();
+  }
+}
+
+/* =========================
+   Quick presets + usage
+========================= */
+
+export function makeGlobalLimiter(redis?: Redis) {
+  return new RateLimiter(
+    {
+      windowMs: 60_000, // 1 minute
+      max: 120,         // 120 req/min
+      burst: 30,        // allow short bursts
+      prefix: "rl:g",
+      headerPrefix: "X-RateLimit",
+      skipSuccessful: false,
+      keyGenerator: (req) =>
+        (req as any).auth?.userId ||
+        (req.headers["x-api-key"] as string) ||
+        req.ip,
+    },
+    redis
+  ).middleware();
+}
+
+export function makeScanLimiter(redis?: Redis) {
+  return new RateLimiter(
+    {
+      windowMs: 60_000,
+      max: 30,         // stricter for expensive endpoints
+      burst: 10,
+      prefix: "rl:scan",
+    },
+    redis
+  ).middleware();
+}
