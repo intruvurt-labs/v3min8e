@@ -1,550 +1,513 @@
 import { z } from "zod";
 
-// Enterprise-grade ML scanning engine for NimRev Protocol
-export class VerminAI {
-  private models: {
-    threatDetection: any;
-    alphaSignals: any;
-    viralOutbreaks: any;
-    patternRecognition: any;
+/* ================================
+   1) Types & Schemas (strict)
+================================== */
+
+export const Network = z.enum([
+  "solana",
+  "ethereum",
+  "base",
+  "blast",
+  "polygon",
+  "avalanche",
+  "arbitrum",
+  "optimism",
+]);
+export type Network = z.infer<typeof Network>;
+
+export const Address = z.string().min(3); // refine with per-chain validation if needed
+
+// Low-level measurements we extract from chain+offchain
+export const FeaturesSchema = z.object({
+  liquidityRatio: z.number().min(0).nullable(), // 0..1 or null if unknown
+  holderDistribution: z.object({
+    top1Percent: z.number().min(0).max(100).nullable(),
+    top10Percent: z.number().min(0).max(100).nullable(),
+    uniqueHolders: z.number().int().min(0).nullable(),
+  }),
+  contractAgeSec: z.number().int().min(0).nullable(),
+  transactionPatterns: z.object({
+    botLikeActivity: z.number().min(0).max(1).nullable(),
+    humanLikeActivity: z.number().min(0).max(1).nullable(),
+    suspiciousTransfers: z.number().int().min(0).nullable(),
+  }),
+  crossChainActivity: z.object({
+    bridgeTxCount: z.number().int().min(0).nullable(),
+    multiChainPresence: z.boolean().nullable(),
+  }),
+
+  volumeSpikes: z.object({
+    last24h: z.number().min(0).nullable(), // X over baseline
+    last7d: z.number().min(0).nullable(),
+  }),
+  socialSentiment: z.object({
+    score: z.number().min(-1).max(1).nullable(), // -1..1
+    mentions24h: z.number().int().min(0).nullable(),
+  }),
+  socialMentions: z.object({
+    growth24h: z.number().min(-1000).nullable(), // %
+  }),
+  whaleActivity: z.object({
+    accumulating: z.number().min(0).max(1).nullable(),
+    selling: z.number().min(0).max(1).nullable(),
+    newWhales: z.number().int().min(0).nullable(),
+  }),
+  developmentActivity: z.object({
+    commits: z.number().int().min(0).nullable(),
+    activeDevs: z.number().int().min(0).nullable(),
+  }),
+  marketCapGrowth: z.object({
+    last7d: z.number().min(-1e6).nullable(), // X
+  }),
+
+  influencerActivity: z.object({
+    bigFollowers: z.number().int().min(0).nullable(),
+  }),
+  searchTrends: z.object({
+    spike: z.number().min(0).nullable(),
+  }),
+  networkEffect: z.object({
+    velocity: z.number().min(0).max(1).nullable(),
+  }),
+  memePotential: z.number().min(0).max(1).nullable(),
+
+  // Raw tx data (optional for pattern model)
+  transactionData: z
+    .array(
+      z.object({
+        hash: z.string(),
+        from: z.string(),
+        to: z.string(),
+        value: z.number(), // native minor units okay; just be consistent
+        timestamp: z.number().int(),
+        gasUsed: z.number().int(),
+      }),
+    )
+    .default([]),
+});
+export type Features = z.infer<typeof FeaturesSchema>;
+
+export type ThreatResult = {
+  threatScore: number; // 0..1
+  confidence: number;  // 0..1
+  indicators: string[];
+};
+
+export type AlphaResult = {
+  alphaScore: number;          // 0..1
+  potentialMultiplier: number; // capped
+  confidence: number;          // 0..1
+  signals: string[];
+};
+
+export type ViralResult = {
+  viralScore: number;  // 0..1
+  timeToViralHrs: number; // >=1
+  confidence: number;  // 0..1
+  catalysts: string[];
+};
+
+export type PatternResult = {
+  knownPatterns: { type: string; similarity: number; description: string }[];
+  novelPatterns: { type: string; confidence: number; description: string }[];
+  riskLevel: number; // 0..1
+};
+
+export type Analysis = {
+  threat: ThreatResult;
+  alpha: AlphaResult;
+  viral: ViralResult;
+  patterns: PatternResult;
+  summary: string;
+  metadata: {
+    processingMs: number;
+    overallConfidence: number;
+    featureKeys: number;
+    aiModelsUsed: number;
   };
+};
 
-  private readonly confidenceThreshold = 0.85;
-  private readonly patterns: Map<string, any> = new Map();
-  private readonly knownThreats: Set<string> = new Set();
-  private readonly alphaSignatures: Map<string, any> = new Map();
+/* ================================
+   2) Ports (interfaces)
+================================== */
 
-  constructor() {
-    this.initializeModels();
-    this.loadKnownPatterns();
-  }
+export interface FeatureProvider {
+  extract(address: string, network: Network, options?: Record<string, unknown>): Promise<Features>;
+}
 
-  private initializeModels() {
-    // In production, load actual ML models (TensorFlow.js, ONNX, etc.)
-    this.models = {
-      threatDetection: this.createThreatDetectionModel(),
-      alphaSignals: this.createAlphaSignalModel(),
-      viralOutbreaks: this.createViralOutbreakModel(),
-      patternRecognition: this.createPatternRecognitionModel(),
-    };
-  }
+export interface ThreatModel {
+  predict(features: Features): Promise<ThreatResult>;
+}
+export interface AlphaModel {
+  predict(features: Features): Promise<AlphaResult>;
+}
+export interface ViralModel {
+  predict(features: Features): Promise<ViralResult>;
+}
+export interface PatternModel {
+  analyze(transactions: Features["transactionData"]): Promise<PatternResult>;
+}
 
-  private createThreatDetectionModel() {
-    // Simulated ML model for threat detection
-    return {
-      predict: (features: any) => {
-        const {
-          liquidityRatio,
-          holderDistribution,
-          contractAge,
-          transactionPatterns,
-          crossChainActivity,
-        } = features;
+export interface Persistence {
+  saveScan(input: {
+    address: string;
+    network: Network;
+    analysis: Analysis;
+    public?: boolean;
+    scannedBy?: string; // user id
+  }): Promise<{ id: string } | void>;
+}
 
-        let threatScore = 0;
-        let confidence = 0.5;
+/* ================================
+   3) Utilities
+================================== */
 
-        // Honeypot detection logic
-        if (liquidityRatio < 0.01) {
-          threatScore += 0.4;
-          confidence += 0.2;
-        }
+const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
+const nz = (v: number | null) => (v ?? 0);
 
-        // Whale concentration analysis
-        if (holderDistribution.top10Percent > 80) {
-          threatScore += 0.3;
-          confidence += 0.15;
-        }
+function weightedAverage(values: number[], weights: number[]) {
+  const sumW = weights.reduce((a, b) => a + b, 0) || 1;
+  const sum = values.reduce((acc, v, i) => acc + v * (weights[i] ?? 0), 0);
+  return sum / sumW;
+}
 
-        // New contract risk
-        if (contractAge < 24 * 60 * 60) {
-          // Less than 24 hours
-          threatScore += 0.2;
-          confidence += 0.1;
-        }
+/* ================================
+   4) Default deterministic models
+   (Replace with TF/ONNX later)
+================================== */
 
-        // Suspicious transaction patterns
-        if (transactionPatterns.botLikeActivity > 0.7) {
-          threatScore += 0.25;
-          confidence += 0.1;
-        }
+export function createThreatModel(cfg?: {
+  liquidityLow?: number;    // default 0.01
+  whaleTop10High?: number;  // default 80
+  newContractSec?: number;  // default 86400
+  botActivityHigh?: number; // default 0.7
+}) : ThreatModel {
+  const C = { liquidityLow: 0.01, whaleTop10High: 80, newContractSec: 86400, botActivityHigh: 0.7, ...cfg };
+  return {
+    async predict(f: Features): Promise<ThreatResult> {
+      let score = 0;
+      let conf = 0.35;
+      const indicators: string[] = [];
 
-        return {
-          threatScore: Math.min(1, threatScore),
-          confidence: Math.min(1, confidence),
-          indicators: this.generateThreatIndicators(features),
-        };
-      },
-    };
-  }
+      if (f.liquidityRatio !== null && f.liquidityRatio < C.liquidityLow) {
+        score += 0.4; conf += 0.2; indicators.push("Extremely low liquidity ratio");
+      }
+      if (f.holderDistribution.top10Percent !== null && f.holderDistribution.top10Percent > C.whaleTop10High) {
+        score += 0.3; conf += 0.15; indicators.push("High whale concentration");
+      }
+      if (f.contractAgeSec !== null && f.contractAgeSec < C.newContractSec) {
+        score += 0.2; conf += 0.1; indicators.push("Very new contract");
+      }
+      if (f.transactionPatterns.botLikeActivity !== null && f.transactionPatterns.botLikeActivity > C.botActivityHigh) {
+        score += 0.25; conf += 0.1; indicators.push("Bot-like transaction patterns");
+      }
 
-  private createAlphaSignalModel() {
-    return {
-      predict: (features: any) => {
-        const {
-          volumeSpikes,
-          socialSentiment,
-          whaleActivity,
-          developmentActivity,
-          marketCapGrowth,
-          uniqueHolders,
-        } = features;
+      return { threatScore: clamp01(score), confidence: clamp01(conf), indicators };
+    },
+  };
+}
 
-        let alphaScore = 0;
-        let potentialMultiplier = 1;
+export function createAlphaModel(): AlphaModel {
+  return {
+    async predict(f: Features): Promise<AlphaResult> {
+      let alpha = 0;
+      let mult = 1;
+      const signals: string[] = [];
 
-        // Volume analysis
-        if (volumeSpikes.last24h > 10) {
-          alphaScore += 0.3;
-          potentialMultiplier *= 2;
-        }
+      if (nz(f.volumeSpikes.last24h) > 10) { alpha += 0.3; mult *= 2; signals.push("Massive volume spike"); }
+      if (nz(f.socialSentiment.score) > 0.8) { alpha += 0.25; mult *= 1.5; signals.push("Extremely positive sentiment"); }
+      if (nz(f.whaleActivity.accumulating) > 0.7) { alpha += 0.2; mult *= 3; signals.push("Whale accumulation"); }
+      if (nz(f.developmentActivity.commits) > 50) { alpha += 0.15; mult *= 1.2; signals.push("High development activity"); }
+      if (nz(f.marketCapGrowth.last7d) > 2) { alpha += 0.1; mult *= Math.max(1, nz(f.marketCapGrowth.last7d)); signals.push("Market cap growth"); }
 
-        // Social momentum
-        if (socialSentiment.score > 0.8) {
-          alphaScore += 0.25;
-          potentialMultiplier *= 1.5;
-        }
-
-        // Whale accumulation
-        if (whaleActivity.accumulating > 0.7) {
-          alphaScore += 0.2;
-          potentialMultiplier *= 3;
-        }
-
-        // Development activity
-        if (developmentActivity.commits > 50) {
-          alphaScore += 0.15;
-          potentialMultiplier *= 1.2;
-        }
-
-        // Growth metrics
-        if (marketCapGrowth.last7d > 2) {
-          alphaScore += 0.1;
-          potentialMultiplier *= marketCapGrowth.last7d;
-        }
-
-        return {
-          alphaScore: Math.min(1, alphaScore),
-          potentialMultiplier: Math.min(1000000, potentialMultiplier), // Cap at 1M x
-          confidence: this.calculateAlphaConfidence(features),
-          signals: this.generateAlphaSignals(features),
-        };
-      },
-    };
-  }
-
-  private createViralOutbreakModel() {
-    return {
-      predict: (features: any) => {
-        const {
-          socialMentions,
-          influencerActivity,
-          searchTrends,
-          networkEffect,
-          memePotential,
-        } = features;
-
-        let viralScore = 0;
-        let timeToViral = Infinity;
-
-        // Social media tracking
-        const mentionGrowth = socialMentions.growth24h;
-        if (mentionGrowth > 5) {
-          viralScore += 0.4;
-          timeToViral = Math.min(timeToViral, 72 - mentionGrowth * 2); // Hours
-        }
-
-        // Influencer engagement
-        if (influencerActivity.bigFollowers > 0) {
-          viralScore += 0.3;
-          timeToViral = Math.min(timeToViral, 48);
-        }
-
-        // Search trend analysis
-        if (searchTrends.spike > 3) {
-          viralScore += 0.2;
-          timeToViral = Math.min(timeToViral, 24);
-        }
-
-        // Network effect calculation
-        if (networkEffect.velocity > 0.8) {
-          viralScore += 0.1;
-          timeToViral = Math.min(timeToViral, 12);
-        }
-
-        return {
-          viralScore: Math.min(1, viralScore),
-          timeToViral: Math.max(1, timeToViral),
-          confidence: this.calculateViralConfidence(features),
-          catalysts: this.identifyViralCatalysts(features),
-        };
-      },
-    };
-  }
-
-  private createPatternRecognitionModel() {
-    return {
-      analyze: (transactionData: any[]) => {
-        const patterns = [];
-        const sequences = this.extractSequences(transactionData);
-
-        // Look for known scam patterns
-        for (const sequence of sequences) {
-          const similarity = this.calculatePatternSimilarity(sequence);
-          if (similarity > this.confidenceThreshold) {
-            patterns.push({
-              type: "scam_pattern",
-              similarity,
-              description: this.describePattern(sequence),
-            });
-          }
-        }
-
-        // Detect new patterns using unsupervised learning
-        const newPatterns = this.detectNovelPatterns(sequences);
-
-        return {
-          knownPatterns: patterns,
-          novelPatterns: newPatterns,
-          riskLevel: this.calculatePatternRisk(patterns, newPatterns),
-        };
-      },
-    };
-  }
-
-  public async performDeepScan(
-    address: string,
-    network: string,
-    options: any = {},
-  ) {
-    const startTime = Date.now();
-
-    try {
-      // Gather comprehensive data
-      const features = await this.extractFeatures(address, network);
-
-      // Run all AI models in parallel for maximum speed
-      const [threatAnalysis, alphaAnalysis, viralAnalysis, patternAnalysis] =
-        await Promise.all([
-          this.analyzeThreat(features),
-          this.analyzeAlphaSignals(features),
-          this.analyzeViralPotential(features),
-          this.analyzePatterns(features.transactionData),
-        ]);
-
-      // Generate VERM-style summary
-      const summary = this.generateVermSummary({
-        address,
-        network,
-        threatAnalysis,
-        alphaAnalysis,
-        viralAnalysis,
-        patternAnalysis,
-        features,
-      });
-
-      const processingTime = Date.now() - startTime;
+      const conf = clamp01(
+        0.45 +
+          (nz(f.volumeSpikes.last24h) > 10 ? 0.2 : 0) +
+          (nz(f.socialSentiment.score) > 0.8 ? 0.15 : 0) +
+          (nz(f.whaleActivity.accumulating) > 0.7 ? 0.15 : 0),
+      );
 
       return {
-        success: true,
-        analysis: {
-          threat: threatAnalysis,
-          alpha: alphaAnalysis,
-          viral: viralAnalysis,
-          patterns: patternAnalysis,
-          summary,
-          metadata: {
-            processingTime,
-            confidence: this.calculateOverallConfidence(
-              threatAnalysis,
-              alphaAnalysis,
-              viralAnalysis,
-            ),
-            dataPoints: Object.keys(features).length,
-            aiModelsUsed: 4,
-          },
-        },
+        alphaScore: clamp01(alpha),
+        potentialMultiplier: Math.min(1_000_000, mult),
+        confidence: conf,
+        signals,
       };
-    } catch (error) {
-      console.error("Deep scan error:", error);
-      throw new Error("Enterprise scanning temporarily unavailable");
-    }
+    },
+  };
+}
+
+export function createViralModel(): ViralModel {
+  return {
+    async predict(f: Features): Promise<ViralResult> {
+      let vs = 0;
+      let ttv = Number.POSITIVE_INFINITY;
+      const cats: string[] = [];
+
+      const mentions = nz(f.socialMentions.growth24h);
+      if (mentions > 5) { vs += 0.4; ttv = Math.min(ttv, Math.max(6, 72 - mentions * 2)); cats.push("Exponential social growth"); }
+
+      if (nz(f.influencerActivity.bigFollowers) > 0) { vs += 0.3; ttv = Math.min(ttv, 48); cats.push("Major influencer engagement"); }
+      if (nz(f.searchTrends.spike) > 3) { vs += 0.2; ttv = Math.min(ttv, 24); cats.push("Search trend spike"); }
+      if (nz(f.networkEffect.velocity) > 0.8) { vs += 0.1; ttv = Math.min(ttv, 12); cats.push("Strong network velocity"); }
+      if (nz(f.memePotential) > 0.8) cats.push("High meme potential");
+
+      const conf = clamp01(
+        weightedAverage(
+          [Math.min(1, mentions / 10), nz(f.influencerActivity.bigFollowers) > 0 ? 1 : 0, Math.min(1, nz(f.searchTrends.spike) / 5)],
+          [0.5, 0.3, 0.2],
+        ),
+      );
+
+      return {
+        viralScore: clamp01(vs),
+        timeToViralHrs: Number.isFinite(ttv) ? Math.max(1, Math.round(ttv)) : 72,
+        confidence: conf,
+        catalysts: cats,
+      };
+    },
+  };
+}
+
+export function createPatternModel(confidenceThreshold = 0.85): PatternModel {
+  function classifyTx(tx: { value: number; gasUsed: number }) {
+    const v = tx.value > 1_000_000 ? "large" : tx.value > 1_000 ? "medium" : "small";
+    const g = tx.gasUsed > 100_000 ? "high_gas" : "normal_gas";
+    return `${v}_${g}`;
   }
 
-  private async extractFeatures(address: string, network: string) {
-    // In production, gather real blockchain data
-    // Note: Real AI analysis features should be implemented here
-    // Mock features removed for security - only real data should be used
-    const features = {
-      // Placeholder structure - requires real blockchain data integration
-      liquidityRatio: 0,
+  return {
+    async analyze(txs): Promise<PatternResult> {
+      const patterns: { type: string; similarity: number; description: string }[] = [];
+      // naive similarity: proportion of large_high_gas
+      const lh = txs.filter((t) => classifyTx(t) === "large_high_gas").length;
+      const sim = clamp01(txs.length ? lh / txs.length : 0);
+
+      if (sim > confidenceThreshold) {
+        patterns.push({
+          type: "scam_pattern",
+          similarity: sim,
+          description: "High proportion of large value and high gas transactions",
+        });
+      }
+
+      // No unsupervised novelty in prod stub; keep 0; plug real model later
+      const novel: PatternResult["novelPatterns"] = [];
+
+      const risk = clamp01(patterns.length * 0.3 + novel.length * 0.1);
+      return { knownPatterns: patterns, novelPatterns: novel, riskLevel: risk };
+    },
+  };
+}
+
+/* ================================
+   5) Summary (tone selectable)
+================================== */
+
+export type SummaryTone = "clinical" | "vermin";
+
+export function summarize(
+  tone: SummaryTone,
+  input: {
+    address: string;
+    network: Network;
+    threat: ThreatResult;
+    alpha: AlphaResult;
+    viral: ViralResult;
+  },
+): string {
+  const { threat, alpha, viral, address, network } = input;
+
+  if (tone === "clinical") {
+    const lines: string[] = [];
+    lines.push(`NimRev report for ${network}:${address}`);
+    lines.push(`Threat score ${Math.round(threat.threatScore * 100)}%; confidence ${Math.round(threat.confidence * 100)}%`);
+    if (threat.indicators.length) lines.push(`Indicators: ${threat.indicators.join("; ")}`);
+    if (alpha.alphaScore > 0.4) lines.push(`Alpha: score ${Math.round(alpha.alphaScore * 100)}%; est potential ~${alpha.potentialMultiplier.toFixed(0)}x`);
+    if (viral.viralScore > 0.4) lines.push(`Viral: score ${Math.round(viral.viralScore * 100)}%; ETA ~${viral.timeToViralHrs}h`);
+    lines.push("Method: heuristic scoring; social and activity signals; pattern analysis.");
+    lines.push("Disclosure: analysis is informational; not financial advice.");
+    return lines.join("\n");
+  }
+
+  // "vermin" tone
+  let s = "🐀 VERMIN INTELLIGENCE REPORT 🐀\n\n";
+  if (threat.threatScore > 0.7) {
+    s += `⚠️ THREAT DETECTED; confidence ${Math.round(threat.confidence * 100)}%\n`;
+  } else if (threat.threatScore > 0.4) {
+    s += "🔍 CAUTION ADVISED; mid-level signatures present\n";
+  } else {
+    s += "✅ INITIAL SCAN CLEAN; no immediate hazards detected\n";
+  }
+  if (alpha.alphaScore > 0.6) {
+    s += `💎 ALPHA SIGNAL; potential ~${alpha.potentialMultiplier.toFixed(0)}x; momentum forming\n`;
+  }
+  if (viral.viralScore > 0.5) {
+    s += `🚀 VIRAL MOMENTUM; ~${viral.timeToViralHrs}h window possible\n`;
+  }
+  if (threat.indicators.length) s += `Indicators: ${threat.indicators.join("; ")}\n`;
+  s += "\nDisclaimer; intelligence only; verify independently.";
+  return s;
+}
+
+/* ================================
+   6) Default Feature Provider
+   (dev-friendly; deterministic; no randomness)
+================================== */
+
+export class MockFeatureProvider implements FeatureProvider {
+  async extract(address: string, network: Network): Promise<Features> {
+    // Replace with real fetchers for Solana/EVM etc.
+    // Deterministic pseudo-values from address hash
+    const seed = [...address].reduce((a, c) => (a + c.charCodeAt(0)) % 9973, 0) / 9973;
+    const pct = (n: number) => Math.round(n * 100);
+
+    return FeaturesSchema.parse({
+      liquidityRatio: 0.02 + (seed % 0.01), // 0.02..0.03
       holderDistribution: {
-        top1Percent: 0,
-        top10Percent: 0,
-        uniqueHolders: 0,
+        top1Percent: pct(0.1 + (seed % 0.1)),   // 10..20
+        top10Percent: pct(0.5 + (seed % 0.2)),  // 50..70
+        uniqueHolders: Math.floor(1000 + seed * 1000),
       },
-      contractAge: 0,
+      contractAgeSec: 3600 * (12 + Math.floor(seed * 96)), // 12h..108h
       transactionPatterns: {
-        botLikeActivity: 0,
-        humanLikeActivity: 0,
-        suspiciousTransfers: 0,
+        botLikeActivity: 0.4 + (seed % 0.3), // 0.4..0.7
+        humanLikeActivity: 0.3 + (seed % 0.4),
+        suspiciousTransfers: Math.floor(seed * 10),
       },
       crossChainActivity: {
-        bridgeTransactions: 0,
-        multiChainPresence: false,
+        bridgeTxCount: Math.floor(seed * 5),
+        multiChainPresence: seed > 0.5,
       },
-      volumeSpikes: {
-        last24h: 0,
-        last7d: 0,
-      },
-      socialSentiment: {
-        score: 0,
-        mentions24h: 0,
-      },
-      socialMentions: {
-        growth24h: 0,
-      },
-      whaleActivity: {
-        accumulating: 0,
-        selling: 0,
-        newWhales: 0,
-      },
-      developmentActivity: {
-        commits: 0,
-        activeDevs: 0,
-      },
-
-      // Market metrics
-      marketCapGrowth: {
-        last7d: Math.random() * 5,
-      },
-
-      // Viral indicators
-      influencerActivity: {
-        bigFollowers: Math.floor(Math.random() * 3),
-      },
-      searchTrends: {
-        spike: Math.random() * 10,
-      },
-      networkEffect: {
-        velocity: Math.random(),
-      },
-      memePotential: Math.random(),
-
-      // Raw transaction data
-      transactionData: this.generateMockTransactions(address),
-    };
-
-    return features;
-  }
-
-  private generateMockTransactions(address: string) {
-    const transactions = [];
-    const count = Math.floor(Math.random() * 1000) + 100;
-
-    for (let i = 0; i < count; i++) {
-      transactions.push({
-        hash: `0x${Math.random().toString(16).slice(2)}`,
-        from: `0x${Math.random().toString(16).slice(2, 42)}`,
+      volumeSpikes: { last24h: 5 + Math.floor(seed * 15), last7d: 2 + Math.floor(seed * 10) },
+      socialSentiment: { score: -0.2 + (seed % 1), mentions24h: Math.floor(seed * 500) },
+      socialMentions: { growth24h: -5 + Math.floor(seed * 20) },
+      whaleActivity: { accumulating: 0.3 + (seed % 0.5), selling: 0.1 + (seed % 0.4), newWhales: Math.floor(seed * 3) },
+      developmentActivity: { commits: Math.floor(seed * 120), activeDevs: Math.floor(seed * 10) },
+      marketCapGrowth: { last7d: 1 + (seed % 5) },
+      influencerActivity: { bigFollowers: Math.floor(seed * 3) },
+      searchTrends: { spike: 1 + (seed % 9) },
+      networkEffect: { velocity: 0.2 + (seed % 0.7) },
+      memePotential: 0.2 + (seed % 0.7),
+      transactionData: Array.from({ length: 200 }, (_, i) => ({
+        hash: `0x${i.toString(16).padStart(8, "0")}`,
+        from: `0xseed${i}`,
         to: address,
-        value: Math.random() * 1000000,
-        timestamp: Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000,
-        gasUsed: Math.floor(Math.random() * 200000) + 21000,
-      });
-    }
-
-    return transactions;
-  }
-
-  private async analyzeThreat(features: any) {
-    return this.models.threatDetection.predict(features);
-  }
-
-  private async analyzeAlphaSignals(features: any) {
-    return this.models.alphaSignals.predict(features);
-  }
-
-  private async analyzeViralPotential(features: any) {
-    return this.models.viralOutbreaks.predict(features);
-  }
-
-  private async analyzePatterns(transactionData: any[]) {
-    return this.models.patternRecognition.analyze(transactionData);
-  }
-
-  private generateVermSummary(data: any): string {
-    const { threatAnalysis, alphaAnalysis, viralAnalysis, network, address } =
-      data;
-
-    // VERM-style analysis using underground hacker tone
-    let summary = "🐀 VERMIN INTELLIGENCE REPORT 🐀\n\n";
-
-    if (threatAnalysis.threatScore > 0.7) {
-      summary += "⚠️ THREAT DETECTED - The rats smell something rotten. ";
-      summary +=
-        "This contract reeks of honeypot schemes and rug pull potential. ";
-      summary +=
-        "Our neural networks caught suspicious liquidity patterns that scream 'TRAP'. ";
-      summary += `Confidence: ${(threatAnalysis.confidence * 100).toFixed(1)}%\n\n`;
-    } else if (threatAnalysis.threatScore > 0.4) {
-      summary += "🔍 CAUTION ADVISED - Mid-level threat signatures detected. ";
-      summary +=
-        "Not clean, but not immediately lethal. Proceed with rat-like cunning.\n\n";
-    } else {
-      summary +=
-        "✅ INITIAL SCAN CLEAN - No immediate threats detected in the sewers. ";
-      summary +=
-        "But remember, even the cleanest-looking cheese can hide poison.\n\n";
-    }
-
-    if (alphaAnalysis.alphaScore > 0.6) {
-      summary += `💎 ALPHA SIGNAL DETECTED - Potential ${alphaAnalysis.potentialMultiplier.toFixed(0)}x opportunity brewing. `;
-      summary +=
-        "The vermin network is picking up whale accumulation patterns and unusual volume spikes. ";
-      summary +=
-        "This could be the beginning of something big, but as always, DYOR and don't bet the farm.\n\n";
-    }
-
-    if (viralAnalysis.viralScore > 0.5) {
-      summary += `🚀 VIRAL OUTBREAK IMMINENT - T-minus ${viralAnalysis.timeToViral.toFixed(0)} hours to potential explosion. `;
-      summary += "Social momentum building, influencer chatter increasing. ";
-      summary += "The rats are gathering - something's about to blow.\n\n";
-    }
-
-    summary +=
-      "🔬 METHODOLOGY: Subversive pattern matching, cross-chain correlation analysis, ";
-    summary +=
-      "ML-powered threat detection, and real-time social sentiment tracking. ";
-    summary +=
-      "No guesswork, only cold hard data processed through the vermin neural network.\n\n";
-
-    summary += "⚡ DISCLAIMER: This is not financial advice. ";
-    summary +=
-      "The rats provide intelligence, but the decision to act is yours alone. ";
-    summary +=
-      "Always verify independently and never risk more than you can afford to lose.";
-
-    return summary;
-  }
-
-  // Helper methods for AI model implementations
-  private generateThreatIndicators(features: any): string[] {
-    const indicators = [];
-    if (features.liquidityRatio < 0.01)
-      indicators.push("Extremely low liquidity ratio");
-    if (features.holderDistribution.top10Percent > 80)
-      indicators.push("High whale concentration");
-    if (features.contractAge < 86400)
-      indicators.push("Very new contract (high risk)");
-    if (features.transactionPatterns.botLikeActivity > 0.7)
-      indicators.push("Bot-like transaction patterns");
-    return indicators;
-  }
-
-  private calculateAlphaConfidence(features: any): number {
-    let confidence = 0.5;
-    if (features.volumeSpikes.last24h > 10) confidence += 0.2;
-    if (features.socialSentiment.score > 0.8) confidence += 0.15;
-    if (features.whaleActivity.accumulating > 0.7) confidence += 0.15;
-    return Math.min(1, confidence);
-  }
-
-  private generateAlphaSignals(features: any): string[] {
-    const signals = [];
-    if (features.volumeSpikes.last24h > 10)
-      signals.push("Massive volume spike detected");
-    if (features.socialSentiment.score > 0.8)
-      signals.push("Extremely positive sentiment");
-    if (features.whaleActivity.accumulating > 0.7)
-      signals.push("Whale accumulation pattern");
-    if (features.developmentActivity.commits > 50)
-      signals.push("High development activity");
-    return signals;
-  }
-
-  private calculateViralConfidence(features: any): number {
-    let confidence = 0.3;
-    if (features.socialMentions.growth24h > 5) confidence += 0.3;
-    if (features.influencerActivity.bigFollowers > 0) confidence += 0.25;
-    if (features.searchTrends.spike > 3) confidence += 0.15;
-    return Math.min(1, confidence);
-  }
-
-  private identifyViralCatalysts(features: any): string[] {
-    const catalysts = [];
-    if (features.socialMentions.growth24h > 5)
-      catalysts.push("Exponential social media growth");
-    if (features.influencerActivity.bigFollowers > 0)
-      catalysts.push("Major influencer engagement");
-    if (features.searchTrends.spike > 3)
-      catalysts.push("Search trend explosion");
-    if (features.memePotential > 0.8) catalysts.push("High meme potential");
-    return catalysts;
-  }
-
-  private extractSequences(transactionData: any[]): any[] {
-    // Extract transaction patterns and sequences for analysis
-    return transactionData.map((tx) => ({
-      pattern: this.calculateTransactionPattern(tx),
-      timing: tx.timestamp,
-      value: tx.value,
-      gasUsed: tx.gasUsed,
-    }));
-  }
-
-  private calculateTransactionPattern(tx: any): string {
-    // Simplified pattern calculation
-    const valuePattern =
-      tx.value > 1000000 ? "large" : tx.value > 1000 ? "medium" : "small";
-    const gasPattern = tx.gasUsed > 100000 ? "high_gas" : "normal_gas";
-    return `${valuePattern}_${gasPattern}`;
-  }
-
-  private calculatePatternSimilarity(sequence: any): number {
-    // Simplified similarity calculation
-    return Math.random() * 0.9; // Mock implementation
-  }
-
-  private describePattern(sequence: any): string {
-    return `Suspicious transaction sequence detected: ${sequence.pattern}`;
-  }
-
-  private detectNovelPatterns(sequences: any[]): any[] {
-    // Mock implementation for novel pattern detection
-    return sequences
-      .filter(() => Math.random() > 0.95)
-      .map((seq) => ({
-        type: "novel_pattern",
-        confidence: Math.random() * 0.5 + 0.5,
-        description: "Previously unseen transaction pattern",
-      }));
-  }
-
-  private calculatePatternRisk(
-    knownPatterns: any[],
-    novelPatterns: any[],
-  ): number {
-    const knownRisk = knownPatterns.length * 0.3;
-    const novelRisk = novelPatterns.length * 0.1;
-    return Math.min(1, knownRisk + novelRisk);
-  }
-
-  private calculateOverallConfidence(
-    threat: any,
-    alpha: any,
-    viral: any,
-  ): number {
-    return (threat.confidence + alpha.confidence + viral.confidence) / 3;
-  }
-
-  private loadKnownPatterns() {
-    // Load known scam patterns and threat signatures
-    // In production, this would load from a database
-    this.knownThreats.add("honeypot_v1");
-    this.knownThreats.add("rug_pull_standard");
-    this.knownThreats.add("liquidity_drain");
+        value: Math.floor(10 ** (seed * 6)) + i,
+        timestamp: Date.now() - i * 60000,
+        gasUsed: 21_000 + (i % 100_000),
+      })),
+    });
   }
 }
 
-// Singleton instance for the application
+/* ================================
+   7) Engine (DI; caching; timeouts; persistence)
+================================== */
+
+export type VerminConfig = {
+  featureProvider?: FeatureProvider;
+  threatModel?: ThreatModel;
+  alphaModel?: AlphaModel;
+  viralModel?: ViralModel;
+  patternModel?: PatternModel;
+  summaryTone?: SummaryTone;
+  cacheTtlMs?: number;
+  persistence?: Persistence;
+  timeoutMs?: number;
+};
+
+type CacheEntry = { at: number; features: Features };
+
+export class VerminAI {
+  private readonly cfg: Required<Omit<VerminConfig, "persistence">> & { persistence?: Persistence };
+  private readonly cache = new Map<string, CacheEntry>();
+
+  constructor(config: VerminConfig = {}) {
+    this.cfg = {
+      featureProvider: config.featureProvider ?? new MockFeatureProvider(),
+      threatModel: config.threatModel ?? createThreatModel(),
+      alphaModel: config.alphaModel ?? createAlphaModel(),
+      viralModel: config.viralModel ?? createViralModel(),
+      patternModel: config.patternModel ?? createPatternModel(0.85),
+      summaryTone: config.summaryTone ?? "clinical",
+      cacheTtlMs: config.cacheTtlMs ?? 30_000,
+      timeoutMs: config.timeoutMs ?? 15_000,
+      persistence: config.persistence,
+    };
+  }
+
+  private key(address: string, network: Network) {
+    return `${network}:${address}`;
+  }
+
+  private async withTimeout<T>(p: Promise<T>): Promise<T> {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), this.cfg.timeoutMs);
+    try {
+      return await p;
+    } finally {
+      clearTimeout(t);
+    }
+  }
+
+  private async getFeatures(address: string, network: Network, options?: Record<string, unknown>): Promise<Features> {
+    const k = this.key(address, network);
+    const now = Date.now();
+    const hit = this.cache.get(k);
+    if (hit && now - hit.at < this.cfg.cacheTtlMs) return hit.features;
+
+    const raw = await this.withTimeout(this.cfg.featureProvider.extract(address, network, options));
+    const features = FeaturesSchema.parse(raw); // strict validation
+    this.cache.set(k, { at: now, features });
+    return features;
+  }
+
+  public async deepScan(input: { address: string; network: Network; options?: Record<string, unknown>; public?: boolean; scannedBy?: string; tone?: SummaryTone; }): Promise<{ success: true; analysis: Analysis; id?: string }> {
+    const address = Address.parse(input.address);
+    const network = Network.parse(input.network);
+    const tone = input.tone ?? this.cfg.summaryTone;
+
+    const started = Date.now();
+    const features = await this.getFeatures(address, network, input.options);
+
+    const [threat, alpha, viral, patterns] = await Promise.all([
+      this.cfg.threatModel.predict(features),
+      this.cfg.alphaModel.predict(features),
+      this.cfg.viralModel.predict(features),
+      this.cfg.patternModel.analyze(features.transactionData),
+    ]);
+
+    const overallConfidence = clamp01((threat.confidence + alpha.confidence + viral.confidence) / 3);
+    const summary = summarize(tone, { address, network, threat, alpha, viral });
+
+    const analysis: Analysis = {
+      threat,
+      alpha,
+      viral,
+      patterns,
+      summary,
+      metadata: {
+        processingMs: Date.now() - started,
+        overallConfidence,
+        featureKeys: Object.keys(features).length,
+        aiModelsUsed: 4,
+      },
+    };
+
+    let id: string | undefined;
+    if (this.cfg.persistence) {
+      const rec = await this.cfg.persistence.saveScan({ address, network, analysis, public: input.public, scannedBy: input.scannedBy });
+      if (rec && "id" in rec) id = rec.id;
+    }
+
+    return { success: true, analysis, id };
+  }
+}
+
+/* ================================
+   8) Singleton (default)
+================================== */
+
 export const verminAI = new VerminAI();
