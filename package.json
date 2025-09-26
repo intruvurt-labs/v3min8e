@@ -1,24 +1,28 @@
 {
-  "name": "nimrev-verm-airdrop",
+  "name": "nimrev-security-protocol",
   "version": "2.0.0",
   "private": true,
   "type": "module",
-  "description": "NimRev VERM Token Airdrop Platform - Blockchain Security & Intelligence",
+  "description": "NimRev Security Protocol; multi-tenant Telegram utility bot; blockchain threat intelligence; token and contract risk scoring; authority monitoring; cross-chain alerts",
   "homepage": "https://nimrev.xyz",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/dobleduche/v3rmin8e"
-  },
+  "repository": { "type": "git", "url": "https://github.com/dobleduche/v3rmin8e" },
   "keywords": [
-    "VERM",
-    "airdrop",
-    "blockchain",
-    "crypto",
-    "security",
-    "web3",
-    "solana",
-    "alpha",
-    "ethereum"
+    "nimrev",
+    "blockchain security",
+    "smart contract scanner",
+    "token risk score",
+    "authority revoke",
+    "rug pull detection",
+    "telegram bot",
+    "threat intelligence",
+    "solana security",
+    "evm security",
+    "wallet monitoring",
+    "multichain monitoring",
+    "onchain compliance",
+    "security automation",
+    "kyc optional"
+}
   ],
   "pkg": {
     "assets": [
