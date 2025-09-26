@@ -1,18 +1,20 @@
+// app/page.tsx (server component)
+import { cookies } from 'next/headers';
+import { createClient } from '@/utils/supabase/server';
 
-import { createClient } from '@/utils/supabase/server'
-import { cookies } from 'next/headers'
+type Todo = { id: string; title: string; done: boolean };
 
 export default async function Page() {
-  const cookieStore = await cookies()
-  const supabase = createClient(cookieStore)
+  const supabase = createClient(cookies());
+  const { data: todos, error } = await supabase.from('todos').select('*');
 
-  const { data: todos } = await supabase.from('todos').select()
+  if (error) return <p className="text-red-500">Error: {error.message}</p>;
 
   return (
-    <ul>
-      {todos?.map((todo) => (
-        <li>{todo}</li>
+    <ul className="space-y-2">
+      {todos?.map((t: Todo) => (
+        <li key={t.id}>{t.title}</li>
       ))}
     </ul>
-  )
+  );
 }
