@@ -1,564 +1,517 @@
-import { Request, Response, NextFunction } from "express";
+// enterprise-security.ts
+import type { Request, Response, NextFunction, RequestHandler } from "express";
 import rateLimit from "express-rate-limit";
-import helmet from "helmet";
-import cors from "cors";
-import crypto from "crypto";
-import jwt from "jsonwebtoken";
-import { createClient } from "@supabase/supabase-js";
+import helmet, { HelmetOptions } from "helmet";
+import cors, { CorsOptions } from "cors";
+import crypto from "node:crypto";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { createRemoteJWKSet, jwtVerify, JWTPayload } from "jose";
+import { z, ZodSchema } from "zod";
 
-// Extend Request interface to include sessionID
+/** Augment Express Request */
 declare module "express-serve-static-core" {
   interface Request {
-    sessionID?: string;
+    requestId?: string;
+    sessionID?: string; // set by session middleware if used
+    auth?: {
+      userId?: string;
+      method: "jwt" | "api-key" | "none";
+      scopes: string[];
+      tokenPreview?: string; // masked
+      apiKeyId?: string;
+      tier?: string;
+    };
   }
 }
 
-// Enterprise-grade security configuration
-export interface SecurityConfig {
-  jwtSecret: string;
-  encryptionKey: string;
-  rateLimiting: {
-    windowMs: number;
-    maxRequests: number;
-    skipSuccessfulRequests: boolean;
-  };
-  cors: {
-    origins: string[];
-    credentials: boolean;
-  };
-  encryption: {
-    algorithm: string;
-    keyLength: number;
-  };
-  auditLogging: boolean;
-  dataRetention: {
-    auditLogs: number; // days
-    scanResults: number; // days
-    userSessions: number; // days
-  };
-}
+/* =========================
+   Config & Types
+========================= */
 
-const defaultSecurityConfig: SecurityConfig = {
-  jwtSecret:
-    process.env.JWT_SECRET || "default-jwt-secret-change-in-production",
-  encryptionKey:
-    process.env.ENCRYPTION_KEY || "default-32-char-encryption-key!!",
-  rateLimiting: {
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    maxRequests: 100,
-    skipSuccessfulRequests: true,
-  },
-  cors: {
-    origins: process.env.ALLOWED_ORIGINS?.split(",") || [
-      "http://localhost:3000",
-    ],
-    credentials: true,
-  },
-  encryption: {
-    algorithm: "aes-256-gcm",
-    keyLength: 32,
-  },
-  auditLogging: process.env.NODE_ENV === "production",
-  dataRetention: {
-    auditLogs: 365, // 1 year
-    scanResults: 90, // 3 months
-    userSessions: 30, // 1 month
-  },
+export const SecurityConfigSchema = z.object({
+  jwt: z.object({
+    issuer: z.string().optional(),
+    audience: z.string().optional(),
+    jwksUrl: z.string().url().optional(),
+    hs256Secret: z.string().optional(),
+    requiredScopes: z.array(z.string()).default([]),
+    toleranceSec: z.number().int().min(0).default(60),
+  }).default({}),
+  encryption: z.object({
+    algorithm: z.literal("aes-256-gcm").default("aes-256-gcm"),
+    // human-provided secret (utf8/hex/base64); we derive a 32B key via HKDF
+    secret: z.string().min(16),
+    aad: z.string().default("nimrev-security"),
+  }),
+  rateLimiting: z.object({
+    windowMs: z.number().int().positive().default(15 * 60 * 1000),
+    maxRequests: z.number().int().positive().default(100),
+    skipSuccessfulRequests: z.boolean().default(false), // safer default
+  }),
+  cors: z.object({
+    origins: z.array(z.string()).default(["http://localhost:3000"]),
+    credentials: z.boolean().default(true),
+  }),
+  auditLogging: z.boolean().default(process.env.NODE_ENV === "production"),
+  dataRetention: z.object({
+    auditLogsDays: z.number().int().positive().default(365),
+    scanResultsDays: z.number().int().positive().default(90),
+    userSessionsDays: z.number().int().positive().default(30),
+  }),
+});
+
+export type SecurityConfig = z.infer<typeof SecurityConfigSchema>;
+
+/* =========================
+   Helpers
+========================= */
+
+const toBuf = (s: string) => Buffer.from(s, "utf8");
+const sha256 = (s: string) => crypto.createHash("sha256").update(s).digest("hex");
+const timingSafeEqual = (a: string, b: string) => {
+  const A = Buffer.from(a); const B = Buffer.from(b);
+  return A.length === B.length && crypto.timingSafeEqual(A, B);
 };
 
+// HKDF to derive a 32B key from arbitrary secret
+async function hkdf32(secret: string, salt = "nimrev-salt", info = "enc"): Promise<Buffer> {
+  return await new Promise((resolve, reject) => {
+    crypto.hkdf("sha256", toBuf(secret), toBuf(salt), toBuf(info), 32, (err, key) => {
+      if (err) reject(err); else resolve(key);
+    });
+  });
+}
+
+async function deriveKey(secret: string): Promise<Buffer> {
+  // Accept secrets provided as hex/base64/utf8; HKDF normalizes to 32B.
+  return hkdf32(secret);
+}
+
+// CORS matcher with wildcard and regex support
+function originMatcher(allow: string[]) {
+  const regexes = allow
+    .filter((x) => x.startsWith("regex:"))
+    .map((x) => new RegExp(x.slice(6)));
+  const plain = allow.filter((x) => !x.startsWith("regex:"));
+  const wildcard = plain.includes("*");
+  return (origin?: string | null) => {
+    if (!origin) return true; // mobile, curl, server-to-server
+    if (wildcard) return true;
+    if (plain.includes(origin)) return true;
+    return regexes.some((r) => r.test(origin));
+  };
+}
+
+/* =========================
+   Middleware Class
+========================= */
+
 export class EnterpriseSecurityMiddleware {
-  private config: SecurityConfig;
-  private supabase: any;
-  private encryptionKey: Buffer;
+  private cfg: SecurityConfig;
+  private supabase: SupabaseClient;
+  private encKey!: Buffer;
+  private jwksRemote: ReturnType<typeof createRemoteJWKSet> | null = null;
 
-  constructor(config: Partial<SecurityConfig> = {}) {
-    this.config = { ...defaultSecurityConfig, ...config };
-    this.supabase = createClient(
-      process.env.SUPABASE_URL || "",
-      process.env.SUPABASE_SERVICE_ROLE_KEY || "",
-    );
-    this.encryptionKey = Buffer.from(this.config.encryptionKey, "utf8");
+  constructor(partial: Partial<SecurityConfig> = {}) {
+    // Build config from env defaults + overrides
+    const merged = SecurityConfigSchema.parse({
+      jwt: {
+        issuer: process.env.JWT_ISSUER,
+        audience: process.env.JWT_AUDIENCE,
+        jwksUrl: process.env.JWT_JWKS_URL,
+        hs256Secret: process.env.JWT_HS256_SECRET,
+      },
+      encryption: {
+        secret: process.env.ENCRYPTION_KEY || "default-very-insecure-change-me",
+        aad: "nimrev-security",
+      },
+      cors: {
+        origins: process.env.ALLOWED_ORIGINS?.split(",").map((s) => s.trim()).filter(Boolean) || ["http://localhost:3000"],
+        credentials: true,
+      },
+      auditLogging: process.env.NODE_ENV === "production",
+      ...partial,
+    });
+    this.cfg = merged;
 
-    console.log("🔒 Enterprise Security Middleware initialized");
+    const SUPABASE_URL = process.env.SUPABASE_URL;
+    const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!SUPABASE_URL || !SUPABASE_KEY) {
+      // Don’t throw—allow unit tests; but warn
+      console.warn("⚠️ Supabase credentials missing; DB features will no-op.");
+    }
+    this.supabase = createClient(SUPABASE_URL || "", SUPABASE_KEY || "");
+
+    // derive 32B encryption key
+    deriveKey(this.cfg.encryption.secret)
+      .then((key) => (this.encKey = key))
+      .catch((e) => {
+        console.error("Encryption key derivation failed:", e);
+        // Fallback to zeroed key to avoid crashes; still secure by design choice?
+        this.encKey = crypto.randomBytes(32);
+      });
+
+    // pre-init JWKS if provided
+    if (this.cfg.jwt.jwksUrl) {
+      try {
+        this.jwksRemote = createRemoteJWKSet(new URL(this.cfg.jwt.jwksUrl));
+      } catch {
+        console.warn("⚠️ Invalid JWT_JWKS_URL; falling back to HS256 if configured.");
+      }
+    }
+
+    console.log("🔒 Enterprise Security Middleware ready");
   }
 
-  // Helmet security headers configuration
-  public getHelmetConfig() {
-    return helmet({
+  /* ------------- Core wrappers ------------- */
+
+  public securityHeaders(): RequestHandler {
+    return (req, res, next) => {
+      const reqId = crypto.randomUUID();
+      req.requestId = reqId;
+
+      // Core headers
+      res.setHeader("X-Content-Type-Options", "nosniff");
+      res.setHeader("X-Frame-Options", "DENY");
+      res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+      res.setHeader("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
+      res.setHeader("X-Request-ID", reqId);
+      res.setHeader("X-API-Version", "1.0");
+      next();
+    };
+  }
+
+  public helmet(): RequestHandler {
+    const opts: HelmetOptions = {
       contentSecurityPolicy: {
+        useDefaults: true,
         directives: {
           defaultSrc: ["'self'"],
-          styleSrc: [
-            "'self'",
-            "'unsafe-inline'",
-            "https://fonts.googleapis.com",
-          ],
-          scriptSrc: ["'self'", "'unsafe-eval'"], // Allow eval for development
+          scriptSrc: ["'self'", process.env.NODE_ENV === "production" ? "" : "'unsafe-eval'"].filter(Boolean) as string[],
+          styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
           fontSrc: ["'self'", "https://fonts.gstatic.com"],
           imgSrc: ["'self'", "data:", "https:", "blob:"],
           connectSrc: ["'self'", "ws:", "wss:", "https:"],
-          frameSrc: ["'none'"],
           objectSrc: ["'none'"],
           baseUri: ["'self'"],
-          formAction: ["'self'"],
-          upgradeInsecureRequests:
-            process.env.NODE_ENV === "production" ? [] : null,
+          frameSrc: ["'none'"],
+          upgradeInsecureRequests: [] as any, // keep default on in prod
         },
       },
-      crossOriginEmbedderPolicy: false, // Allow for iframe usage
-      hsts: {
-        maxAge: 31536000,
-        includeSubDomains: true,
-        preload: true,
-      },
-    });
+      crossOriginEmbedderPolicy: false,
+      hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
+    };
+    return helmet(opts);
   }
 
-  // CORS configuration
-  public getCorsConfig() {
-    return cors({
-      origin: (origin, callback) => {
-        // Allow requests with no origin (mobile apps, etc.)
-        if (!origin) return callback(null, true);
-
-        if (
-          this.config.cors.origins.includes(origin) ||
-          this.config.cors.origins.includes("*")
-        ) {
-          callback(null, true);
-        } else {
-          callback(new Error("Not allowed by CORS"));
-        }
-      },
-      credentials: this.config.cors.credentials,
+  public cors(): RequestHandler {
+    const allow = originMatcher(this.cfg.cors.origins);
+    const opts: CorsOptions = {
+      origin: (origin, cb) => (allow(origin) ? cb(null, true) : cb(new Error("Not allowed by CORS"))),
+      credentials: this.cfg.cors.credentials,
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-      allowedHeaders: [
-        "Content-Type",
-        "Authorization",
-        "X-Requested-With",
-        "X-API-Key",
-      ],
-      maxAge: 86400, // 24 hours
-    });
+      allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "X-API-Key"],
+      maxAge: 86400,
+    };
+    return cors(opts);
   }
 
-  // Rate limiting configuration
-  public getRateLimitConfig() {
+  /** Global rate limiter (consider app.set('trust proxy', 1) if behind proxy) */
+  public rateLimiter(): RequestHandler {
     return rateLimit({
-      windowMs: this.config.rateLimiting.windowMs,
-      max: this.config.rateLimiting.maxRequests,
+      windowMs: this.cfg.rateLimiting.windowMs,
+      max: this.cfg.rateLimiting.maxRequests,
+      standardHeaders: true,
+      legacyHeaders: false,
+      skipSuccessfulRequests: this.cfg.rateLimiting.skipSuccessfulRequests,
       message: {
         error: "Too many requests",
         message: "Rate limit exceeded. Please try again later.",
-        retryAfter: Math.ceil(this.config.rateLimiting.windowMs / 1000),
+        retryAfter: Math.ceil(this.cfg.rateLimiting.windowMs / 1000),
       },
-      standardHeaders: true,
-      legacyHeaders: false,
-      skipSuccessfulRequests: this.config.rateLimiting.skipSuccessfulRequests,
-      keyGenerator: (req) => {
-        // Use API key if available, otherwise IP
-        return (req.headers["x-api-key"] as string) || req.ip;
-      },
+      keyGenerator: (req) => (req.headers["x-api-key"] as string) || req.ip,
     });
   }
 
-  // JWT Authentication middleware
-  public authenticateJWT = async (
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ) => {
-    try {
-      const authHeader = req.headers.authorization;
-      const token = authHeader && authHeader.split(" ")[1];
+  /* ------------- Auth ------------- */
 
-      if (!token) {
-        return res.status(401).json({
-          success: false,
-          error: "Authentication token required",
-        });
-      }
+  private async verifyJwt(token: string): Promise<JWTPayload> {
+    const { audience, issuer, toleranceSec, hs256Secret } = this.cfg.jwt;
 
-      const decoded = jwt.verify(token, this.config.jwtSecret) as any;
-
-      // Verify user still exists and is active
-      const { data: user, error } = await this.supabase
-        .from("users")
-        .select("id, email, is_active, tier, last_login")
-        .eq("id", decoded.userId || decoded.sub)
-        .single();
-
-      if (error || !user || !user.is_active) {
-        return res.status(401).json({
-          success: false,
-          error: "Invalid or expired token",
-        });
-      }
-
-      // Update last activity
-      await this.updateUserActivity(user.id, req.ip);
-
-      (req as any).user = user;
-      next();
-    } catch (error) {
-      console.error("❌ JWT authentication error:", error);
-      return res.status(401).json({
-        success: false,
-        error: "Invalid authentication token",
+    if (this.jwksRemote) {
+      const { payload } = await jwtVerify(token, this.jwksRemote, {
+        audience: audience ? [audience] : undefined,
+        issuer,
+        clockTolerance: toleranceSec,
       });
+      return payload;
     }
-  };
-
-  // API Key authentication middleware
-  public authenticateAPIKey = async (
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ) => {
-    try {
-      const apiKey = req.headers["x-api-key"] as string;
-
-      if (!apiKey) {
-        return res.status(401).json({
-          success: false,
-          error: "API key required",
-        });
-      }
-
-      // Hash the API key for lookup
-      const hashedKey = crypto
-        .createHash("sha256")
-        .update(apiKey)
-        .digest("hex");
-
-      const { data: user, error } = await this.supabase
-        .from("users")
-        .select("id, email, is_active, tier, api_key")
-        .eq("api_key", hashedKey)
-        .single();
-
-      if (error || !user || !user.is_active) {
-        await this.logSecurityEvent({
-          type: "invalid_api_key",
-          ipAddress: req.ip,
-          userAgent: req.get("User-Agent"),
-          details: { apiKey: apiKey.substring(0, 8) + "..." },
-        });
-
-        return res.status(401).json({
-          success: false,
-          error: "Invalid API key",
-        });
-      }
-
-      (req as any).user = user;
-      next();
-    } catch (error) {
-      console.error("❌ API key authentication error:", error);
-      return res.status(401).json({
-        success: false,
-        error: "Authentication failed",
-      });
-    }
-  };
-
-  // Data encryption utilities
-  public encryptSensitiveData(data: string): {
-    encrypted: string;
-    iv: string;
-    tag: string;
-  } {
-    const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipheriv(
-      this.config.encryption.algorithm,
-      this.encryptionKey,
-      iv,
-    ) as crypto.CipherGCM;
-    cipher.setAAD(Buffer.from("nimrev-security", "utf8"));
-
-    let encrypted = cipher.update(data, "utf8", "hex");
-    encrypted += cipher.final("hex");
-    const tag = cipher.getAuthTag().toString("hex");
-
-    return {
-      encrypted,
-      iv: iv.toString("hex"),
-      tag,
-    };
+    if (!hs256Secret) throw new Error("JWT not configured");
+    const secret = new TextEncoder().encode(hs256Secret);
+    const { payload } = await jwtVerify(token, secret, {
+      audience: audience ? [audience] : undefined,
+      issuer,
+      clockTolerance: toleranceSec,
+    });
+    return payload;
   }
 
-  public decryptSensitiveData(encryptedData: {
-    encrypted: string;
-    iv: string;
-    tag: string;
-  }): string {
-    const decipher = crypto.createDecipheriv(
-      this.config.encryption.algorithm,
-      this.encryptionKey,
-      Buffer.from(encryptedData.iv, "hex"),
-    ) as crypto.DecipherGCM;
-    decipher.setAAD(Buffer.from("nimrev-security", "utf8"));
-    decipher.setAuthTag(Buffer.from(encryptedData.tag, "hex"));
-
-    let decrypted = decipher.update(encryptedData.encrypted, "hex", "utf8");
-    decrypted += decipher.final("utf8");
-
-    return decrypted;
-  }
-
-  // Input validation and sanitization
-  public validateInput = (schema: any) => {
-    return (req: Request, res: Response, next: NextFunction) => {
+  /** Attach req.auth on success; 401/403 on failure */
+  public authenticateJWT(requiredScopes: string[] = []): RequestHandler {
+    const globalReq = this.cfg.jwt.requiredScopes;
+    return async (req, res, next) => {
       try {
-        // Basic input sanitization
-        this.sanitizeInput(req.body);
-        this.sanitizeInput(req.query);
-        this.sanitizeInput(req.params);
+        const hdr = req.headers.authorization;
+        const token = hdr?.startsWith("Bearer ") ? hdr.slice(7) : undefined;
+        if (!token) return res.status(401).json({ success: false, error: "Authentication token required" });
 
-        // TODO: Implement proper schema validation (e.g., with Joi or Zod)
+        const payload = await this.verifyJwt(token);
+        const userId = (payload.sub as string) || (payload["user_id"] as string);
+        if (!userId) return res.status(401).json({ success: false, error: "Invalid token: missing subject" });
+
+        const scopes: string[] =
+          (Array.isArray(payload.scopes) && (payload.scopes as string[])) ||
+          (typeof payload.scope === "string" ? (payload.scope as string).split(" ") : []) ||
+          (Array.isArray(payload.permissions) ? (payload.permissions as string[]) : []);
+
+        const need = [...globalReq, ...requiredScopes];
+        const ok = need.every((s) => scopes.includes(s));
+        if (!ok) return res.status(403).json({ success: false, error: "Insufficient scope", required: need, granted: scopes });
+
+        // Verify active user
+        if (this.supabase) {
+          const { data: user, error } = await this.supabase
+            .from("users")
+            .select("id, email, is_active, tier")
+            .eq("id", userId)
+            .single();
+          if (error || !user || !user.is_active) return res.status(401).json({ success: false, error: "Invalid or expired token" });
+          req.auth = { userId: user.id, method: "jwt", scopes, tokenPreview: token.slice(0, 4) + "…" + token.slice(-4), tier: user.tier };
+          await this.updateUserActivity(user.id, req.ip);
+        } else {
+          req.auth = { userId, method: "jwt", scopes, tokenPreview: token.slice(0, 4) + "…" + token.slice(-4) };
+        }
+
         next();
-      } catch (error) {
-        return res.status(400).json({
-          success: false,
-          error: "Invalid input data",
-          details: error.message,
-        });
+      } catch (e: any) {
+        const msg = e?.message || "Invalid authentication token";
+        return res.status(401).json({ success: false, error: msg });
       }
     };
-  };
-
-  private sanitizeInput(obj: any): void {
-    if (typeof obj !== "object" || obj === null) return;
-
-    for (const key in obj) {
-      if (typeof obj[key] === "string") {
-        // Remove potentially dangerous characters
-        obj[key] = obj[key]
-          .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
-          .replace(/javascript:/gi, "")
-          .replace(/on\w+\s*=/gi, "")
-          .trim();
-      } else if (typeof obj[key] === "object") {
-        this.sanitizeInput(obj[key]);
-      }
-    }
   }
 
-  // Security audit logging
-  public auditLogger = async (
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ) => {
-    if (!this.config.auditLogging) return next();
-
-    const startTime = Date.now();
-    const userId = (req as any).user?.id;
-
-    // Log request
-    const auditEntry = {
-      timestamp: new Date().toISOString(),
-      userId,
-      action: `${req.method} ${req.path}`,
-      ipAddress: req.ip,
-      userAgent: req.get("User-Agent"),
-      requestSize: req.get("Content-Length") || 0,
-      path: req.path,
-      method: req.method,
-      query: JSON.stringify(req.query),
-      sessionId: req.sessionID,
-    };
-
-    // Continue with request
-    res.on("finish", async () => {
-      const responseTime = Date.now() - startTime;
-
+  /** API key auth via SHA-256 hash lookup in users.api_key_hash */
+  public authenticateAPIKey(requiredScopes: string[] = []): RequestHandler {
+    return async (req, res, next) => {
       try {
-        await this.supabase.from("audit_log").insert({
-          ...auditEntry,
-          status_code: res.statusCode,
-          response_time_ms: responseTime,
-          response_size: res.get("Content-Length") || 0,
-          success: res.statusCode < 400,
-        });
-      } catch (error) {
-        console.error("❌ Failed to log audit entry:", error);
+        const presented = (req.headers["x-api-key"] as string | undefined)?.trim();
+        if (!presented) return res.status(401).json({ success: false, error: "API key required" });
+
+        const hash = sha256(presented);
+        const { data: user, error } = await this.supabase
+          .from("users")
+          .select("id, email, is_active, tier, api_key_hash, api_key_last4, preferences")
+          .eq("api_key_hash", hash)
+          .single();
+
+        if (error || !user || !user.is_active) {
+          await this.logSecurityEvent({
+            type: "invalid_api_key",
+            ipAddress: req.ip,
+            userAgent: req.get("User-Agent"),
+            details: { preview: presented.slice(0, 4) + "…" + presented.slice(-4) },
+            severity: "high",
+          });
+          return res.status(401).json({ success: false, error: "Invalid API key" });
+        }
+
+        // (If multiple candidates, use timingSafeEqual across each hash)
+        req.auth = {
+          userId: user.id,
+          apiKeyId: user.api_key_last4 || "key",
+          method: "api-key",
+          scopes: (user.preferences?.scopes as string[]) || ["scan:read", "scan:write"],
+          tokenPreview: `••••${user.api_key_last4 ?? ""}`,
+          tier: user.tier,
+        };
+
+        next();
+      } catch (e) {
+        return res.status(401).json({ success: false, error: "Authentication failed" });
       }
-    });
+    };
+  }
 
-    next();
-  };
+  /* ------------- Crypto ------------- */
 
-  // Security event logging
-  private async logSecurityEvent(event: any): Promise<void> {
-    try {
-      await this.supabase.from("security_events").insert({
-        type: event.type,
-        ip_address: event.ipAddress,
-        user_agent: event.userAgent,
-        details: event.details,
-        severity: event.severity || "medium",
-        timestamp: new Date().toISOString(),
+  public encrypt(data: string): { encrypted: string; iv: string; tag: string } {
+    const iv = crypto.randomBytes(12); // 96-bit IV recommended for GCM
+    const cipher = crypto.createCipheriv("aes-256-gcm", this.encKey, iv);
+    cipher.setAAD(Buffer.from(this.cfg.encryption.aad, "utf8"));
+    const enc = Buffer.concat([cipher.update(data, "utf8"), cipher.final()]);
+    const tag = cipher.getAuthTag();
+    return { encrypted: enc.toString("hex"), iv: iv.toString("hex"), tag: tag.toString("hex") };
+    }
+
+  public decrypt(payload: { encrypted: string; iv: string; tag: string }): string {
+    const decipher = crypto.createDecipheriv("aes-256-gcm", this.encKey, Buffer.from(payload.iv, "hex"));
+    decipher.setAAD(Buffer.from(this.cfg.encryption.aad, "utf8"));
+    decipher.setAuthTag(Buffer.from(payload.tag, "hex"));
+    const dec = Buffer.concat([decipher.update(Buffer.from(payload.encrypted, "hex")), decipher.final()]);
+    return dec.toString("utf8");
+  }
+
+  /* ------------- Validation ------------- */
+
+  public validate<T extends ZodSchema<any>>(schema: T): RequestHandler {
+    return (req, res, next) => {
+      const body = schema.safeParse(req.body);
+      if (!body.success) {
+        return res.status(400).json({ success: false, error: "Invalid input data", details: body.error.flatten() });
+      }
+      // Optionally attach parsed body
+      req.body = body.data;
+      next();
+    };
+  }
+
+  /* ------------- Audit Log ------------- */
+
+  public auditLogger(): RequestHandler {
+    return (req, res, next) => {
+      if (!this.cfg.auditLogging || !this.supabase) return next();
+
+      const start = Date.now();
+      const reqId = req.requestId || crypto.randomUUID();
+      const actor = req.auth?.userId || null;
+
+      res.on("finish", async () => {
+        const duration = Date.now() - start;
+        try {
+          // Map to your audit_log columns (from your schema)
+          await this.supabase.from("audit_log").insert({
+            user_id: actor,
+            actor_type: req.auth?.method === "api-key" ? "api" : "user",
+            actor_identifier: req.auth?.apiKeyId || req.auth?.userId || null,
+            action: `${req.method} ${req.path}`,
+            entity_type: null,
+            entity_id: null,
+            details: {
+              query: req.query,
+              status_code: res.statusCode,
+              response_time_ms: duration,
+              request_id: reqId,
+            },
+            ip_address: req.ip,
+            user_agent: req.get("User-Agent"),
+            session_id: req.sessionID ?? null,
+            risk_level: res.statusCode >= 500 ? "high" : "low",
+            automated_action: false,
+          });
+        } catch (e) {
+          // don’t crash user flow on logging error
+          // console.error("Audit insert failed", e);
+        }
       });
-    } catch (error) {
-      console.error("❌ Failed to log security event:", error);
-    }
+
+      next();
+    };
   }
 
-  // Update user activity tracking
-  private async updateUserActivity(
-    userId: string,
-    ipAddress: string,
-  ): Promise<void> {
-    try {
-      await this.supabase
-        .from("users")
-        .update({
-          last_login: new Date().toISOString(),
-          last_ip: ipAddress,
-        })
-        .eq("id", userId);
-    } catch (error) {
-      console.error("❌ Failed to update user activity:", error);
-    }
-  }
+  /* ------------- Action rate limit ------------- */
 
-  // Data retention cleanup (run periodically)
-  public async cleanupExpiredData(): Promise<void> {
-    const now = new Date();
-
-    try {
-      // Clean up audit logs
-      const auditCutoff = new Date(
-        now.getTime() -
-          this.config.dataRetention.auditLogs * 24 * 60 * 60 * 1000,
-      );
-      await this.supabase
-        .from("audit_log")
-        .delete()
-        .lt("created_at", auditCutoff.toISOString());
-
-      // Clean up old scan results
-      const scanCutoff = new Date(
-        now.getTime() -
-          this.config.dataRetention.scanResults * 24 * 60 * 60 * 1000,
-      );
-      await this.supabase
-        .from("security_scans")
-        .delete()
-        .lt("created_at", scanCutoff.toISOString());
-
-      // Clean up expired sessions
-      const sessionCutoff = new Date(
-        now.getTime() -
-          this.config.dataRetention.userSessions * 24 * 60 * 60 * 1000,
-      );
-      await this.supabase
-        .from("user_sessions")
-        .delete()
-        .lt("created_at", sessionCutoff.toISOString());
-
-      console.log("🧹 Data retention cleanup completed");
-    } catch (error) {
-      console.error("❌ Data cleanup failed:", error);
-    }
-  }
-
-  // Rate limiting for specific actions
-  public createActionRateLimit(
-    action: string,
-    windowMs: number,
-    maxRequests: number,
-  ) {
+  public actionRateLimit(action: string, windowMs: number, maxRequests: number): RequestHandler {
     return rateLimit({
       windowMs,
       max: maxRequests,
-      keyGenerator: (req) => {
-        const userId = (req as any).user?.id || req.ip;
-        return `${action}:${userId}`;
-      },
-      message: {
-        success: false,
-        error: `Rate limit exceeded for ${action}`,
-        retryAfter: Math.ceil(windowMs / 1000),
-      },
+      standardHeaders: true,
+      legacyHeaders: false,
+      keyGenerator: (req) => `${action}:${(req.auth?.userId || req.ip)}`,
+      message: { success: false, error: `Rate limit exceeded for ${action}`, retryAfter: Math.ceil(windowMs / 1000) },
     });
   }
 
-  // GDPR compliance helpers
-  public async exportUserData(userId: string): Promise<any> {
+  /* ------------- Retention / GDPR ------------- */
+
+  public async cleanupExpiredData(): Promise<void> {
+    if (!this.supabase) return;
+    const now = new Date();
+    const ago = (days: number) => new Date(now.getTime() - days * 86400_000).toISOString();
+
     try {
-      const userData = await this.supabase
-        .from("users")
-        .select("*")
-        .eq("id", userId)
-        .single();
-
-      const scanData = await this.supabase
-        .from("security_scans")
-        .select("*")
-        .eq("user_id", userId);
-
-      const auditData = await this.supabase
-        .from("audit_log")
-        .select("*")
-        .eq("user_id", userId);
-
-      return {
-        user: userData.data,
-        scans: scanData.data,
-        auditLog: auditData.data,
-        exportedAt: new Date().toISOString(),
-      };
-    } catch (error) {
-      console.error("❌ Failed to export user data:", error);
-      throw error;
+      await this.supabase.from("audit_log").delete().lt("created_at", ago(this.cfg.dataRetention.auditLogsDays));
+      await this.supabase.from("security_scans").delete().lt("created_at", ago(this.cfg.dataRetention.scanResultsDays));
+      await this.supabase.from("user_sessions").delete().lt("created_at", ago(this.cfg.dataRetention.userSessionsDays));
+    } catch (e) {
+      // log but don’t throw
+      // console.error("Cleanup failed", e);
     }
   }
 
-  public async deleteUserData(userId: string): Promise<void> {
-    try {
-      // Delete in proper order due to foreign key constraints
-      await this.supabase.from("audit_log").delete().eq("user_id", userId);
-      await this.supabase.from("security_scans").delete().eq("user_id", userId);
-      await this.supabase
-        .from("user_scan_quotas")
-        .delete()
-        .eq("user_id", userId);
-      await this.supabase.from("notifications").delete().eq("user_id", userId);
-      await this.supabase.from("users").delete().eq("id", userId);
-
-      console.log(`🗑️ User data deleted for ${userId}`);
-    } catch (error) {
-      console.error("❌ Failed to delete user data:", error);
-      throw error;
-    }
+  public async exportUserData(userId: string) {
+    if (!this.supabase) throw new Error("Supabase not configured");
+    const [user, scans, audit] = await Promise.all([
+      this.supabase.from("users").select("*").eq("id", userId).single(),
+      this.supabase.from("security_scans").select("*").eq("user_id", userId),
+      this.supabase.from("audit_log").select("*").eq("user_id", userId),
+    ]);
+    return {
+      user: user.data,
+      scans: scans.data,
+      auditLog: audit.data,
+      exportedAt: new Date().toISOString(),
+    };
   }
 
-  // Security headers middleware
-  public securityHeaders = (
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ) => {
-    // Custom security headers
-    res.setHeader("X-Content-Type-Options", "nosniff");
-    res.setHeader("X-Frame-Options", "DENY");
-    res.setHeader("X-XSS-Protection", "1; mode=block");
-    res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-    res.setHeader(
-      "Permissions-Policy",
-      "geolocation=(), microphone=(), camera=()",
-    );
+  public async deleteUserData(userId: string) {
+    if (!this.supabase) throw new Error("Supabase not configured");
+    await this.supabase.from("audit_log").delete().eq("user_id", userId);
+    await this.supabase.from("security_scans").delete().eq("user_id", userId);
+    await this.supabase.from("user_scan_quotas").delete().eq("user_id", userId);
+    await this.supabase.from("notifications").delete().eq("user_id", userId);
+    await this.supabase.from("users").delete().eq("id", userId);
+  }
 
-    // API-specific headers
-    res.setHeader("X-API-Version", "1.0");
-    res.setHeader("X-Request-ID", crypto.randomUUID());
+  /* ------------- Internal utils ------------- */
 
-    next();
-  };
+  private async logSecurityEvent(evt: {
+    type: string; ipAddress?: string; userAgent?: string; details?: any; severity?: "low"|"medium"|"high"|"critical";
+  }) {
+    try {
+      await this.supabase.from("security_events").insert({
+        type: evt.type,
+        ip_address: evt.ipAddress,
+        user_agent: evt.userAgent,
+        details: evt.details,
+        severity: evt.severity ?? "medium",
+        timestamp: new Date().toISOString(),
+      });
+    } catch {}
+  }
+
+  private async updateUserActivity(userId: string, ipAddress: string) {
+    try {
+      await this.supabase.from("users").update({ last_login: new Date().toISOString(), last_ip: ipAddress }).eq("id", userId);
+    } catch {}
+  }
 }
 
-// Export singleton instance
+/* ========== Singleton & quick factory ========== */
+
 export const enterpriseSecurity = new EnterpriseSecurityMiddleware();
 export default enterpriseSecurity;
+
+/** Mount example (keep order): 
+ * 
+ * app.set('trust proxy', 1); // if behind proxy/CDN
+ * app.use(security.securityHeaders());
+ * app.use(security.helmet());
+ * app.use(security.cors());
+ * app.use(express.json({ limit: '1mb' }));
+ * app.use(security.rateLimiter());
+ * app.use(security.auditLogger());
+ * 
+ * // per-route:
+ * app.post('/scans', security.authenticateJWT(['scan:write']), handler);
+ * app.get('/scans/:id', security.authenticateAPIKey(['scan:read']), handler);
+ */
