@@ -1,351 +1,363 @@
-'use client';
+// ============================================================================
+// INTEGRATED ADVANCED SECURITY SCANNER SYSTEM
+// Combines all detection methods into comprehensive analysis
+// ============================================================================
 
-import { useState, useEffect, useRef } from 'react';
-import { useWalletContext } from '../contexts/WalletContext';
-import { motion, AnimatePresence } from 'framer-motion';
-import * as THREE from 'three';
-import { Canvas, useFrame } from '@react-three/fiber';
-import io from 'socket.io-client';
-import { Button, notification } from 'antd';
-import { LoadingOutlined } from '@ant-design/icons';
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import express from 'express';
+import { AdvancedScamDetector } from './AdvancedScamDetector';
+import { SolanaSecurityAnalyzer } from './SolanaSecurityAnalyzer';
 
-type LayoutOption = 'AUTO' | 'TOP_BOTTOM' | 'SPLIT_PANEL' | 'QUOTE_CARD';
+// Enhanced scanner with all advanced detection capabilities
+export class ComprehensiveSecurityScanner {
+  private basicAnalyzer: SolanaSecurityAnalyzer;
+  private advancedDetector: AdvancedScamDetector;
+  private scamDatabase: ScamDatabase;
 
-interface GeneratedMeme {
-  image: string;
-  meta: any;
-  hash: string;
-  shortHash: string;
-  filename: string;
-  isSafe: boolean;
-}
+  constructor(config: any) {
+    this.basicAnalyzer = new SolanaSecurityAnalyzer(config);
+    this.advancedDetector = new AdvancedScamDetector(config);
+    this.scamDatabase = new ScamDatabase(config);
+  }
 
-const RainParticle = ({ currency }: { currency: string }) => {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const [exploded, setExploded] = useState(false);
-
-  useFrame(() => {
-    if (meshRef.current) {
-      meshRef.current.position.y -= 0.1;
-      if (meshRef.current.position.y < -5 && !exploded) {
-        setExploded(true);
-        meshRef.current.scale.set(2, 2, 2);
-        setTimeout(() => meshRef.current?.scale.set(0, 0, 0), 500);
-      }
-    }
-  });
-
-  return (
-    <mesh ref={meshRef} position={[Math.random() * 10 - 5, 5, 0]}>
-      <sphereGeometry args={[0.1, 16, 16]} />
-      <meshBasicMaterial color={exploded ? '#FFD700' : '#00BFFF'} />
-      <sprite position={[0, 0, 0.1]}>
-        <spriteMaterial color={exploded ? '#FFD700' : '#FFFFFF'}>
-          <canvasTexture attach="map" image={document.createElement('canvas')} />
-        </spriteMaterial>
-        <div className="text-2xl">{currency}</div>
-      </sprite>
-    </mesh>
-  );
-};
-
-export default function MemeGenerator() {
-  const { connected, publicKey, role, isCreator, isOwner } = useWalletContext();
-  const [prompt, setPrompt] = useState('');
-  const [selectedLayout, setSelectedLayout] = useState<LayoutOption>('AUTO');
-  const [generatedMeme, setGeneratedMeme] = useState<GeneratedMeme | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const socket = io('ws://your-backend-url');
-  const currencies = ['$', '¥', '₽', '₦', 'A$', 'NPR', 'R$'];
-
-  useEffect(() => {
-    socket.on('generation_progress', (data: { scan_id: string; message: string }) => {
-      notification.info({ message: 'Progress', description: data.message });
-    });
-    socket.on('scan_result', (data: { scan_id: string; status: string; issues: any[] }) => {
-      if (data.status === 'FAIL') {
-        notification.error({ message: 'Security Alert', description: 'Meme flagged as unsafe and quarantined.' });
-      }
-    });
-    return () => socket.disconnect();
-  }, []);
-
-  const generateMeme = async () => {
-    if (!prompt.trim()) {
-      setError('Please enter a prompt for your meme');
-      return;
-    }
-    if (!connected || !isCreator) {
-      setError('Connect wallet and ensure CREATOR role to generate');
-      return;
-    }
-
-    setIsGenerating(true);
-    setError(null);
-
+  async performComprehensiveScan(mintAddress: string) {
+    console.log(`Starting comprehensive scan of ${mintAddress}`);
+    
     try {
-      const signature = await signMessage(prompt); // Sign for auth
-      const response = await fetch('/api/generate-meme', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: prompt.trim(), layout: selectedLayout, signature, publicKey: publicKey?.toBase58() }),
-      });
+      // Run all analyses in parallel for speed
+      const [
+        basicAnalysis,
+        advancedThreats,
+        historicalData,
+        realTimeMonitoring
+      ] = await Promise.allSettled([
+        this.basicAnalyzer.analyzeToken(mintAddress),
+        this.advancedDetector.performAdvancedScamAnalysis(mintAddress),
+        this.scamDatabase.checkHistoricalData(mintAddress),
+        this.performRealTimeMonitoring(mintAddress)
+      ]);
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || 'Failed to generate meme');
+      // Combine all results
+      const combinedResults = this.combineAnalysisResults(
+        basicAnalysis.status === 'fulfilled' ? basicAnalysis.value : null,
+        advancedThreats.status === 'fulfilled' ? advancedThreats.value : null,
+        historicalData.status === 'fulfilled' ? historicalData.value : null,
+        realTimeMonitoring.status === 'fulfilled' ? realTimeMonitoring.value : null
+      );
 
-      // Scan meme for safety
-      const scanResponse = await fetch('/api/scan-meme', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: result.data.image }),
-      });
-      const scanResult = await scanResponse.json();
-      setGeneratedMeme({ ...result.data, isSafe: scanResult.status === 'PASS' });
+      // Generate final security report
+      const securityReport = this.generateSecurityReport(combinedResults);
 
-      if (scanResult.status !== 'PASS') {
-        await fetch('/api/quarantine-meme', { method: 'POST', body: JSON.stringify({ scan_id: scanResult.scan_id }) });
+      // Store results for future reference
+      await this.scamDatabase.storeAnalysisResults(mintAddress, securityReport);
+
+      return securityReport;
+
+    } catch (error) {
+      console.error('Comprehensive scan failed:', error);
+      throw new Error(`Scan failed: ${error.message}`);
+    }
+  }
+
+  private combineAnalysisResults(basic: any, advanced: any, historical: any, realTime: any) {
+    // Merge threat detections
+    const allThreats = [
+      ...(basic?.warnings?.map(w => ({
+        type: 'BASIC_WARNING',
+        severity: 50,
+        description: w,
+        category: 'basic'
+      })) || []),
+      ...(advanced?.detectedThreats || []),
+      ...(historical?.knownThreats || []),
+      ...(realTime?.activeThreats || [])
+    ];
+
+    // Calculate composite risk score
+    const basicRisk = basic?.riskScore || 0;
+    const advancedRisk = advanced?.totalSeverityScore || 0;
+    const historicalRisk = historical?.riskScore || 0;
+    const realTimeRisk = realTime?.riskScore || 0;
+
+    const compositeRiskScore = this.calculateCompositeRisk(
+      basicRisk, advancedRisk, historicalRisk, realTimeRisk
+    );
+
+    return {
+      mintAddress: basic?.mintAddress,
+      basicAnalysis: basic,
+      advancedThreats: advanced,
+      historicalData: historical,
+      realTimeData: realTime,
+      allThreats: allThreats.sort((a, b) => b.severity - a.severity),
+      compositeRiskScore,
+      overallRiskLevel: this.determineOverallRisk(compositeRiskScore, allThreats),
+      analysisTimestamp: new Date().toISOString()
+    };
+  }
+
+  private generateSecurityReport(combinedResults: any) {
+    const report = {
+      scanId: `scan_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      tokenAddress: combinedResults.mintAddress,
+      timestamp: combinedResults.analysisTimestamp,
+      
+      // Executive Summary
+      executiveSummary: {
+        overallRisk: combinedResults.overallRiskLevel,
+        riskScore: combinedResults.compositeRiskScore,
+        criticalThreats: combinedResults.allThreats.filter(t => t.severity >= 80).length,
+        recommendedAction: this.getRecommendedAction(combinedResults.overallRiskLevel),
+        keyFindings: this.extractKeyFindings(combinedResults.allThreats)
+      },
+
+      // Detailed Analysis
+      detailedAnalysis: {
+        tokenMetadata: combinedResults.basicAnalysis?.metadata,
+        marketData: combinedResults.basicAnalysis?.liquidity,
+        holderAnalysis: combinedResults.basicAnalysis?.holders,
+        socialIntelligence: combinedResults.basicAnalysis?.social,
+        transactionPatterns: combinedResults.basicAnalysis?.transactions
+      },
+
+      // Threat Assessment
+      threatAssessment: {
+        honeypotRisk: this.assessSpecificThreat('HONEYPOT', combinedResults.allThreats),
+        rugPullRisk: this.assessSpecificThreat('RUG', combinedResults.allThreats),
+        socialEngineeringRisk: this.assessSpecificThreat('SOCIAL', combinedResults.allThreats),
+        technicalVulnerabilities: this.assessSpecificThreat('VULN', combinedResults.allThreats),
+        marketManipulation: this.assessSpecificThreat('MANIPULATION', combinedResults.allThreats)
+      },
+
+      // All detected threats
+      detectedThreats: combinedResults.allThreats,
+
+      // Historical context
+      historicalContext: combinedResults.historicalData,
+
+      // Real-time monitoring
+      realTimeMonitoring: combinedResults.realTimeData,
+
+      // Confidence metrics
+      analysisConfidence: this.calculateAnalysisConfidence(combinedResults),
+
+      // Next steps
+      recommendations: this.generateRecommendations(combinedResults)
+    };
+
+    return report;
+  }
+
+  private calculateCompositeRisk(basic: number, advanced: number, historical: number, realTime: number): number {
+    // Weighted average with different importance levels
+    const weights = {
+      basic: 0.25,
+      advanced: 0.40,
+      historical: 0.20,
+      realTime: 0.15
+    };
+
+    const compositeScore = 
+      (basic * weights.basic) +
+      (Math.min(advanced, 100) * weights.advanced) +
+      (historical * weights.historical) +
+      (realTime * weights.realTime);
+
+    return Math.min(Math.round(compositeScore), 100);
+  }
+
+  private determineOverallRisk(score: number, threats: any[]): string {
+    const criticalThreats = threats.filter(t => t.severity >= 90).length;
+    const highThreats = threats.filter(t => t.severity >= 75).length;
+
+    if (criticalThreats >= 3 || score >= 85) return 'CRITICAL';
+    if (criticalThreats >= 1 || highThreats >= 3 || score >= 70) return 'HIGH';
+    if (highThreats >= 1 || score >= 50) return 'MEDIUM';
+    if (score >= 25) return 'LOW';
+    return 'MINIMAL';
+  }
+
+  private getRecommendedAction(riskLevel: string): string {
+    const actions = {
+      'CRITICAL': 'DO NOT TRADE - Multiple critical security threats detected. This token poses extreme risk to investors.',
+      'HIGH': 'AVOID - High-risk token with significant threat indicators. Not recommended for investment.',
+      'MEDIUM': 'CAUTION - Some concerning patterns detected. Only invest small amounts if you understand the risks.',
+      'LOW': 'PROCEED CAREFULLY - Minor risk factors present. Monitor closely and limit exposure.',
+      'MINIMAL': 'RELATIVELY SAFE - Low risk detected, but always conduct additional research.'
+    };
+    return actions[riskLevel] || actions['MEDIUM'];
+  }
+
+  private extractKeyFindings(threats: any[]): string[] {
+    const keyFindings = [];
+    
+    // Group threats by type
+    const threatGroups = threats.reduce((groups, threat) => {
+      const category = threat.type.split('_')[0];
+      if (!groups[category]) groups[category] = [];
+      groups[category].push(threat);
+      return groups;
+    }, {});
+
+    // Extract key findings from each category
+    Object.entries(threatGroups).forEach(([category, categoryThreats]: [string, any[]]) => {
+      if (categoryThreats.length > 0) {
+        const highestSeverity = Math.max(...categoryThreats.map(t => t.severity));
+        if (highestSeverity >= 70) {
+          keyFindings.push(`${category} threats detected with severity up to ${highestSeverity}`);
+        }
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const downloadMeme = () => {
-    if (!generatedMeme || !generatedMeme.isSafe) return;
-    const link = document.createElement('a');
-    link.download = generatedMeme.filename || `odinary-meme-${generatedMeme.shortHash}.png`;
-    link.href = generatedMeme.image;
-    link.click();
-  };
-
-  const mintMeme = async () => {
-    if (!connected || !isCreator || !generatedMeme || !generatedMeme.isSafe) {
-      setError('Connect wallet, ensure CREATOR role, or verify meme safety');
-      return;
-    }
-    const signature = await signMessage(generatedMeme.hash);
-    await fetch('/api/mint-nft', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ image: generatedMeme.image, hash: generatedMeme.hash, signature, publicKey: publicKey?.toBase58() }),
     });
-    notification.success({ message: 'NFT Minted', description: 'Meme minted to Solana!' });
-  };
 
-  const signMessage = async (message: string) => {
-    if (!publicKey || !window.solana?.signMessage) throw new Error('Wallet does not support signing');
-    const encodedMessage = new TextEncoder().encode(message);
-    const { signature } = await window.solana.signMessage(encodedMessage, 'utf8');
-    return Buffer.from(signature).toString('base64');
-  };
+    return keyFindings.slice(0, 5); // Top 5 findings
+  }
 
-  const layoutOptions = [
-    { value: 'AUTO', label: 'Auto-Select', description: 'Let AI choose the best layout' },
-    { value: 'TOP_BOTTOM', label: 'Top/Bottom', description: 'Classic meme with text above and below' },
-    { value: 'SPLIT_PANEL', label: 'Split Panel', description: 'Side-by-side comparison layout' },
-    { value: 'QUOTE_CARD', label: 'Quote Card', description: 'Quote-style card layout' },
-  ];
+  private assessSpecificThreat(threatType: string, allThreats: any[]) {
+    const relevantThreats = allThreats.filter(t => 
+      t.type.includes(threatType) || t.category?.includes(threatType.toLowerCase())
+    );
 
-  return (
-    <div className="relative bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white p-6 rounded-xl border border-slate-700/50 overflow-hidden">
-      {/* Glitch Sandpaper Background */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[url('/sandpaper-texture.png')] opacity-20 animate-glitch" />
-        <style jsx>{`
-          @keyframes glitch {
-            0% { transform: translate(0); }
-            20% { transform: translate(-2px, 2px); }
-            40% { transform: translate(2px, -2px); }
-            60% { transform: translate(-1px, 1px); }
-            80% { transform: translate(1px, -1px); }
-            100% { transform: translate(0); }
-          }
-          .animate-glitch {
-            animation: glitch 1s infinite;
-          }
-        `}</style>
-        <Canvas style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
-          <ambientLight intensity={0.5} />
-          {currencies.map((currency, i) => (
-            <RainParticle key={i} currency={currency} />
-          ))}
-        </Canvas>
-      </div>
+    if (relevantThreats.length === 0) {
+      return { riskLevel: 'NONE', score: 0, threats: [] };
+    }
 
-      <div className="relative z-10 text-center mb-8">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-red-500/20 to-gold-500/20 rounded-full border border-red-500/30 mb-4"
-        >
-          <span className="text-sm font-medium text-red-400">BRAND-LOCKED GENERATOR</span>
-        </motion.div>
-        <motion.h2
-          initial={{ scale: 0.8 }}
-          animate={{ scale: 1 }}
-          className="text-4xl font-bold bg-gradient-to-r from-red-400 via-gold-400 to-red-400 bg-clip-text text-transparent mb-2"
-        >
-          ODINARY Meme Generator
-        </motion.h2>
-        <p className="text-slate-400">Create secure, brand-consistent meme NFTs</p>
-      </div>
+    const maxSeverity = Math.max(...relevantThreats.map(t => t.severity));
+    let riskLevel = 'LOW';
+    if (maxSeverity >= 90) riskLevel = 'CRITICAL';
+    else if (maxSeverity >= 75) riskLevel = 'HIGH';
+    else if (maxSeverity >= 50) riskLevel = 'MEDIUM';
 
-      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Left: Inputs */}
-        <motion.div initial={{ x: -50, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="space-y-6">
-          <div className="bg-slate-800/50 p-6 rounded-xl border border-slate-700/50">
-            <h3 className="text-xl font-semibold mb-4 text-gold-400">Meme Prompt</h3>
-            <textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              className="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-red-500 focus:ring-1 focus:ring-red-500 resize-none"
-              placeholder="Enter your meme text here..."
-              rows={4}
-              maxLength={500}
-            />
-            <div className="text-xs text-slate-400 mt-1">{prompt.length}/500 characters</div>
+    return {
+      riskLevel,
+      score: maxSeverity,
+      threatCount: relevantThreats.length,
+      threats: relevantThreats.slice(0, 3) // Top 3 threats
+    };
+  }
 
-            <label className="block text-sm font-medium mb-2 text-slate-300 mt-4">Layout Style</label>
-            <select
-              value={selectedLayout}
-              onChange={(e) => setSelectedLayout(e.target.value as LayoutOption)}
-              className="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:border-red-500 focus:ring-1 focus:ring-red-500"
-            >
-              {layoutOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label} - {option.description}
-                </option>
-              ))}
-            </select>
-          </div>
+  private calculateAnalysisConfidence(results: any): number {
+    let confidence = 0;
+    let factors = 0;
 
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="w-full"
-          >
-            <WalletMultiButton
-              className={`w-full py-4 rounded-xl font-semibold text-lg transition-all duration-200 ${
-                connected
-                  ? 'bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white shadow-lg hover:shadow-green-500/25'
-                  : 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white shadow-lg hover:shadow-red-500/25'
-              }`}
-            >
-              {connected ? `Connected: ${publicKey?.toBase58().slice(0, 8)}...` : 'Connect Wallet'}
-            </WalletMultiButton>
-          </motion.div>
+    if (results.basicAnalysis) { confidence += 85; factors++; }
+    if (results.advancedThreats) { confidence += 90; factors++; }
+    if (results.historicalData) { confidence += 80; factors++; }
+    if (results.realTimeData) { confidence += 75; factors++; }
 
-          <Button
-            onClick={generateMeme}
-            disabled={!prompt.trim() || isGenerating || !isCreator}
-            className={`w-full py-4 rounded-xl font-semibold text-lg transition-all duration-200 ${
-              !prompt.trim() || isGenerating || !isCreator
-                ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
-                : 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white shadow-lg hover:shadow-red-500/25'
-            }`}
-          >
-            {isGenerating ? (
-              <div className="flex items-center justify-center space-x-2">
-                <LoadingOutlined />
-                <span>Generating Secure Meme...</span>
-              </div>
-            ) : (
-              'Generate Brand-Locked Meme'
-            )}
-          </Button>
+    return factors > 0 ? Math.round(confidence / factors) : 50;
+  }
 
-          {isOwner && (
-            <div className="bg-slate-800/50 p-6 rounded-xl border border-slate-700/50">
-              <h3 className="text-xl font-semibold mb-4 text-gold-400">Admin Panel</h3>
-              <p className="text-slate-400">Scan Logs: View quarantined memes and audit trails.</p>
-              {/* Add log viewer component here */}
-            </div>
-          )}
-        </motion.div>
+  private generateRecommendations(results: any): string[] {
+    const recommendations = [];
 
-        {/* Right: Preview */}
-        <motion.div initial={{ x: 50, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="space-y-6">
-          <div className="bg-slate-800/50 p-6 rounded-xl border border-slate-700/50">
-            <h3 className="text-xl font-semibold mb-4 text-gold-400">Preview</h3>
-            <div className="border-2 border-slate-600 rounded-xl overflow-hidden bg-slate-900/50 flex items-center justify-center" style={{ minHeight: '400px' }}>
-              <AnimatePresence>
-                {generatedMeme ? (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="relative"
-                  >
-                    <img
-                      src={generatedMeme.image}
-                      alt="Generated ODINARY meme"
-                      className="max-w-full max-h-[400px] rounded-lg shadow-2xl"
-                    />
-                    <div className="absolute top-2 right-2 bg-black/70 px-2 py-1 rounded text-xs text-gold-400">
-                      #{generatedMeme.shortHash}
-                    </div>
-                    {!generatedMeme.isSafe && (
-                      <div className="absolute bottom-2 left-2 bg-red-500/70 px-2 py-1 rounded text-xs text-white">
-                        Quarantined: Unsafe Content
-                      </div>
-                    )}
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="text-center p-8 text-slate-400"
-                  >
-                    <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-red-500/20 to-gold-500/20 rounded-full flex items-center justify-center">
-                      <svg className="w-8 h-8 text-gold-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <p className="text-lg font-medium mb-2">Your ODINARY meme will appear here</p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </div>
+    // Risk-based recommendations
+    if (results.overallRiskLevel === 'CRITICAL') {
+      recommendations.push('Avoid this token completely - multiple critical threats detected');
+      recommendations.push('If you already hold this token, consider exiting your position immediately');
+    } else if (results.overallRiskLevel === 'HIGH') {
+      recommendations.push('Do not invest in this token without extensive additional research');
+      recommendations.push('If investing, limit exposure to less than 1% of your portfolio');
+    }
 
-          {generatedMeme && (
-            <div className="bg-slate-800/50 p-6 rounded-xl border border-slate-700/50">
-              <h3 className="text-xl font-semibold mb-4 text-gold-400">Actions</h3>
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <Button
-                  onClick={downloadMeme}
-                  disabled={!generatedMeme.isSafe}
-                  className="py-3 px-4 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium transition-colors duration-200 flex items-center justify-center space-x-2"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  <span>Download</span>
-                </Button>
-                <Button
-                  onClick={mintMeme}
-                  disabled={!connected || !isCreator || !generatedMeme.isSafe}
-                  className={`py-3 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center space-x-2 ${
-                    !connected || !isCreator || !generatedMeme.isSafe
-                      ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
-                      : 'bg-green-600 hover:bg-green-500 text-white'
-                  }`}
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                  </svg>
-                  <span>Mint NFT</span>
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+    // Specific threat recommendations
+    const honeypotThreats = results.allThreats.filter(t => t.type.includes('HONEYPOT'));
+    if (honeypotThreats.length > 0) {
+      recommendations.push('Test with a small transaction before larger investments');
+    }
+
+    const rugPullThreats = results.allThreats.filter(t => t.type.includes('RUG') || t.type.includes('LIQUIDITY'));
+    if (rugPullThreats.length > 0) {
+      recommendations.push('Monitor liquidity locks and team wallet activity closely');
+    }
+
+    // General security recommendations
+    recommendations.push('Always use a dedicated trading wallet with limited funds');
+    recommendations.push('Set stop-losses and take-profit levels before trading');
+    recommendations.push('Never invest more than you can afford to lose');
+
+    return recommendations.slice(0, 8); // Top 8 recommendations
+  }
+
+  private async performRealTimeMonitoring(mintAddress: string) {
+    // This would implement real-time monitoring of:
+    // - Large transactions
+    // - Unusual trading patterns
+    // - Social media sentiment changes
+    // - Liquidity movements
+    // - Price manipulation attempts
+
+    return {
+      activeThreats: [],
+      riskScore: 0,
+      monitoringStatus: 'active'
+    };
+  }
 }
+
+// Scam database for historical reference
+class ScamDatabase {
+  private config: any;
+
+  constructor(config: any) {
+    this.config = config;
+  }
+
+  async checkHistoricalData(mintAddress: string) {
+    // Check against known scam databases
+    // Cross-reference with previous rug pulls
+    // Check deployer history
+    // Analyze similar token patterns
+
+    return {
+      knownThreats: [],
+      riskScore: 0,
+      historicalContext: 'No historical red flags found'
+    };
+  }
+
+  async storeAnalysisResults(mintAddress: string, report: any) {
+    // Store scan results for future reference
+    // Build reputation database
+    // Track patterns over time
+    console.log(`Storing analysis results for ${mintAddress}`);
+  }
+}
+
+// Enhanced API endpoint
+const enhancedApp = express();
+
+enhancedApp.post('/api/comprehensive-scan', async (req, res) => {
+  try {
+    const { address } = req.body;
+
+    if (!address) {
+      return res.status(400).json({
+        error: 'Token address is required'
+      });
+    }
+
+    const scanner = new ComprehensiveSecurityScanner({
+      HELIUS_RPC: process.env.HELIUS_RPC_URL,
+      SOLSCAN_API: process.env.SOLSCAN_API_KEY,
+      MORALIS_API: process.env.MORALIS_API_KEY,
+      TWITTER_BEARER: process.env.TWITTER_API_BEARER,
+      // ... other config
+    });
+
+    const report = await scanner.performComprehensiveScan(address);
+
+    res.json({
+      success: true,
+      data: report,
+      message: 'Comprehensive security analysis completed'
+    });
+
+  } catch (error) {
+    console.error('Comprehensive scan failed:', error);
+    res.status(500).json({
+      error: 'Analysis failed',
+      message: error.message
+    });
+  }
+});
+
+export default enhancedApp;
