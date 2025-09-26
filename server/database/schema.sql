@@ -1,450 +1,251 @@
--- NIMREV Security Platform Database Schema
--- Production-ready schema for comprehensive security scanning platform
+-- === Extensions you will use ===
+create extension if not exists "citext";
+create extension if not exists "pg_trgm";
+create extension if not exists "pgcrypto";
 
--- Enable necessary extensions
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+-- === ENUMs to replace varchar checks ===
+do $$
+begin
+  if not exists (select 1 from pg_type where typname='user_tier') then
+    create type user_tier as enum ('basic','premium','enterprise','elite');
+  end if;
+  if not exists (select 1 from pg_type where typname='scan_type') then
+    create type scan_type as enum ('basic','comprehensive','elite');
+  end if;
+  if not exists (select 1 from pg_type where typname='scan_status') then
+    create type scan_status as enum ('pending','running','completed','error','cancelled');
+  end if;
+  if not exists (select 1 from pg_type where typname='risk_level') then
+    create type risk_level as enum ('safe','low','medium','high','critical');
+  end if;
+  if not exists (select 1 from pg_type where typname='severity_level') then
+    create type severity_level as enum ('low','medium','high','critical');
+  end if;
+  if not exists (select 1 from pg_type where typname='notify_priority') then
+    create type notify_priority as enum ('low','normal','high','urgent');
+  end if;
+end $$;
 
--- Users table (enhanced for security platform)
-CREATE TABLE IF NOT EXISTS users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    username VARCHAR(100) UNIQUE,
-    tier VARCHAR(20) DEFAULT 'basic' CHECK (tier IN ('basic', 'premium', 'enterprise', 'elite')),
-    api_key VARCHAR(255) UNIQUE,
-    is_verified BOOLEAN DEFAULT FALSE,
-    is_active BOOLEAN DEFAULT TRUE,
-    last_login TIMESTAMP WITH TIME ZONE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
-    -- Security-specific fields
-    scan_quota_daily INTEGER DEFAULT 10,
-    scan_quota_monthly INTEGER DEFAULT 100,
-    wallet_addresses JSONB DEFAULT '[]'::jsonb,
-    preferences JSONB DEFAULT '{}'::jsonb,
-    security_settings JSONB DEFAULT '{}'::jsonb
-);
+-- === Tighten users table ===
+alter table users
+  alter column email type citext,
+  alter column tier type user_tier using tier::user_tier,
+  add column if not exists api_key_hash text,
+  add column if not exists api_key_last4 text,
+  add constraint users_email_ck check (email ~* '^[^@]+@[^@]+\.[^@]+$');
 
--- Security scans table (main scanning records)
-CREATE TABLE IF NOT EXISTS security_scans (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    scan_id VARCHAR(255) UNIQUE NOT NULL,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    
-    -- Scan configuration
-    address VARCHAR(255) NOT NULL,
-    network VARCHAR(50) NOT NULL,
-    scan_type VARCHAR(20) DEFAULT 'comprehensive' CHECK (scan_type IN ('basic', 'comprehensive', 'elite')),
-    
-    -- Scan status and results
-    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'running', 'completed', 'error', 'cancelled')),
-    progress INTEGER DEFAULT 0 CHECK (progress >= 0 AND progress <= 100),
-    current_phase VARCHAR(50),
-    
-    -- Results summary
-    score INTEGER CHECK (score >= 0 AND score <= 100),
-    risk_level VARCHAR(20) CHECK (risk_level IN ('safe', 'low', 'medium', 'high', 'critical')),
-    findings_count INTEGER DEFAULT 0,
-    critical_findings_count INTEGER DEFAULT 0,
-    
-    -- Detailed results (JSONB for flexibility)
-    findings JSONB DEFAULT '[]'::jsonb,
-    report JSONB DEFAULT '{}'::jsonb,
-    metadata JSONB DEFAULT '{}'::jsonb,
-    
-    -- Timestamps
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    started_at TIMESTAMP WITH TIME ZONE,
-    completed_at TIMESTAMP WITH TIME ZONE,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
-    -- Performance metrics
-    processing_time_ms INTEGER,
-    
-    -- Indexes for performance
-    INDEX idx_security_scans_user_id (user_id),
-    INDEX idx_security_scans_status (status),
-    INDEX idx_security_scans_network (network),
-    INDEX idx_security_scans_risk_level (risk_level),
-    INDEX idx_security_scans_created_at (created_at DESC),
-    INDEX idx_security_scans_address (address),
-    INDEX idx_security_scans_score (score)
-);
+-- stop storing api_key raw; keep only hash + last4
+update users set api_key_last4 = right(api_key, 4)
+where api_key is not null and api_key_last4 is null;
 
--- Security findings table (normalized findings data)
-CREATE TABLE IF NOT EXISTS security_findings (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    scan_id UUID NOT NULL REFERENCES security_scans(id) ON DELETE CASCADE,
-    finding_id VARCHAR(255) NOT NULL,
-    
-    -- Finding classification
-    type VARCHAR(50) NOT NULL,
-    severity VARCHAR(20) NOT NULL CHECK (severity IN ('low', 'medium', 'high', 'critical')),
-    confidence INTEGER NOT NULL CHECK (confidence >= 0 AND confidence <= 100),
-    
-    -- Finding details
-    title VARCHAR(255) NOT NULL,
-    description TEXT NOT NULL,
-    evidence JSONB DEFAULT '[]'::jsonb,
-    mitigation TEXT,
-    
-    -- Security references
-    cve_id VARCHAR(50),
-    cwe_id VARCHAR(50),
-    owasp_category VARCHAR(100),
-    
-    -- Additional metadata
-    source_tool VARCHAR(50),
-    metadata JSONB DEFAULT '{}'::jsonb,
-    
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
-    INDEX idx_security_findings_scan_id (scan_id),
-    INDEX idx_security_findings_severity (severity),
-    INDEX idx_security_findings_type (type),
-    INDEX idx_security_findings_confidence (confidence)
-);
+-- optional: drop plain api_key if you’re ready
+-- alter table users drop column api_key;
 
--- User scan quotas and usage tracking
-CREATE TABLE IF NOT EXISTS user_scan_quotas (
-    user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-    
-    -- Current usage
-    daily_scans_used INTEGER DEFAULT 0,
-    monthly_scans_used INTEGER DEFAULT 0,
-    total_scans_used INTEGER DEFAULT 0,
-    
-    -- Quota limits
-    daily_scan_limit INTEGER DEFAULT 10,
-    monthly_scan_limit INTEGER DEFAULT 100,
-    
-    -- Reset tracking
-    last_daily_reset DATE DEFAULT CURRENT_DATE,
-    last_monthly_reset DATE DEFAULT DATE_TRUNC('month', CURRENT_DATE),
-    
-    -- Overage handling
-    overage_allowed BOOLEAN DEFAULT FALSE,
-    overage_count INTEGER DEFAULT 0,
-    
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
-    CONSTRAINT positive_usage CHECK (
-        daily_scans_used >= 0 AND 
-        monthly_scans_used >= 0 AND 
-        total_scans_used >= 0 AND
-        daily_scan_limit >= 0 AND
-        monthly_scan_limit >= 0
-    )
-);
+-- === security_scans: move to enums; add generated band; add useful FKs/indexes ===
+alter table security_scans
+  alter column scan_type type scan_type using scan_type::scan_type,
+  alter column status type scan_status using status::scan_status,
+  alter column risk_level type risk_level using risk_level::risk_level;
 
--- Threat intelligence database
-CREATE TABLE IF NOT EXISTS threat_intelligence (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    
-    -- Threat identification
-    threat_id VARCHAR(255) UNIQUE NOT NULL,
-    address VARCHAR(255) NOT NULL,
-    network VARCHAR(50) NOT NULL,
-    
-    -- Threat classification
-    threat_type VARCHAR(50) NOT NULL,
-    severity VARCHAR(20) NOT NULL CHECK (severity IN ('low', 'medium', 'high', 'critical')),
-    confidence_score INTEGER CHECK (confidence_score >= 0 AND confidence_score <= 100),
-    
-    -- Threat details
-    title VARCHAR(255) NOT NULL,
-    description TEXT,
-    indicators JSONB DEFAULT '[]'::jsonb,
-    attribution JSONB DEFAULT '{}'::jsonb,
-    
-    -- Intelligence sources
-    source VARCHAR(100),
-    verified BOOLEAN DEFAULT FALSE,
-    false_positive BOOLEAN DEFAULT FALSE,
-    
-    -- Lifecycle
-    first_seen TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    last_seen TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'mitigated')),
-    
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
-    INDEX idx_threat_intelligence_address (address),
-    INDEX idx_threat_intelligence_network (network),
-    INDEX idx_threat_intelligence_severity (severity),
-    INDEX idx_threat_intelligence_type (threat_type),
-    INDEX idx_threat_intelligence_status (status),
-    INDEX idx_threat_intelligence_verified (verified)
-);
+-- Generated risk band (helps dashboards)
+do $$ begin
+  alter table security_scans drop column if exists risk_band;
+  exception when undefined_column then null;
+end $$;
 
--- Scan progress tracking for real-time updates
-CREATE TABLE IF NOT EXISTS scan_progress (
-    scan_id UUID PRIMARY KEY REFERENCES security_scans(id) ON DELETE CASCADE,
-    
-    -- Current state
-    current_phase VARCHAR(50) NOT NULL,
-    phase_progress INTEGER DEFAULT 0 CHECK (phase_progress >= 0 AND phase_progress <= 100),
-    overall_progress INTEGER DEFAULT 0 CHECK (overall_progress >= 0 AND overall_progress <= 100),
-    
-    -- Phase details
-    current_task VARCHAR(255),
-    estimated_completion TIMESTAMP WITH TIME ZONE,
-    phase_start_time TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
-    -- Real-time findings
-    live_findings JSONB DEFAULT '[]'::jsonb,
-    phase_metrics JSONB DEFAULT '{}'::jsonb,
-    
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+alter table security_scans
+  add column risk_band text generated always as (
+    case
+      when score is null then null
+      when score <= 20 then 'safe'
+      when score <= 40 then 'low'
+      when score <= 70 then 'medium'
+      when score <= 90 then 'high'
+      else 'critical'
+    end
+  ) stored;
 
--- Notifications and alerts
-CREATE TABLE IF NOT EXISTS notifications (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    
-    -- Notification details
-    type VARCHAR(50) NOT NULL,
-    title VARCHAR(255) NOT NULL,
-    message TEXT NOT NULL,
-    priority VARCHAR(20) DEFAULT 'normal' CHECK (priority IN ('low', 'normal', 'high', 'urgent')),
-    
-    -- Related entities
-    scan_id UUID REFERENCES security_scans(id) ON DELETE CASCADE,
-    threat_id UUID REFERENCES threat_intelligence(id) ON DELETE SET NULL,
-    
-    -- Delivery tracking
-    delivered BOOLEAN DEFAULT FALSE,
-    read BOOLEAN DEFAULT FALSE,
-    clicked BOOLEAN DEFAULT FALSE,
-    
-    -- Channels
-    email_sent BOOLEAN DEFAULT FALSE,
-    push_sent BOOLEAN DEFAULT FALSE,
-    sms_sent BOOLEAN DEFAULT FALSE,
-    
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    delivered_at TIMESTAMP WITH TIME ZONE,
-    read_at TIMESTAMP WITH TIME ZONE,
-    
-    INDEX idx_notifications_user_id (user_id),
-    INDEX idx_notifications_type (type),
-    INDEX idx_notifications_priority (priority),
-    INDEX idx_notifications_read (read),
-    INDEX idx_notifications_created_at (created_at DESC)
-);
+-- === security_findings enums ===
+alter table security_findings
+  alter column severity type severity_level using severity::severity_level;
 
--- API usage tracking for rate limiting and analytics
-CREATE TABLE IF NOT EXISTS api_usage (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
-    
-    -- Request details
-    endpoint VARCHAR(255) NOT NULL,
-    method VARCHAR(10) NOT NULL,
-    ip_address INET,
-    user_agent TEXT,
-    
-    -- Response details
-    status_code INTEGER NOT NULL,
-    response_time_ms INTEGER,
-    bytes_sent INTEGER DEFAULT 0,
-    bytes_received INTEGER DEFAULT 0,
-    
-    -- Rate limiting
-    rate_limit_key VARCHAR(255),
-    rate_limit_remaining INTEGER,
-    
-    -- Authentication
-    api_key_used VARCHAR(255),
-    authenticated BOOLEAN DEFAULT FALSE,
-    
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
-    INDEX idx_api_usage_user_id (user_id),
-    INDEX idx_api_usage_endpoint (endpoint),
-    INDEX idx_api_usage_created_at (created_at DESC),
-    INDEX idx_api_usage_rate_limit_key (rate_limit_key),
-    INDEX idx_api_usage_ip_address (ip_address)
-);
+-- === threat_intelligence enums and integrity ===
+alter table threat_intelligence
+  alter column severity type severity_level using severity::severity_level;
 
--- Security audit log
-CREATE TABLE IF NOT EXISTS audit_log (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    
-    -- Actor information
-    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
-    actor_type VARCHAR(50) DEFAULT 'user' CHECK (actor_type IN ('user', 'system', 'admin', 'api')),
-    actor_identifier VARCHAR(255),
-    
-    -- Action details
-    action VARCHAR(100) NOT NULL,
-    entity_type VARCHAR(50),
-    entity_id VARCHAR(255),
-    
-    -- Context and changes
-    details JSONB DEFAULT '{}'::jsonb,
-    old_values JSONB DEFAULT '{}'::jsonb,
-    new_values JSONB DEFAULT '{}'::jsonb,
-    
-    -- Request context
-    ip_address INET,
-    user_agent TEXT,
-    session_id VARCHAR(255),
-    
-    -- Risk assessment
-    risk_level VARCHAR(20) DEFAULT 'low' CHECK (risk_level IN ('low', 'medium', 'high', 'critical')),
-    automated_action BOOLEAN DEFAULT FALSE,
-    
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
-    INDEX idx_audit_log_user_id (user_id),
-    INDEX idx_audit_log_action (action),
-    INDEX idx_audit_log_entity_type (entity_type),
-    INDEX idx_audit_log_risk_level (risk_level),
-    INDEX idx_audit_log_created_at (created_at DESC)
-);
+-- === notifications enums ===
+alter table notifications
+  alter column priority type notify_priority using priority::notify_priority;
 
--- Contract metadata cache
-CREATE TABLE IF NOT EXISTS contract_metadata (
-    address VARCHAR(255) NOT NULL,
-    network VARCHAR(50) NOT NULL,
-    
-    -- Contract details
-    name VARCHAR(255),
-    symbol VARCHAR(50),
-    decimals INTEGER,
-    total_supply NUMERIC,
-    contract_type VARCHAR(50),
-    
-    -- Verification status
-    verified BOOLEAN DEFAULT FALSE,
-    source_code_available BOOLEAN DEFAULT FALSE,
-    proxy_contract BOOLEAN DEFAULT FALSE,
-    
-    -- Social and economic data
-    market_cap NUMERIC,
-    trading_volume_24h NUMERIC,
-    holder_count INTEGER,
-    liquidity_usd NUMERIC,
-    
-    -- Reputation scores
-    trust_score INTEGER CHECK (trust_score >= 0 AND trust_score <= 100),
-    community_score INTEGER CHECK (community_score >= 0 AND community_score <= 100),
-    developer_score INTEGER CHECK (developer_score >= 0 AND developer_score <= 100),
-    
-    -- Cache metadata
-    last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    data_sources JSONB DEFAULT '[]'::jsonb,
-    cache_expires_at TIMESTAMP WITH TIME ZONE,
-    
-    PRIMARY KEY (address, network),
-    INDEX idx_contract_metadata_trust_score (trust_score),
-    INDEX idx_contract_metadata_verified (verified),
-    INDEX idx_contract_metadata_last_updated (last_updated)
-);
+-- === Create indexes (moved out of CREATE TABLE) ===
+-- security_scans
+create index if not exists idx_security_scans_user_id on security_scans(user_id);
+create index if not exists idx_security_scans_status on security_scans(status);
+create index if not exists idx_security_scans_network on security_scans(network);
+create index if not exists idx_security_scans_risk_level on security_scans(risk_level);
+create index if not exists idx_security_scans_created_at on security_scans(created_at desc);
+create index if not exists idx_security_scans_address on security_scans(address);
+create index if not exists idx_security_scans_score on security_scans(score);
+create index if not exists idx_security_scans_band on security_scans(risk_band);
+create index if not exists idx_security_scans_findings_gin on security_scans using gin (findings jsonb_path_ops);
+create index if not exists idx_security_scans_report_gin on security_scans using gin (report jsonb_path_ops);
 
--- Performance optimization: Partitioning for large tables
--- Partition security_scans by created_at (monthly partitions)
--- Note: This would be implemented in production with proper partition management
+-- security_findings
+create index if not exists idx_security_findings_scan_id on security_findings(scan_id);
+create index if not exists idx_security_findings_severity on security_findings(severity);
+create index if not exists idx_security_findings_type on security_findings(type);
+create index if not exists idx_security_findings_confidence on security_findings(confidence);
 
--- Views for common queries
-CREATE OR REPLACE VIEW user_scan_summary AS
-SELECT 
-    u.id as user_id,
-    u.email,
-    u.tier,
-    COUNT(ss.id) as total_scans,
-    COUNT(CASE WHEN ss.status = 'completed' THEN 1 END) as completed_scans,
-    COUNT(CASE WHEN ss.risk_level = 'critical' THEN 1 END) as critical_threats_found,
-    AVG(ss.score) as average_security_score,
-    MAX(ss.created_at) as last_scan_date
-FROM users u
-LEFT JOIN security_scans ss ON u.id = ss.user_id
-GROUP BY u.id, u.email, u.tier;
+-- notifications
+create index if not exists idx_notifications_user_id on notifications(user_id);
+create index if not exists idx_notifications_type on notifications(type);
+create index if not exists idx_notifications_priority on notifications(priority);
+create index if not exists idx_notifications_read on notifications(read);
+create index if not exists idx_notifications_created_at on notifications(created_at desc);
 
-CREATE OR REPLACE VIEW threat_summary AS
-SELECT 
-    network,
-    threat_type,
-    severity,
-    COUNT(*) as threat_count,
-    COUNT(CASE WHEN verified = true THEN 1 END) as verified_threats,
-    AVG(confidence_score) as avg_confidence
-FROM threat_intelligence
-WHERE status = 'active'
-GROUP BY network, threat_type, severity
-ORDER BY threat_count DESC;
+-- threat_intelligence
+create index if not exists idx_threat_intelligence_address on threat_intelligence(address);
+create index if not exists idx_threat_intelligence_network on threat_intelligence(network);
+create index if not exists idx_threat_intelligence_severity on threat_intelligence(severity);
+create index if not exists idx_threat_intelligence_type on threat_intelligence(threat_type);
+create index if not exists idx_threat_intelligence_status on threat_intelligence(status);
+create index if not exists idx_threat_intelligence_verified on threat_intelligence(verified);
+create index if not exists idx_threat_intel_indicators_gin on threat_intelligence using gin (indicators jsonb_path_ops);
 
--- Triggers for maintaining data integrity and audit trails
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$ language 'plpgsql';
+-- api_usage
+create index if not exists idx_api_usage_user_id on api_usage(user_id);
+create index if not exists idx_api_usage_endpoint on api_usage(endpoint);
+create index if not exists idx_api_usage_created_at on api_usage(created_at desc);
+create index if not exists idx_api_usage_rate_limit_key on api_usage(rate_limit_key);
+create index if not exists idx_api_usage_ip_address on api_usage(ip_address);
 
-CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- contract_metadata
+create index if not exists idx_contract_metadata_trust_score on contract_metadata(trust_score);
+create index if not exists idx_contract_metadata_verified on contract_metadata(verified);
+create index if not exists idx_contract_metadata_last_updated on contract_metadata(last_updated);
+create index if not exists idx_contract_metadata_data_sources_gin on contract_metadata using gin (data_sources);
 
-CREATE TRIGGER update_security_scans_updated_at BEFORE UPDATE ON security_scans
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- FTS (you already added one for findings); add for scans.report titles if needed
+create index if not exists idx_threat_intelligence_description_fts 
+  on threat_intelligence using gin (to_tsvector('english', description));
 
-CREATE TRIGGER update_threat_intelligence_updated_at BEFORE UPDATE ON threat_intelligence
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- === Quota Enforcement ===
+create or replace function can_consume_scan(p_user uuid, p_daily int, p_monthly int)
+returns boolean language plpgsql as $$
+declare ok boolean;
+begin
+  update user_scan_quotas uq
+     set daily_scans_used = daily_scans_used + 1,
+         monthly_scans_used = monthly_scans_used + 1,
+         total_scans_used = total_scans_used + 1,
+         last_daily_reset = case when last_daily_reset < current_date then current_date else last_daily_reset end,
+         last_monthly_reset = case when last_monthly_reset < date_trunc('month', current_date) then date_trunc('month', current_date)::date else last_monthly_reset end,
+         updated_at = now()
+   where uq.user_id = p_user
+     and (daily_scans_used < coalesce(p_daily, uq.daily_scan_limit)
+          or overage_allowed = true)
+     and (monthly_scans_used < coalesce(p_monthly, uq.monthly_scan_limit)
+          or overage_allowed = true)
+  returning true into ok;
+  return coalesce(ok,false);
+end $$;
 
--- Function to automatically update scan quotas
-CREATE OR REPLACE FUNCTION reset_daily_quotas()
-RETURNS void AS $$
-BEGIN
-    UPDATE user_scan_quotas 
-    SET daily_scans_used = 0, 
-        last_daily_reset = CURRENT_DATE
-    WHERE last_daily_reset < CURRENT_DATE;
-END;
-$$ LANGUAGE plpgsql;
+-- BEFORE INSERT trigger to block when over quota
+create or replace function tg_block_when_over_quota()
+returns trigger language plpgsql as $$
+declare allowed boolean;
+begin
+  -- ensure quota row exists
+  insert into user_scan_quotas (user_id, daily_scan_limit, monthly_scan_limit)
+  values (new.user_id, 10, 100)
+  on conflict (user_id) do nothing;
 
-CREATE OR REPLACE FUNCTION reset_monthly_quotas()
-RETURNS void AS $$
-BEGIN
-    UPDATE user_scan_quotas 
-    SET monthly_scans_used = 0, 
-        last_monthly_reset = DATE_TRUNC('month', CURRENT_DATE)
-    WHERE last_monthly_reset < DATE_TRUNC('month', CURRENT_DATE);
-END;
-$$ LANGUAGE plpgsql;
+  allowed := can_consume_scan(new.user_id, null, null);
+  if not allowed then
+    raise exception 'Scan quota exceeded for user %', new.user_id using errcode = 'P0001';
+  end if;
+  return new;
+end $$;
 
--- Indexes for full-text search on findings
-CREATE INDEX IF NOT EXISTS idx_security_findings_description_fts 
-ON security_findings USING gin(to_tsvector('english', description));
+drop trigger if exists trg_scans_quota_guard on security_scans;
+create trigger trg_scans_quota_guard
+before insert on security_scans
+for each row execute function tg_block_when_over_quota();
 
-CREATE INDEX IF NOT EXISTS idx_threat_intelligence_description_fts 
-ON threat_intelligence USING gin(to_tsvector('english', description));
+-- === RLS (Row Level Security) ===
+alter table users enable row level security;
+alter table security_scans enable row level security;
+alter table security_findings enable row level security;
+alter table user_scan_quotas enable row level security;
+alter table notifications enable row level security;
+alter table api_usage enable row level security;
+alter table audit_log enable row level security;
+alter table threat_intelligence enable row level security;
 
--- Grant appropriate permissions (adjust for your specific user setup)
--- GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO nimrev_app;
--- GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO nimrev_app;
+-- Policies (Supabase style: auth.uid() present)
+do $$
+begin
+  -- Users: self read/update
+  if not exists (select 1 from pg_policies where tablename='users' and policyname='users_self_read') then
+    create policy users_self_read on users for select using (id = auth.uid());
+  end if;
+  if not exists (select 1 from pg_policies where tablename='users' and policyname='users_self_update') then
+    create policy users_self_update on users for update using (id = auth.uid()) with check (id = auth.uid());
+  end if;
 
--- Insert default data for testing
-INSERT INTO users (email, password_hash, username, tier, scan_quota_daily, scan_quota_monthly) 
-VALUES 
-('admin@nimrev.io', crypt('admin123', gen_salt('bf')), 'admin', 'elite', 1000, 10000),
-('test@nimrev.io', crypt('test123', gen_salt('bf')), 'testuser', 'premium', 50, 500)
-ON CONFLICT (email) DO NOTHING;
+  -- security_scans: owner full; allow public read of completed SAFE rows via view instead
+  if not exists (select 1 from pg_policies where tablename='security_scans' and policyname='scans_owner_all') then
+    create policy scans_owner_all on security_scans
+      using (user_id = auth.uid()) with check (user_id = auth.uid());
+  end if;
 
--- Initialize scan quotas for existing users
-INSERT INTO user_scan_quotas (user_id, daily_scan_limit, monthly_scan_limit)
-SELECT id, scan_quota_daily, scan_quota_monthly 
-FROM users 
-ON CONFLICT (user_id) DO NOTHING;
+  -- security_findings: via parent scan ownership
+  if not exists (select 1 from pg_policies where tablename='security_findings' and policyname='findings_owner_read') then
+    create policy findings_owner_read on security_findings
+      for select using (scan_id in (select id from security_scans where user_id = auth.uid()));
+  end if;
 
--- Performance analysis queries for monitoring
-COMMENT ON TABLE security_scans IS 'Primary table for storing security scan results and metadata';
-COMMENT ON TABLE threat_intelligence IS 'Centralized threat intelligence database for known malicious addresses';
-COMMENT ON TABLE user_scan_quotas IS 'User quota management and usage tracking';
-COMMENT ON TABLE audit_log IS 'Security audit trail for all system actions';
+  -- quotas: owner read
+  if not exists (select 1 from pg_policies where tablename='user_scan_quotas' and policyname='quotas_owner_read') then
+    create policy quotas_owner_read on user_scan_quotas for select using (user_id = auth.uid());
+  end if;
+
+  -- notifications: owner
+  if not exists (select 1 from pg_policies where tablename='notifications' and policyname='notif_owner_all') then
+    create policy notif_owner_all on notifications
+      using (user_id = auth.uid()) with check (user_id = auth.uid());
+  end if;
+
+  -- api_usage: owner read
+  if not exists (select 1 from pg_policies where tablename='api_usage' and policyname='api_owner_read') then
+    create policy api_owner_read on api_usage for select using (user_id = auth.uid());
+  end if;
+
+  -- threat_intelligence: read for authenticated only (writes by backend service role)
+  if not exists (select 1 from pg_policies where tablename='threat_intelligence' and policyname='ti_read_auth') then
+    create policy ti_read_auth on threat_intelligence for select using (auth.role() = 'authenticated');
+  end if;
+end $$;
+
+-- === Safer public views ===
+drop view if exists public_scan_results;
+create view public_scan_results with (security_barrier = true) as
+select id, address, network, score, risk_level, created_at
+from security_scans
+where status = 'completed'::scan_status
+order by created_at desc;
+
+drop view if exists user_scan_summary;
+create or replace view user_scan_summary as
+select 
+  u.id as user_id,
+  u.email,
+  u.tier,
+  count(ss.id) as total_scans,
+  count(*) filter (where ss.status = 'completed') as completed_scans,
+  count(*) filter (where ss.risk_level = 'critical') as critical_threats_found,
+  avg(ss.score) as average_security_score,
+  max(ss.created_at) as last_scan_date
+from users u
+left join security_scans ss on u.id = ss.user_id
+group by u.id, u.email, u.tier;
